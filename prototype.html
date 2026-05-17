@@ -129,6 +129,16 @@
       flex-direction: column;
     }
 
+    /* LAYER 0 — BACKGROUND IMAGE */
+    .hero-bg-image {
+      position: absolute;
+      inset: 0;
+      background: url('hero-bg.png') center/cover no-repeat;
+      opacity: 0.15;
+      z-index: 0;
+      pointer-events: none;
+    }
+
     /* LAYER 1 — DEEP RADIAL ATMOSPHERE */
     .hero-atmosphere {
       position: absolute;
@@ -1020,6 +1030,9 @@
 
   <!-- ============ HERO — RICH ANIMATED ============ -->
   <header class="hero" id="top">
+
+    <!-- Layer 0: Background Image -->
+    <div class="hero-bg-image"></div>
 
     <!-- Layer 1: Atmospheric gradient -->
     <div class="hero-atmosphere"></div>
