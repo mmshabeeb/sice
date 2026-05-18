@@ -4,7 +4,7 @@ export type CampaignStatus = 'draft' | 'active' | 'in_progress' | 'completed' | 
 export type Platform = 'instagram' | 'youtube' | 'facebook' | 'x' | 'linkedin' | 'tiktok';
 
 export interface Profile {
-  id: string;
+  uid: string;          // Firestore doc ID == Firebase Auth UID
   role: UserRole;
   full_name: string | null;
   avatar_url: string | null;
@@ -22,7 +22,7 @@ export interface Chapter {
 }
 
 export interface CreatorProfile {
-  id: string;
+  uid: string;
   bio: string | null;
   languages: string[];
   niche: string | null;
@@ -117,19 +117,11 @@ export interface OnboardingApplication {
   created_at: string;
 }
 
-// Supabase Database generic type (simplified)
-export type Database = {
-  public: {
-    Tables: {
-      profiles: { Row: Profile; Insert: Partial<Profile>; Update: Partial<Profile> };
-      chapters: { Row: Chapter; Insert: Partial<Chapter>; Update: Partial<Chapter> };
-      creator_profiles: { Row: CreatorProfile; Insert: Partial<CreatorProfile>; Update: Partial<CreatorProfile> };
-      social_accounts: { Row: SocialAccount; Insert: Partial<SocialAccount>; Update: Partial<SocialAccount> };
-      campaigns: { Row: Campaign; Insert: Partial<Campaign>; Update: Partial<Campaign> };
-      contracts: { Row: Contract; Insert: Partial<Contract>; Update: Partial<Contract> };
-      deliverables: { Row: Deliverable; Insert: Partial<Deliverable>; Update: Partial<Deliverable> };
-      events: { Row: Event; Insert: Partial<Event>; Update: Partial<Event> };
-      onboarding_applications: { Row: OnboardingApplication; Insert: Partial<OnboardingApplication>; Update: Partial<OnboardingApplication> };
-    };
-  };
-};
+export interface ContactMessage {
+  id?: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  submitted_at: string;
+}

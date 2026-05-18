@@ -24,7 +24,8 @@ import {
   ChevronLeft,
 } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { createClient } from '@/lib/supabase/client';
+import { auth } from '@/lib/firebase/client';
+import { signOut } from 'firebase/auth';
 
 /* ------------------------------------------------------------------ */
 /* Nav config                                                            */
@@ -89,8 +90,8 @@ function SidebarContent({
   const navItems = NAV[role] ?? NAV.creator;
 
   async function handleLogout() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await fetch('/api/auth/session', { method: 'DELETE' });
+    await signOut(auth);
     router.push('/login');
   }
 

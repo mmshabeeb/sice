@@ -1,60 +1,29 @@
-import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+const DASHBOARD_ROLES = ['creator', 'merchant', 'admin'] as const;
+
 export async function proxy(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return request.cookies.getAll(); },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
-
-  const { data: { user } } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
+  const session = request.cookies.get('session')?.value;
 
-  // Redirect logged-out users away from dashboard
-  if (path.startsWith('/dashboard') && !user) {
+  const isDashboard = path.startsWith('/dashboard');
+  const isLogin = path === '/login';
+
+  // Redirect unauthenticated users away from dashboard
+  if (isDashboard && !session) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Redirect logged-in users away from login
-  if (path === '/login' && user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-    const role = profile?.role ?? 'creator';
+  // Redirect authenticated users away from login
+  // (role redirect happens client-side after sign-in; just send to /dashboard)
+  if (isLogin && session) {
+    // Detect which role sub-path to use from the URL they came from, or default to creator
+    const from = request.nextUrl.searchParams.get('from');
+    const role = DASHBOARD_ROLES.find((r) => from?.startsWith(`/dashboard/${r}`)) ?? 'creator';
     return NextResponse.redirect(new URL(`/dashboard/${role}`, request.url));
   }
 
-  // Role-based access enforcement
-  if (path.startsWith('/dashboard/creator') && user) {
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role !== 'creator') return NextResponse.redirect(new URL(`/dashboard/${profile?.role}`, request.url));
-  }
-  if (path.startsWith('/dashboard/merchant') && user) {
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role !== 'merchant') return NextResponse.redirect(new URL(`/dashboard/${profile?.role}`, request.url));
-  }
-  if (path.startsWith('/dashboard/admin') && user) {
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role !== 'admin') return NextResponse.redirect(new URL(`/dashboard/${profile?.role}`, request.url));
-  }
-
-  return supabaseResponse;
+  return NextResponse.next();
 }
 
 export const config = {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { appendToSheet } from '@/lib/google-sheets';
+import { adminDb } from '@/lib/firebase/server';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,13 +10,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
     }
 
-    await appendToSheet('Contact', [
-      new Date().toISOString(),
-      String(name).trim(),
-      String(email).trim(),
-      String(reason).trim(),
-      String(message).trim(),
-    ]);
+    await adminDb.collection('contacts').add({
+      submitted_at: FieldValue.serverTimestamp(),
+      name: String(name).trim(),
+      email: String(email).trim(),
+      subject: String(reason).trim(),
+      message: String(message).trim(),
+    });
 
     return NextResponse.json({ success: true });
   } catch (err) {

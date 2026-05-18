@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { appendToSheet } from '@/lib/google-sheets';
+import { adminDb } from '@/lib/firebase/server';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,18 +30,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'At least one social media URL is required.' }, { status: 400 });
     }
 
-    await appendToSheet('Applications', [
-      new Date().toISOString(),
-      String(fullName).trim(),
-      String(email).trim(),
-      `${contactCountryCode} ${contactNumber}`.trim(),
-      `${whatsappCountryCode} ${whatsappNumber}`.trim(),
-      String(facebookUrl || '').trim(),
-      String(instagramUrl || '').trim(),
-      String(youtubeUrl || '').trim(),
-      String(xUrl || '').trim(),
-      String(linkedinUrl || '').trim(),
-    ]);
+    await adminDb.collection('applications').add({
+      submitted_at: FieldValue.serverTimestamp(),
+      full_name: String(fullName).trim(),
+      email: String(email).trim(),
+      contact_number: `${contactCountryCode ?? ''} ${contactNumber}`.trim(),
+      whatsapp_number: `${whatsappCountryCode ?? ''} ${whatsappNumber}`.trim(),
+      facebook_url: String(facebookUrl || '').trim(),
+      instagram_url: String(instagramUrl || '').trim(),
+      youtube_url: String(youtubeUrl || '').trim(),
+      x_url: String(xUrl || '').trim(),
+      linkedin_url: String(linkedinUrl || '').trim(),
+      status: 'pending',
+    });
 
     return NextResponse.json({ success: true });
   } catch (err) {

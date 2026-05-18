@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase/client';
 import type { UserRole } from '@/types/database';
 
 const DEMO_ACCOUNTS = [
@@ -39,35 +41,41 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const supabase = createClient();
+    try {
+      const { user } = await signInWithEmailAndPassword(auth, email, password);
 
-    const { data: authData, error: authError } =
-      await supabase.auth.signInWithPassword({ email, password });
+      // Get ID token and create server-side session cookie
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
 
-    if (authError || !authData.user) {
-      setError(authError?.message ?? 'Sign in failed. Please try again.');
+      if (!res.ok) {
+        throw new Error('Session creation failed. Please try again.');
+      }
+
+      // Read role from Firestore
+      const profileSnap = await getDoc(doc(db, 'users', user.uid));
+      if (!profileSnap.exists()) {
+        setError('Profile not found. Please contact support.');
+        setLoading(false);
+        return;
+      }
+
+      const role = profileSnap.data().role as UserRole;
+      router.push(`/dashboard/${role}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Sign in failed. Please try again.';
+      setError(msg.replace('Firebase: ', '').replace(/\(auth\/.*\)\.?/, '').trim());
       setLoading(false);
-      return;
     }
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', authData.user.id)
-      .single() as { data: { role: UserRole } | null; error: unknown };
-
-    if (profileError || !profile) {
-      setError('Could not load your profile. Please contact support.');
-      setLoading(false);
-      return;
-    }
-
-    router.push(`/dashboard/${profile.role}`);
   }
 
-  function fillDemo(email: string, password: string) {
-    setEmail(email);
-    setPassword(password);
+  function fillDemo(demoEmail: string, demoPassword: string) {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
     setError(null);
   }
 
@@ -82,7 +90,6 @@ export default function LoginPage() {
           className="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4"
           style={{ background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.35)' }}
         >
-          {/* Wordmark icon placeholder */}
           <span
             className="text-2xl font-bold tracking-tighter select-none"
             style={{ color: '#C9A84C', fontFamily: 'var(--font-bricolage, sans-serif)' }}
@@ -120,7 +127,6 @@ export default function LoginPage() {
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* Email */}
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="email"
@@ -143,16 +149,11 @@ export default function LoginPage() {
                 border: '1px solid rgba(240,235,224,0.12)',
                 color: '#F0EBE0',
               }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(201,168,76,0.55)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(240,235,224,0.12)';
-              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(201,168,76,0.55)'; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(240,235,224,0.12)'; }}
             />
           </div>
 
-          {/* Password */}
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="password"
@@ -175,16 +176,11 @@ export default function LoginPage() {
                 border: '1px solid rgba(240,235,224,0.12)',
                 color: '#F0EBE0',
               }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(201,168,76,0.55)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(240,235,224,0.12)';
-              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(201,168,76,0.55)'; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(240,235,224,0.12)'; }}
             />
           </div>
 
-          {/* Error */}
           {error && (
             <div
               className="rounded-lg px-3.5 py-2.5 text-sm"
@@ -198,21 +194,16 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
             className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition-opacity disabled:opacity-60"
-            style={{
-              background: '#C9A84C',
-              color: '#080D26',
-            }}
+            style={{ background: '#C9A84C', color: '#080D26' }}
           >
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 
-        {/* Apply link */}
         <p className="mt-5 text-center text-sm" style={{ color: 'rgba(240,235,224,0.45)' }}>
           New creator?{' '}
           <Link
@@ -244,12 +235,8 @@ export default function LoginPage() {
                 background: 'rgba(201,168,76,0.06)',
                 border: '1px solid rgba(201,168,76,0.18)',
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(201,168,76,0.12)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(201,168,76,0.06)';
-              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(201,168,76,0.12)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(201,168,76,0.06)'; }}
             >
               <div className="flex items-center justify-between gap-3">
                 <div>

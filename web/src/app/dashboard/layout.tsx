@@ -1,39 +1,39 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { adminAuth, adminDb } from '@/lib/firebase/server';
 import type { UserRole } from '@/types/database';
 import DashboardShell from './components/DashboardShell';
-
-interface ProfileRow {
-  role: UserRole;
-  full_name: string | null;
-  avatar_url: string | null;
-  chapter_id: string | null;
-}
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get('session')?.value;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  if (!sessionCookie) {
     redirect('/login');
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, full_name, avatar_url, chapter_id')
-    .eq('id', user.id)
-    .single() as { data: ProfileRow | null; error: unknown };
-
-  if (!profile) {
+  let uid: string;
+  try {
+    const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
+    uid = decoded.uid;
+  } catch {
     redirect('/login');
   }
+
+  const profileSnap = await adminDb.collection('users').doc(uid).get();
+  if (!profileSnap.exists) {
+    redirect('/login');
+  }
+
+  const profile = profileSnap.data() as {
+    role: UserRole;
+    full_name: string | null;
+    avatar_url: string | null;
+  };
 
   return (
     <DashboardShell
