@@ -1,6 +1,10 @@
 {
   "private": true,
+  "workspaces": [
+    "web"
+  ],
   "scripts": {
+    "postinstall": "npm --prefix web install",
     "dev": "npm --prefix web run dev",
     "build": "npm --prefix web run build",
     "start": "npm --prefix web run start",
