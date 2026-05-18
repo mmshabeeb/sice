@@ -193,7 +193,7 @@ export default function Home() {
           <span>S</span><span>I</span><span>C</span><span>E</span>
         </div>
         <div className="hero-bottom-rule"></div>
-        <div className="hero-tagline">South Indian<br />Creators Economy</div>
+        <div className="hero-tagline">South Indian<br />Creator Economy</div>
       </div>
 
       <div className="hero-statement">
