@@ -19,7 +19,7 @@
     body {
       background: var(--bone);
       color: var(--ink);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif;
       -webkit-font-smoothing: antialiased;
       line-height: 1.6;
     }
@@ -45,7 +45,7 @@
       display: flex; align-items: center; justify-content: space-between;
     }
     .nav-logo {
-      font-family: 'Bricolage Grotesque', sans-serif;
+      font-family: var(--font-bricolage), sans-serif;
       font-weight: 600; font-size: 22px;
       letter-spacing: -0.05em; color: var(--cream);
     }
@@ -207,7 +207,7 @@
       justify-content: center;
       gap: 8px;
       margin-bottom: 24px;
-      opacity: 0;
+      opacity: 1;
       animation: fadeInDown 1s ease-out 0.3s forwards;
     }
     .hero-top-rule .line {
@@ -240,7 +240,7 @@
 
     /* The wordmark — letters reveal one at a time */
     .hero-wordmark {
-      font-family: 'Bricolage Grotesque', sans-serif;
+      font-family: var(--font-bricolage), sans-serif;
       font-weight: 600;
       font-size: clamp(80px, 14vw, 200px);
       letter-spacing: -0.05em;
@@ -251,8 +251,8 @@
     }
     .hero-wordmark span {
       display: inline-block;
-      opacity: 0;
-      transform: translateY(40px);
+      opacity: 1;
+      transform: translateY(0);
       animation: letterReveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
     .hero-wordmark span:nth-child(1) { animation-delay: 0.4s; }
@@ -277,15 +277,17 @@
 
     /* Tagline */
     .hero-tagline {
-      font-family: 'Inter', sans-serif;
-      font-weight: 500;
-      font-size: clamp(11px, 1.2vw, 14px);
+      font-family: var(--font-inter), sans-serif;
+      font-weight: 800;
+      font-size: clamp(33px, 3.6vw, 42px);
+      line-height: 1.3;
       text-transform: uppercase;
       letter-spacing: 0.42em;
+      text-indent: 0.42em;
       color: var(--gold);
       text-align: center;
       margin-top: 20px;
-      opacity: 0;
+      opacity: 1;
       animation: fadeInUp 1s ease-out 1.6s forwards;
     }
     @keyframes fadeInUp {
@@ -298,11 +300,11 @@
       max-width: 880px;
       margin: 0 auto;
       text-align: center;
-      opacity: 0;
+      opacity: 1;
       animation: fadeInUp 1s ease-out 1.9s forwards;
     }
     .hero-statement h1 {
-      font-family: 'Bricolage Grotesque', sans-serif;
+      font-family: var(--font-bricolage), sans-serif;
       font-weight: 400;
       font-size: clamp(22px, 2.8vw, 34px);
       line-height: 1.3;
@@ -311,7 +313,7 @@
       margin-bottom: 32px;
     }
     .hero-statement h1 em {
-      font-style: italic; font-family: 'Fraunces', serif;
+      font-style: italic; font-family: var(--font-fraunces), serif;
       color: var(--gold);
     }
 
@@ -327,7 +329,7 @@
       margin-bottom: 36px;
       flex-wrap: wrap;
       justify-content: center;
-      opacity: 0;
+      opacity: 1;
       animation: fadeInUp 1s ease-out 2.1s forwards;
     }
     .gov-banner-tag {
@@ -342,7 +344,7 @@
     /* CTA row */
     .hero-cta-row {
       display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
-      opacity: 0;
+      opacity: 1;
       animation: fadeInUp 1s ease-out 2.3s forwards;
     }
     .btn-primary {
@@ -376,11 +378,11 @@
       margin-top: 96px; padding-top: 48px;
       border-top: 1px solid var(--indigo-line);
       display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px;
-      opacity: 0;
+      opacity: 1;
       animation: fadeInUp 1s ease-out 2.5s forwards;
     }
     .stat-num {
-      font-family: 'Bricolage Grotesque', sans-serif;
+      font-family: var(--font-bricolage), sans-serif;
       font-weight: 500;
       font-size: clamp(32px, 3.5vw, 48px);
       line-height: 1; letter-spacing: -0.04em;
@@ -399,7 +401,7 @@
       left: 50%;
       transform: translateX(-50%);
       z-index: 6;
-      opacity: 0;
+      opacity: 1;
       animation: fadeInUp 1s ease-out 3s forwards, scrollBounce 2s ease-in-out 3s infinite;
       font-size: 10px;
       text-transform: uppercase;
@@ -450,7 +452,7 @@
     .section-eyebrow.light { color: var(--gold); }
     .section-eyebrow.light::before { background: var(--gold); }
     h2 {
-      font-family: 'Bricolage Grotesque', sans-serif;
+      font-family: var(--font-bricolage), sans-serif;
       font-weight: 500;
       font-size: clamp(32px, 4.5vw, 56px);
       line-height: 1.05; letter-spacing: -0.04em;
@@ -458,18 +460,18 @@
     }
     h2.light { color: var(--cream); }
     h2 em {
-      font-style: italic; font-family: 'Fraunces', serif;
+      font-style: italic; font-family: var(--font-fraunces), serif;
       font-weight: 400; color: var(--gold-deep);
     }
     h2.light em { color: var(--gold); }
     h3 {
-      font-family: 'Bricolage Grotesque', sans-serif;
+      font-family: var(--font-bricolage), sans-serif;
       font-weight: 500; font-size: 22px;
       letter-spacing: -0.02em; color: var(--indigo);
       margin-bottom: 12px;
     }
     .lede {
-      font-family: 'Fraunces', serif; font-style: italic;
+      font-family: var(--font-fraunces), serif; font-style: italic;
       font-size: clamp(17px, 1.5vw, 20px); line-height: 1.55;
       color: rgba(8, 13, 38, 0.7);
       max-width: 640px; margin-bottom: 48px;
@@ -478,8 +480,8 @@
 
     /* Scroll-reveal animation for content sections */
     .reveal {
-      opacity: 0;
-      transform: translateY(30px);
+      opacity: 1;
+      transform: translateY(0);
       transition: opacity 0.8s ease-out, transform 0.8s ease-out;
     }
     .reveal.visible {
@@ -507,7 +509,7 @@
     .brand-bar-rule-top .line { width: 40px; height: 1px; background: var(--gold); }
     .brand-bar-rule-top .dot { width: 5px; height: 5px; background: var(--gold); border-radius: 50%; }
     .brand-bar-word {
-      font-family: 'Bricolage Grotesque', sans-serif;
+      font-family: var(--font-bricolage), sans-serif;
       font-weight: 600; font-size: 36px;
       letter-spacing: -0.05em; color: var(--cream); line-height: 1;
     }
@@ -531,7 +533,7 @@
     .what-list li:first-child { border-top: 1px solid var(--indigo); }
     .what-list li:last-child { border-bottom: 1px solid var(--rule); }
     .what-list-num {
-      font-family: 'Fraunces', serif; font-style: italic;
+      font-family: var(--font-fraunces), serif; font-style: italic;
       font-size: 13px; color: var(--gold-deep); padding-top: 4px;
     }
     .what-list-content h3 { margin-bottom: 8px; }
@@ -558,18 +560,18 @@
     }
     .vm-card.light::before { display: none; }
     .vm-eyebrow {
-      font-family: 'Fraunces', serif; font-style: italic;
+      font-family: var(--font-fraunces), serif; font-style: italic;
       font-size: 14px; color: var(--gold); margin-bottom: 24px;
     }
     .vm-card.light .vm-eyebrow { color: var(--gold-deep); }
     .vm-heading {
-      font-family: 'Bricolage Grotesque', sans-serif;
+      font-family: var(--font-bricolage), sans-serif;
       font-weight: 500; font-size: 40px;
       line-height: 1.05; letter-spacing: -0.03em;
       margin-bottom: 24px;
     }
     .vm-card .vm-body {
-      font-family: 'Fraunces', serif;
+      font-family: var(--font-fraunces), serif;
       font-size: 18px; line-height: 1.55;
       color: rgba(240, 235, 224, 0.85); font-style: italic;
     }
@@ -600,7 +602,7 @@
     .gov-card h3 { font-size: 26px; margin-bottom: 16px; line-height: 1.2; }
     .gov-card p { font-size: 14px; line-height: 1.7; color: rgba(8, 13, 38, 0.78); margin-bottom: 16px; }
     .gov-card .citation {
-      font-family: 'Fraunces', serif; font-style: italic;
+      font-family: var(--font-fraunces), serif; font-style: italic;
       font-size: 12px; color: rgba(8, 13, 38, 0.55);
       padding-top: 16px; border-top: 1px solid var(--rule); margin-top: 20px;
     }
@@ -623,7 +625,7 @@
       font-size: 14px; line-height: 1.6; color: rgba(240, 235, 224, 0.85);
     }
     .gov-key-list li:first-child { border-top: none; padding-top: 0; }
-    .gov-key-list-num { font-family: 'Fraunces', serif; font-style: italic; color: var(--gold); font-size: 13px; }
+    .gov-key-list-num { font-family: var(--font-fraunces), serif; font-style: italic; color: var(--gold); font-size: 13px; }
     .gov-disclaimer {
       background: rgba(8, 13, 38, 0.04);
       border: 1px solid var(--rule);
@@ -641,7 +643,7 @@
     .gov-source:hover { transform: translateY(-2px); }
     .gov-source-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--gold-deep); margin-bottom: 8px; }
     .gov-source-title {
-      font-family: 'Bricolage Grotesque'; font-weight: 500;
+      font-family: var(--font-bricolage), sans-serif; font-weight: 500;
       font-size: 15px; letter-spacing: -0.01em;
       color: var(--indigo); line-height: 1.3; margin-bottom: 12px;
     }
@@ -663,7 +665,7 @@
       transition: transform 0.3s;
     }
     .pillar:hover { transform: translateY(-4px); }
-    .pillar-num { font-family: 'Fraunces', serif; font-style: italic; font-size: 13px; color: var(--gold); margin-bottom: 24px; }
+    .pillar-num { font-family: var(--font-fraunces), serif; font-style: italic; font-size: 13px; color: var(--gold); margin-bottom: 24px; }
     .pillar h3 { color: var(--cream); font-size: 28px; margin-bottom: 16px; }
     .pillar p { font-size: 14px; color: rgba(240, 235, 224, 0.75); line-height: 1.7; }
 
@@ -686,14 +688,20 @@
       color: rgba(8, 13, 38, 0.5);
     }
     .chapter-stat strong {
-      color: var(--indigo); font-family: 'Bricolage Grotesque';
+      color: var(--indigo); font-family: var(--font-bricolage), sans-serif;
       font-weight: 500; font-size: 18px;
       letter-spacing: -0.02em; text-transform: none;
     }
 
     /* MEMBERSHIP */
     .membership { background: var(--bone); }
-    .membership-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+    .membership-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 520px);
+      justify-content: start;
+      gap: 24px;
+      margin-top: 48px;
+    }
     .tier {
       padding: 40px 32px; border-radius: 4px;
       border-top: 6px solid var(--gold);
@@ -711,7 +719,7 @@
     .tier.featured .tier-tag { color: var(--gold); }
     .tier h3 { font-size: 32px; margin-bottom: 8px; }
     .tier.featured h3 { color: var(--cream); }
-    .tier-price { font-family: 'Fraunces', serif; font-style: italic; font-size: 14px; color: rgba(8, 13, 38, 0.6); margin-bottom: 24px; }
+    .tier-price { font-family: var(--font-fraunces), serif; font-style: italic; font-size: 14px; color: rgba(8, 13, 38, 0.6); margin-bottom: 24px; }
     .tier.featured .tier-price { color: rgba(240, 235, 224, 0.65); }
     .tier-list { list-style: none; padding: 0; margin-bottom: 32px; flex: 1; }
     .tier-list li {
@@ -727,6 +735,15 @@
     .tier.featured .tier-list li::before { color: var(--gold); }
     .tier .btn-primary { width: 100%; text-align: center; }
     .tier.featured .btn-primary { background: var(--gold); }
+    .primary-membership {
+      background: var(--indigo);
+      color: var(--cream);
+    }
+    .primary-membership h3 { color: var(--cream); }
+    .primary-membership .tier-tag { color: var(--gold); }
+    .primary-membership .tier-price { color: rgba(240, 235, 224, 0.65); }
+    .primary-membership .tier-list li { color: rgba(240, 235, 224, 0.85); }
+    .primary-membership .tier-list li::before { color: var(--gold); }
 
     /* DEVELOPER */
     .developer { background: var(--indigo); color: var(--cream); position: relative; overflow: hidden; }
@@ -745,19 +762,19 @@
       padding: 64px; text-align: center;
     }
     .developer-mark-text {
-      font-family: 'Bricolage Grotesque', sans-serif;
+      font-family: var(--font-bricolage), sans-serif;
       font-weight: 600; font-size: 56px;
       letter-spacing: -0.05em; color: var(--cream);
       line-height: 1; margin-bottom: 12px;
     }
-    .developer-mark-tagline { font-family: 'Fraunces', serif; font-style: italic; font-size: 14px; color: var(--gold); margin-bottom: 32px; }
+    .developer-mark-tagline { font-family: var(--font-fraunces), serif; font-style: italic; font-size: 14px; color: var(--gold); margin-bottom: 32px; }
     .developer-stats {
       display: grid; grid-template-columns: repeat(3, 1fr);
       gap: 16px; padding-top: 32px;
       border-top: 1px solid var(--indigo-line);
     }
     .developer-stat-num {
-      font-family: 'Bricolage Grotesque'; font-weight: 500;
+      font-family: var(--font-bricolage), sans-serif; font-weight: 500;
       font-size: 28px; letter-spacing: -0.03em;
       color: var(--cream); line-height: 1;
     }
@@ -770,7 +787,7 @@
     }
     .developer-pillar strong {
       display: block; color: var(--gold);
-      font-family: 'Bricolage Grotesque'; font-weight: 500;
+      font-family: var(--font-bricolage), sans-serif; font-weight: 500;
       font-size: 11px; text-transform: uppercase;
       letter-spacing: 0.2em; margin-bottom: 6px;
     }
@@ -790,13 +807,13 @@
     .editorial-feature > * { position: relative; z-index: 1; }
     .article-tag { font-size: 10px; text-transform: uppercase; letter-spacing: 0.32em; color: var(--gold); margin-bottom: 20px; }
     .editorial-feature h3 {
-      font-family: 'Bricolage Grotesque'; font-weight: 500;
+      font-family: var(--font-bricolage), sans-serif; font-weight: 500;
       font-size: clamp(28px, 3.5vw, 44px);
       line-height: 1.1; letter-spacing: -0.03em;
       color: var(--cream); margin-bottom: 16px; max-width: 720px;
     }
     .editorial-feature .article-lede {
-      font-family: 'Fraunces', serif; font-style: italic;
+      font-family: var(--font-fraunces), serif; font-style: italic;
       font-size: 18px; line-height: 1.55;
       color: rgba(240, 235, 224, 0.75);
       max-width: 580px; margin-bottom: 24px;
@@ -820,7 +837,7 @@
     .faq-item:first-child { border-top: 1px solid var(--indigo); }
     .faq-item summary {
       cursor: pointer;
-      font-family: 'Bricolage Grotesque', sans-serif;
+      font-family: var(--font-bricolage), sans-serif;
       font-weight: 500; font-size: 20px;
       letter-spacing: -0.02em; color: var(--indigo);
       list-style: none;
@@ -829,13 +846,13 @@
     .faq-item summary::-webkit-details-marker { display: none; }
     .faq-item summary::after {
       content: '+';
-      font-family: 'Bricolage Grotesque';
+      font-family: var(--font-bricolage), sans-serif;
       font-weight: 400; font-size: 24px;
       color: var(--gold-deep); transition: transform 0.2s;
     }
     .faq-item[open] summary::after { transform: rotate(45deg); }
     .faq-item p {
-      font-family: 'Inter', sans-serif;
+      font-family: var(--font-inter), sans-serif;
       font-size: 14px; line-height: 1.7;
       color: rgba(8, 13, 38, 0.72);
       margin-top: 16px; max-width: 680px;
@@ -856,6 +873,147 @@
     .cta-band h2 { color: var(--cream); margin: 0 auto 24px; text-align: center; }
     .cta-band .lede { color: rgba(240, 235, 224, 0.75); margin: 0 auto 40px; text-align: center; }
 
+    /* APPLICATION */
+    .application {
+      background: var(--indigo);
+      color: var(--cream);
+      position: relative;
+      overflow: hidden;
+    }
+    .application::before {
+      content: ''; position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 24% 24%, rgba(200, 169, 104, 0.12) 0%, transparent 44%),
+        radial-gradient(circle at 76% 76%, rgba(200, 169, 104, 0.08) 0%, transparent 48%);
+    }
+    .application > .container { position: relative; z-index: 1; }
+    .application h2 { color: var(--cream); }
+    .application h1 {
+      font-family: var(--font-bricolage), sans-serif;
+      font-weight: 500;
+      font-size: clamp(42px, 6vw, 78px);
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+      color: var(--cream);
+      max-width: 860px;
+      margin-bottom: 24px;
+    }
+    .application h1 em {
+      font-family: var(--font-fraunces), serif;
+      font-style: italic;
+      font-weight: 400;
+      color: var(--gold);
+    }
+    .application .lede { color: rgba(240, 235, 224, 0.75); }
+    .apply-hero {
+      min-height: 100vh;
+      padding-top: 64px;
+    }
+    .apply-back {
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: 48px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: rgba(240, 235, 224, 0.7);
+      transition: color 0.2s;
+    }
+    .apply-back:hover { color: var(--gold); }
+    .application-form {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px 24px;
+      max-width: 960px;
+      background: var(--bone);
+      border: 1px solid rgba(240, 235, 224, 0.22);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+    }
+    .application-form .form-field label {
+      color: rgba(8, 13, 38, 0.62);
+    }
+    .application-form .form-field input,
+    .application-form .form-field select,
+    .application-form .form-field textarea {
+      color: var(--indigo);
+      border-bottom-color: rgba(8, 13, 38, 0.18);
+    }
+    .application-form .form-field input::placeholder {
+      color: rgba(8, 13, 38, 0.36);
+    }
+    .application-form .form-field input:focus,
+    .application-form .form-field select:focus,
+    .application-form .form-field textarea:focus {
+      border-bottom-color: var(--gold);
+    }
+    .application-form .form-field select option {
+      color: var(--indigo);
+    }
+    .application-form .full,
+    .application-form .form-submit,
+    .application-form .form-status {
+      grid-column: 1 / -1;
+    }
+    .phone-row {
+      display: grid;
+      grid-template-columns: minmax(150px, 0.42fr) 1fr;
+      gap: 16px;
+      align-items: end;
+    }
+    .social-fieldset {
+      border: 1px solid rgba(8, 13, 38, 0.12);
+      border-radius: 4px;
+      padding: 24px;
+    }
+    .social-fieldset legend {
+      padding: 0 8px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--gold-deep);
+    }
+    .social-fieldset p {
+      font-size: 13px;
+      color: rgba(8, 13, 38, 0.62);
+      margin-bottom: 20px;
+    }
+    .social-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px 24px;
+    }
+    .checkbox-group {
+      display: grid;
+      gap: 14px;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: rgba(8, 13, 38, 0.78);
+    }
+    .checkbox-group input {
+      width: 16px;
+      height: 16px;
+      margin-top: 3px;
+      accent-color: var(--gold);
+      flex: 0 0 auto;
+    }
+    .checkbox-group a {
+      color: var(--gold-deep);
+      border-bottom: 1px solid rgba(168, 136, 74, 0.45);
+    }
+    .form-error,
+    .form-status {
+      margin-top: 14px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .form-error { color: #a83224; }
+    .form-status { color: var(--gold-deep); }
+
     /* CONTACT */
     .contact { background: var(--bone-warm); }
     .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
@@ -864,7 +1022,7 @@
     .contact-block:last-child { border-bottom: none; }
     .contact-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--gold-deep); margin-bottom: 12px; }
     .contact-value {
-      font-family: 'Bricolage Grotesque';
+      font-family: var(--font-bricolage), sans-serif;
       font-weight: 500; font-size: 20px;
       letter-spacing: -0.02em; color: var(--indigo);
       line-height: 1.3;
@@ -876,7 +1034,7 @@
     .form-field input, .form-field select, .form-field textarea {
       width: 100%; background: transparent; border: none;
       border-bottom: 1px solid var(--rule);
-      padding: 12px 0; font-family: 'Inter';
+      padding: 12px 0; font-family: var(--font-inter), sans-serif;
       font-size: 15px; color: var(--indigo);
       transition: border-color 0.2s;
     }
@@ -903,12 +1061,12 @@
       border-bottom: 1px solid var(--indigo-line);
     }
     .footer-brand {
-      font-family: 'Bricolage Grotesque', sans-serif;
+      font-family: var(--font-bricolage), sans-serif;
       font-weight: 600; font-size: 56px;
       letter-spacing: -0.05em; line-height: 0.9;
       color: var(--cream); margin-bottom: 16px;
     }
-    .footer-tagline { font-family: 'Fraunces', serif; font-style: italic; font-size: 15px; line-height: 1.5; color: rgba(240, 235, 224, 0.65); max-width: 320px; }
+    .footer-tagline { font-family: var(--font-fraunces), serif; font-style: italic; font-size: 15px; line-height: 1.5; color: rgba(240, 235, 224, 0.65); max-width: 320px; }
     .footer-col h4 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--gold); margin-bottom: 20px; font-weight: 500; }
     .footer-col ul { list-style: none; padding: 0; }
     .footer-col li { margin-bottom: 12px; }
@@ -927,7 +1085,7 @@
       border-top: 1px solid var(--indigo-line);
       text-align: center; font-size: 11px;
       color: rgba(240, 235, 224, 0.4);
-      font-family: 'Fraunces', serif; font-style: italic;
+      font-family: var(--font-fraunces), serif; font-style: italic;
     }
     .footer-credit a { color: var(--gold); border-bottom: 1px solid rgba(200, 169, 104, 0.4); }
 
@@ -948,6 +1106,11 @@
       .footer-top { grid-template-columns: 1fr; gap: 40px; }
       .footer-bottom { flex-direction: column; align-items: flex-start; }
       .form { padding: 24px; }
+      .application-form,
+      .social-grid,
+      .phone-row {
+        grid-template-columns: 1fr;
+      }
       .vm-heading { font-size: 30px; }
       .developer-mark-text { font-size: 40px; }
       .brand-bar-word { font-size: 28px; }

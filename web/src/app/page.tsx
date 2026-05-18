@@ -1,8 +1,66 @@
 "use client";
 
-import { useEffect } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
+
+const siteName = "SICE - The South Indian Creators Economy";
+const siteUrl = "https://sice.media";
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${siteUrl}/#organization`,
+      name: siteName,
+      alternateName: "SICE",
+      url: siteUrl,
+      logo: `${siteUrl}/og-image.png`,
+      description:
+        "A media platform for Malayalam, Tamil, Telugu, and Kannada creators across South India.",
+      foundingDate: "2026",
+      areaServed: [
+        "Kerala",
+        "Tamil Nadu",
+        "Karnataka",
+        "Telangana",
+        "Andhra Pradesh",
+      ],
+      contactPoint: [
+        {
+          "@type": "ContactPoint",
+          email: "apply@sice.media",
+          contactType: "creator applications",
+          areaServed: "IN",
+        },
+        {
+          "@type": "ContactPoint",
+          email: "partners@sice.media",
+          contactType: "brand partnerships",
+          areaServed: "IN",
+        },
+      ],
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${siteUrl}/#website`,
+      name: siteName,
+      alternateName: "SICE",
+      url: siteUrl,
+      publisher: {
+        "@id": `${siteUrl}/#organization`,
+      },
+      inLanguage: "en-IN",
+    },
+  ],
+};
 
 export default function Home() {
+  const [contactStatus, setContactStatus] = useState("");
+
+  const handleContactSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setContactStatus("General enquiry form design complete. Backend connection will be added next.");
+  };
+
   useEffect(() => {
     // Nav background tightens on scroll
     const nav = document.getElementById('nav');
@@ -59,6 +117,12 @@ export default function Home() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
 
 
   <nav className="nav" id="nav">
@@ -70,7 +134,7 @@ export default function Home() {
         <a href="#chapters" className="nav-link">Chapters</a>
         <a href="#membership" className="nav-link">Membership</a>
         <a href="#editorial" className="nav-link">Editorial</a>
-        <a href="#contact" className="nav-cta">Apply</a>
+        <a href="/apply" className="nav-cta">Apply</a>
       </div>
       <button className="nav-toggle" aria-label="Open menu">☰</button>
     </div>
@@ -129,7 +193,7 @@ export default function Home() {
           <span>S</span><span>I</span><span>C</span><span>E</span>
         </div>
         <div className="hero-bottom-rule"></div>
-        <div className="hero-tagline">South Indian Creator Economy</div>
+        <div className="hero-tagline">South Indian<br />Creators Economy</div>
       </div>
 
       <div className="hero-statement">
@@ -141,7 +205,7 @@ export default function Home() {
         </div>
 
         <div className="hero-cta-row">
-          <a href="#membership" className="btn-primary">Apply for Membership</a>
+          <a href="/apply" className="btn-primary">Apply for Membership</a>
           <a href="#what" className="btn-ghost">What is SICE?</a>
         </div>
       </div>
@@ -160,12 +224,12 @@ export default function Home() {
         <div>
           <div className="stat-num">2026</div>
           <div className="stat-label">Founding Year</div>
-          <div className="stat-note">Charter open now</div>
+          <div className="stat-note">Applications open now</div>
         </div>
         <div>
           <div className="stat-num">100</div>
-          <div className="stat-label">Founding Seats</div>
-          <div className="stat-note">Permanent tier · limited</div>
+          <div className="stat-label">Membership Plan</div>
+          <div className="stat-note">Primary Membership</div>
         </div>
       </div>
     </div>
@@ -183,7 +247,7 @@ export default function Home() {
   <section className="what-is reveal" id="what">
     <div className="container">
       <div className="section-eyebrow">01 · About</div>
-      <h2>What is the <em>South Indian Creator Economy?</em></h2>
+      <h2>What is the <em>South Indian Creators Economy?</em></h2>
       <div className="what-grid">
         <div>
           <p className="lede">SICE is a regional media platform that exists to do three things well — publish South Indian creators, host them in person, and connect them to brand work that pays regional rates fairly.</p>
@@ -192,7 +256,7 @@ export default function Home() {
             <br/><br/>
             Most creator platforms treat South India as one segment of a national strategy. SICE is built the other way around — this region first, full stop. We work with creators whose audiences live in Kerala, Tamil Nadu, Karnataka, Telangana, and Andhra Pradesh, and with the diaspora that watches from the Gulf, Singapore, and beyond.
             <br/><br/>
-            We don't claim to solve every problem a creator has. We focus on three: getting the work seen, putting the right creator in front of the right brand, and creating room for creators to meet each other in real life.
+            We don&apos;t claim to solve every problem a creator has. We focus on three: getting the work seen, putting the right creator in front of the right brand, and creating room for creators to meet each other in real life.
           </p>
         </div>
         <ul className="what-list">
@@ -200,7 +264,7 @@ export default function Home() {
             <div className="what-list-num">01</div>
             <div className="what-list-content">
               <h3>Not an agency</h3>
-              <p>We don't represent creators on commission. The relationship is platform-to-creator, not agent-to-client.</p>
+              <p>We don&apos;t represent creators on commission. The relationship is platform-to-creator, not agent-to-client.</p>
             </div>
           </li>
           <li>
@@ -248,7 +312,7 @@ export default function Home() {
           <div>
             <div className="vm-eyebrow">— Mission</div>
             <div className="vm-heading">Build the platform that makes that vision real for working creators today.</div>
-            <p className="vm-body">Publish original editorial work that puts regional creators in front of brands and audiences who otherwise wouldn't see them. Host chapter meetups that turn isolated creators into a working network. Connect creators to brand partnerships negotiated at fair regional rates — not at rates set by Mumbai-based agencies who decide what regional audiences are worth.</p>
+            <p className="vm-body">Publish original editorial work that puts regional creators in front of brands and audiences who otherwise wouldn&apos;t see them. Host chapter meetups that turn isolated creators into a working network. Connect creators to brand partnerships negotiated at fair regional rates — not at rates set by Mumbai-based agencies who decide what regional audiences are worth.</p>
           </div>
           <div className="vm-stamp">In motion this year</div>
         </article>
@@ -266,7 +330,7 @@ export default function Home() {
       </div>
       <div className="brand-bar-word">SICE</div>
       <div className="brand-bar-rule-bottom"></div>
-      <div className="brand-bar-tag">South Indian Creator Economy</div>
+      <div className="brand-bar-tag">South Indian Creators Economy</div>
     </div>
   </section>
 
@@ -324,7 +388,7 @@ export default function Home() {
     <div className="container">
       <div className="section-eyebrow light">04 · What we do</div>
       <h2 className="light">Three jobs. <em>Done well.</em></h2>
-      <p className="lede light">A media platform's value comes from doing a few things consistently — not many things occasionally. These are ours.</p>
+      <p className="lede light">A media platform&apos;s value comes from doing a few things consistently — not many things occasionally. These are ours.</p>
       <div className="pillars-grid">
         <article className="pillar">
           <div className="pillar-num">Pillar 01</div>
@@ -350,7 +414,7 @@ export default function Home() {
     <div className="container">
       <div className="section-eyebrow">05 · Chapters</div>
       <h2>Five cities. <em>One platform.</em></h2>
-      <p className="lede">Every chapter has a founding home and a working membership. New chapters open when there's demand on the ground — not before.</p>
+      <p className="lede">Every chapter has a founding home and a working membership. New chapters open when there&apos;s demand on the ground — not before.</p>
       <div className="chapters-grid">
         <article className="chapter-card">
           <div className="chapter-meta">Headquarters · Kerala</div>
@@ -398,46 +462,22 @@ export default function Home() {
   <section className="membership reveal" id="membership">
     <div className="container">
       <div className="section-eyebrow">06 · Membership</div>
-      <h2>Three tiers. <em>One platform.</em></h2>
-      <p className="lede">Membership is application-based, not transactional. We don't sell access. We invite working creators and offer them the platform's resources in exchange for a small annual contribution.</p>
+      <h2>Primary Membership. <em>One platform.</em></h2>
+      <p className="lede">Membership is application-based, not transactional. We don&apos;t sell access. We invite working creators and offer them the platform&apos;s resources through one clear membership plan.</p>
       <div className="membership-grid">
-        <article className="tier">
-          <div className="tier-tag">Tier 01</div>
-          <h3>Associate</h3>
-          <div className="tier-price">By application · Free first year for founding cohort</div>
+        <article className="tier primary-membership">
+          <div className="tier-tag">Membership Plan</div>
+          <h3>Primary Membership</h3>
+          <div className="tier-price">By application · Annual contribution</div>
           <ul className="tier-list">
             <li>Listed in the SICE creator directory</li>
             <li>Access to monthly chapter meetups</li>
-            <li>Quarterly editorial submission window</li>
-            <li>Access to peer-review sessions</li>
-          </ul>
-          <a href="#contact" className="btn-primary" style={{background: "var(--indigo)", color: "var(--cream)"}}>Apply</a>
-        </article>
-        <article className="tier featured">
-          <div className="tier-tag">Tier 02 · Recommended</div>
-          <h3>Member</h3>
-          <div className="tier-price">By application · Annual contribution</div>
-          <ul className="tier-list">
-            <li>Everything in Associate</li>
             <li>Priority editorial feature consideration</li>
             <li>Access to brand-partnership marketplace</li>
             <li>Member badge for use on owned channels</li>
             <li>One free workshop per quarter</li>
           </ul>
-          <a href="#contact" className="btn-primary">Apply</a>
-        </article>
-        <article className="tier">
-          <div className="tier-tag">Tier 03 · Limited to 100</div>
-          <h3>Charter</h3>
-          <div className="tier-price">Founding cohort only · Permanent</div>
-          <ul className="tier-list">
-            <li>Everything in Member, permanently</li>
-            <li>Permanent founding-member status</li>
-            <li>Input on platform direction</li>
-            <li>First access to every new chapter</li>
-            <li>Named acknowledgement on the platform</li>
-          </ul>
-          <a href="#contact" className="btn-primary" style={{background: "var(--indigo)", color: "var(--cream)"}}>Apply for Charter</a>
+          <a href="/apply" className="btn-primary">Apply</a>
         </article>
       </div>
     </div>
@@ -492,11 +532,11 @@ export default function Home() {
     <div className="container">
       <div className="section-eyebrow">08 · Editorial</div>
       <h2>What we publish. <em>Read first.</em></h2>
-      <p className="lede">Editorial isn't a side project — it's the main one. Every feature is original writing, regionally specific, and built to be read end-to-end.</p>
+      <p className="lede">Editorial isn&apos;t a side project — it&apos;s the main one. Every feature is original writing, regionally specific, and built to be read end-to-end.</p>
       <article className="editorial-feature">
         <div className="article-tag">Featured · Kerala</div>
         <h3>How a Calicut-based satirist built a 600,000-strong Malayalam audience without leaving Kerala.</h3>
-        <p className="article-lede">A profile of one of the region's most quietly successful Malayalam-language creators — and what regional creators everywhere can learn from her playbook.</p>
+        <p className="article-lede">A profile of one of the region&apos;s most quietly successful Malayalam-language creators — and what regional creators everywhere can learn from her playbook.</p>
         <div className="article-meta">By the SICE Editorial Desk · 7 minute read · May 2026</div>
       </article>
       <div className="editorial-list">
@@ -520,7 +560,7 @@ export default function Home() {
         </article>
         <article className="editorial-card">
           <div className="article-tag">Karnataka</div>
-          <h3>Kannada gaming is having its moment. The brands aren't ready.</h3>
+          <h3>Kannada gaming is having its moment. The brands aren&apos;t ready.</h3>
           <p>A market analysis of Kannada gaming creators and the slow pace of regional brand spend.</p>
           <div className="article-meta">8 minute read · April 2026</div>
         </article>
@@ -552,11 +592,11 @@ export default function Home() {
         </details>
         <details className="faq-item">
           <summary>Is SICE a talent agency?</summary>
-          <p>No. We don't represent creators for commissions. We publish their work, host events, and facilitate brand connections — but the relationship is platform-to-creator, not agent-to-client. Creators retain full control of their work.</p>
+          <p>No. We don&apos;t represent creators for commissions. We publish their work, host events, and facilitate brand connections — but the relationship is platform-to-creator, not agent-to-client. Creators retain full control of their work.</p>
         </details>
         <details className="faq-item">
           <summary>How does the brand-partnership marketplace work?</summary>
-          <p>Brands brief us on what they're looking for. We match the brief to members based on audience fit, voice, and creative direction — not just follower count. Members opt in to each pitch individually. We don't take a commission on the deal.</p>
+          <p>Brands brief us on what they&apos;re looking for. We match the brief to members based on audience fit, voice, and creative direction — not just follower count. Members opt in to each pitch individually. We don&apos;t take a commission on the deal.</p>
         </details>
         <details className="faq-item">
           <summary>Where is SICE based?</summary>
@@ -566,22 +606,12 @@ export default function Home() {
     </div>
   </section>
 
-  {/* CTA */}
-  <section className="cta-band reveal">
-    <div className="container">
-      <div className="section-eyebrow light">10 · Apply</div>
-      <h2 className="light">Founding charter <em>is open.</em></h2>
-      <p className="lede light">100 permanent seats. After that, charter membership closes for good. Applications reviewed weekly.</p>
-      <a href="#contact" className="btn-primary">Apply Now</a>
-    </div>
-  </section>
-
   {/* CONTACT */}
   <section className="contact reveal" id="contact">
     <div className="container">
       <div className="section-eyebrow">11 · Contact</div>
-      <h2>Reach out. <em>One channel per ask.</em></h2>
-      <p className="lede">Different requests, different inboxes. Use the right one — we read every message.</p>
+      <h2>Reach out. <em>General enquiry and support.</em></h2>
+      <p className="lede">Use this form for general enquiries and support requests. Membership applications should use the separate application page.</p>
       <div className="contact-grid">
         <div className="contact-info">
           <div className="contact-block">
@@ -605,7 +635,7 @@ export default function Home() {
             <div className="contact-value"><a href="https://elevatexnow.com" target="_blank" rel="noopener">ElevateX Now →</a></div>
           </div>
         </div>
-        <form className="form" onSubmit={(e) => { e.preventDefault(); alert('Form connected to backend on launch.'); }}>
+        <form className="form" onSubmit={handleContactSubmit}>
           <div className="form-field">
             <label htmlFor="name">Name</label>
             <input type="text" id="name" name="name" required />
@@ -615,12 +645,12 @@ export default function Home() {
             <input type="email" id="email" name="email" required />
           </div>
           <div className="form-field">
-            <label htmlFor="reason">I'm reaching out as a</label>
+            <label htmlFor="reason">Request type</label>
             <select id="reason" name="reason" required>
               <option value="">Select one</option>
-              <option value="creator">Creator applying for membership</option>
-              <option value="brand">Brand looking for partnership</option>
-              <option value="press">Press or media</option>
+              <option value="general">General enquiry</option>
+              <option value="support">Support</option>
+              <option value="press">Press or editorial</option>
               <option value="other">Something else</option>
             </select>
           </div>
@@ -629,6 +659,7 @@ export default function Home() {
             <textarea id="message" name="message" required></textarea>
           </div>
           <button type="submit" className="form-submit">Send Message</button>
+          {contactStatus && <div className="form-status">{contactStatus}</div>}
         </form>
       </div>
     </div>
@@ -640,7 +671,7 @@ export default function Home() {
     <div className="footer-top">
       <div>
         <div className="footer-brand">SICE</div>
-        <p className="footer-tagline">A media platform for South Indian creators. Built here. Published in four languages.</p>
+        <p className="footer-tagline">SICE - The South Indian Creators Economy. A media platform for South Indian creators, built here and published in four languages.</p>
       </div>
       <div className="footer-col">
         <h4>Platform</h4>
@@ -658,7 +689,7 @@ export default function Home() {
           <li><a href="#gov-context">Creator Economy Bill</a></li>
           <li><a href="#developer">About ElevateX</a></li>
           <li><a href="#contact">Contact</a></li>
-          <li><a href="#contact">Apply</a></li>
+          <li><a href="/apply">Apply</a></li>
         </ul>
       </div>
       <div className="footer-col">
