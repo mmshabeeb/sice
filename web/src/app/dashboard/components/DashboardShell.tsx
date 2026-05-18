@@ -23,7 +23,7 @@ import {
   Menu,
   ChevronLeft,
 } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { createClient } from '@/lib/supabase/client';
 
 /* ------------------------------------------------------------------ */
@@ -258,21 +258,22 @@ export default function DashboardShell({
         <SidebarContent {...sidebarProps} />
       </aside>
 
+      {/* Mobile menu button — controlled separately to avoid asChild compat issues */}
+      <button
+        className="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-9 h-9 rounded-lg"
+        style={{
+          background: 'rgba(240,235,224,0.08)',
+          border: '1px solid rgba(240,235,224,0.12)',
+          color: '#F0EBE0',
+        }}
+        aria-label="Open navigation"
+        onClick={() => setMobileOpen(true)}
+      >
+        <Menu size={18} />
+      </button>
+
       {/* Mobile sidebar via Sheet */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetTrigger asChild>
-          <button
-            className="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-9 h-9 rounded-lg"
-            style={{
-              background: 'rgba(240,235,224,0.08)',
-              border: '1px solid rgba(240,235,224,0.12)',
-              color: '#F0EBE0',
-            }}
-            aria-label="Open navigation"
-          >
-            <Menu size={18} />
-          </button>
-        </SheetTrigger>
         <SheetContent
           side="left"
           className="p-0 w-60 border-0"
