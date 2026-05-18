@@ -1,0 +1,2 @@
+# Exclude static HTML prototype from repository language statistics
+prototype.html linguist-detectable=false
