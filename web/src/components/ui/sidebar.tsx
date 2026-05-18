@@ -265,9 +265,8 @@ function SidebarTrigger({
       variant="ghost"
       size="icon-sm"
       className={cn(className)}
-      onClick={(event) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onClick?.(event as any)
+      onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(event as Parameters<NonNullable<typeof onClick>>[0])
         toggleSidebar()
       }}
       {...props}
