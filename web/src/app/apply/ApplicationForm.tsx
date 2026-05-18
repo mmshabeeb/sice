@@ -15,21 +15,15 @@ const countryCodes = [
 export default function ApplicationForm() {
   const [socialError, setSocialError] = useState("");
   const [status, setStatus] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const socialFields = [
-      "facebookUrl",
-      "instagramUrl",
-      "youtubeUrl",
-      "xUrl",
-      "linkedinUrl",
-    ];
-    const hasSocialUrl = socialFields.some((field) =>
-      String(formData.get(field) || "").trim()
-    );
+    const socialFields = ["facebookUrl", "instagramUrl", "youtubeUrl", "xUrl", "linkedinUrl"];
+    const hasSocialUrl = socialFields.some((field) => String(formData.get(field) || "").trim());
 
     if (!hasSocialUrl) {
       setSocialError("Add at least one social media URL.");
@@ -38,8 +32,50 @@ export default function ApplicationForm() {
     }
 
     setSocialError("");
-    setStatus("Application form design complete. Backend connection will be added next.");
+    setSubmitting(true);
+    setStatus("");
+
+    try {
+      const res = await fetch("/api/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: formData.get("fullName"),
+          contactCountryCode: formData.get("contactCountryCode"),
+          contactNumber: formData.get("contactNumber"),
+          whatsappCountryCode: formData.get("whatsappCountryCode"),
+          whatsappNumber: formData.get("whatsappNumber"),
+          email: formData.get("email"),
+          facebookUrl: formData.get("facebookUrl"),
+          instagramUrl: formData.get("instagramUrl"),
+          youtubeUrl: formData.get("youtubeUrl"),
+          xUrl: formData.get("xUrl"),
+          linkedinUrl: formData.get("linkedinUrl"),
+        }),
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        setSubmitted(true);
+        setStatus("Application received. We will review it and be in touch via email.");
+      } else {
+        setStatus(json.error || "Something went wrong. Please try again or email apply@sice.media");
+      }
+    } catch {
+      setStatus("Network error. Please try again or email apply@sice.media");
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (submitted) {
+    return (
+      <div className="form-success">
+        <p>Application received. We will review it and be in touch via email.</p>
+      </div>
+    );
+  }
 
   return (
     <form className="form application-form" onSubmit={handleSubmit}>
@@ -128,7 +164,9 @@ export default function ApplicationForm() {
           <span>I agree to receive emails and newsletters from SICE.</span>
         </label>
       </div>
-      <button type="submit" className="form-submit">Submit Application</button>
+      <button type="submit" className="form-submit" disabled={submitting}>
+        {submitting ? "Submitting…" : "Submit Application"}
+      </button>
       {status && <div className="form-status">{status}</div>}
     </form>
   );

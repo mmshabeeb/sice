@@ -21,7 +21,7 @@ export default function ApplyPage() {
           <h1>Primary Membership <em>application.</em></h1>
           <p className="lede light">
             Complete the details below to apply for SICE Primary Membership.
-            The backend connection will be added in the next step.
+            We review all applications and respond via email.
           </p>
           <ApplicationForm />
         </div>
