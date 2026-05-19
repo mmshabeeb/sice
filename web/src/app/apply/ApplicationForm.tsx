@@ -57,29 +57,25 @@ export default function ApplicationForm() {
     setVerificationError(null);
     setSuccessMessage(null);
     try {
-      if (isMockFirebase) {
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        setGoogleEmail("mock.creator@sice.media");
-        setGoogleName("Mock Creator");
-        setFullName("Mock Creator");
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      const result = await signInWithPopup(auth, provider);
+      if (result.user && result.user.email) {
+        setGoogleEmail(result.user.email);
+        const name = result.user.displayName || "";
+        setGoogleName(name);
+        setFullName(name);
         setSuccessMessage("Google account connected successfully!");
       } else {
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: "select_account" });
-        const result = await signInWithPopup(auth, provider);
-        if (result.user && result.user.email) {
-          setGoogleEmail(result.user.email);
-          const name = result.user.displayName || "";
-          setGoogleName(name);
-          setFullName(name);
-          setSuccessMessage("Google account connected successfully!");
-        } else {
-          throw new Error("Could not retrieve email from Google login.");
-        }
+        throw new Error("Could not retrieve email from Google login.");
       }
     } catch (err: any) {
       console.error(err);
-      setVerificationError(err.message || "Google authentication failed.");
+      let errMsg = err.message || "Google authentication failed.";
+      if (err.code === "auth/unauthorized-domain") {
+        errMsg = "Unauthorized Domain: Please authorize this domain (e.g. 'localhost') in your Firebase Console under Authentication -> Settings -> Authorized Domains.";
+      }
+      setVerificationError(errMsg);
     } finally {
       setGoogleLoading(false);
     }
@@ -95,25 +91,23 @@ export default function ApplicationForm() {
     setSuccessMessage(null);
     const fullPhone = `${selectedCountryCode}${phoneInput}`;
     try {
-      if (isMockFirebase) {
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        setOtpSent(true);
-        setSuccessMessage(`OTP sent to ${fullPhone} successfully! (For Demo, enter 123456)`);
-      } else {
-        if (!recaptchaVerifierRef.current) {
-          recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
-            size: "invisible",
-            callback: () => {}
-          });
-        }
-        const confirmation = await signInWithPhoneNumber(auth, fullPhone, recaptchaVerifierRef.current);
-        setConfirmationResult(confirmation);
-        setOtpSent(true);
-        setSuccessMessage(`Verification code sent to ${fullPhone} successfully!`);
+      if (!recaptchaVerifierRef.current) {
+        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
+          size: "invisible",
+          callback: () => {}
+        });
       }
+      const confirmation = await signInWithPhoneNumber(auth, fullPhone, recaptchaVerifierRef.current);
+      setConfirmationResult(confirmation);
+      setOtpSent(true);
+      setSuccessMessage(`Verification code sent to ${fullPhone} successfully!`);
     } catch (err: any) {
       console.error(err);
-      setVerificationError(err.message || "Failed to send OTP code. Please try again.");
+      let errMsg = err.message || "Failed to send OTP code. Please try again.";
+      if (err.code === "auth/unauthorized-domain") {
+        errMsg = "Unauthorized Domain: Please authorize this domain (e.g. 'localhost') in your Firebase Console under Authentication -> Settings -> Authorized Domains.";
+      }
+      setVerificationError(errMsg);
       if (recaptchaVerifierRef.current) {
         recaptchaVerifierRef.current.clear();
         recaptchaVerifierRef.current = null;
@@ -133,34 +127,23 @@ export default function ApplicationForm() {
     setSuccessMessage(null);
     const fullPhone = `${selectedCountryCode}${phoneInput}`;
     try {
-      if (isMockFirebase) {
-        await new Promise((resolve) => setTimeout(resolve, 600));
-        if (otpCode === "123456") {
-          setSmsPhoneNumber(phoneInput);
+      if (!confirmationResult) {
+        throw new Error("No active verification session. Please request OTP again.");
+      }
+      const result = await confirmationResult.confirm(otpCode);
+      if (result.user) {
+        const verifiedE164 = result.user.phoneNumber || fullPhone;
+        const matchedCountry = countryCodes.find((c) => verifiedE164.startsWith(c.value));
+        if (matchedCountry) {
+          setSmsCountryCode(matchedCountry.value);
+          setSmsPhoneNumber(verifiedE164.substring(matchedCountry.value.length));
+        } else {
           setSmsCountryCode(selectedCountryCode);
-          setSuccessMessage("Phone number verified successfully!");
-        } else {
-          throw new Error("Invalid OTP code. Please enter 123456.");
+          setSmsPhoneNumber(verifiedE164.replace(selectedCountryCode, ""));
         }
+        setSuccessMessage("Phone number verified successfully!");
       } else {
-        if (!confirmationResult) {
-          throw new Error("No active verification session. Please request OTP again.");
-        }
-        const result = await confirmationResult.confirm(otpCode);
-        if (result.user) {
-          const verifiedE164 = result.user.phoneNumber || fullPhone;
-          const matchedCountry = countryCodes.find((c) => verifiedE164.startsWith(c.value));
-          if (matchedCountry) {
-            setSmsCountryCode(matchedCountry.value);
-            setSmsPhoneNumber(verifiedE164.substring(matchedCountry.value.length));
-          } else {
-            setSmsCountryCode(selectedCountryCode);
-            setSmsPhoneNumber(verifiedE164.replace(selectedCountryCode, ""));
-          }
-          setSuccessMessage("Phone number verified successfully!");
-        } else {
-          throw new Error("SMS verification failed.");
-        }
+        throw new Error("SMS verification failed.");
       }
     } catch (err: any) {
       console.error(err);
@@ -182,6 +165,16 @@ export default function ApplicationForm() {
       recaptchaVerifierRef.current.clear();
       recaptchaVerifierRef.current = null;
     }
+  };
+
+  const handleDemoBypass = () => {
+    setGoogleEmail("demo.creator@sice.media");
+    setGoogleName("Demo Creator");
+    setFullName("Demo Creator");
+    setSmsPhoneNumber("9876543210");
+    setSmsCountryCode("+91");
+    setSuccessMessage("Identity verified with offline demo credentials!");
+    setVerificationError(null);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -554,6 +547,43 @@ export default function ApplicationForm() {
         >
           Proceed to Application Form
         </button>
+
+        {/* Offline Demo Bypass option */}
+        {isMockFirebase && (
+          <div style={{
+            marginTop: 20,
+            paddingTop: 16,
+            borderTop: "1px dashed rgba(8, 13, 38, 0.12)",
+            textAlign: "center",
+          }}>
+            <button
+              type="button"
+              onClick={handleDemoBypass}
+              style={{
+                background: "rgba(200, 169, 104, 0.08)",
+                border: "1px dashed var(--gold-deep)",
+                color: "var(--gold-deep)",
+                borderRadius: 6,
+                padding: "8px 16px",
+                fontSize: 11,
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                width: "100%",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(200, 169, 104, 0.15)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(200, 169, 104, 0.08)";
+              }}
+            >
+              ⚡ Bypass Verification (Offline Demo Mode)
+            </button>
+          </div>
+        )}
       </div>
     );
   }
