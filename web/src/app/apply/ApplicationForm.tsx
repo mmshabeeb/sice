@@ -1,7 +1,15 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useRef } from "react";
 import Link from "next/link";
+import { 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  RecaptchaVerifier, 
+  signInWithPhoneNumber,
+  type ConfirmationResult
+} from "firebase/auth";
+import { auth } from "@/lib/firebase/client";
 
 const countryCodes = [
   { label: "India +91", value: "+91" },
@@ -13,10 +21,168 @@ const countryCodes = [
 ];
 
 export default function ApplicationForm() {
+  // Verification states
+  const [googleEmail, setGoogleEmail] = useState<string | null>(null);
+  const [googleName, setGoogleName] = useState<string | null>(null);
+  const [smsPhoneNumber, setSmsPhoneNumber] = useState<string | null>(null);
+  const [smsCountryCode, setSmsCountryCode] = useState<string | null>(null);
+
+  const [step, setStep] = useState<"verify" | "form">("verify");
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [smsLoading, setSmsLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [phoneInput, setPhoneInput] = useState("");
+  const [selectedCountryCode, setSelectedCountryCode] = useState("+91");
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Form submission states
+  const [fullName, setFullName] = useState("");
   const [socialError, setSocialError] = useState("");
   const [status, setStatus] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+
+  // Check if Firebase is using mock key
+  const isMockFirebase = 
+    !process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 
+    process.env.NEXT_PUBLIC_FIREBASE_API_KEY === "mock-api-key-for-prerendering";
+
+  const handleGoogleVerify = async () => {
+    setGoogleLoading(true);
+    setVerificationError(null);
+    setSuccessMessage(null);
+    try {
+      if (isMockFirebase) {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        setGoogleEmail("mock.creator@sice.media");
+        setGoogleName("Mock Creator");
+        setFullName("Mock Creator");
+        setSuccessMessage("Google account connected successfully!");
+      } else {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: "select_account" });
+        const result = await signInWithPopup(auth, provider);
+        if (result.user && result.user.email) {
+          setGoogleEmail(result.user.email);
+          const name = result.user.displayName || "";
+          setGoogleName(name);
+          setFullName(name);
+          setSuccessMessage("Google account connected successfully!");
+        } else {
+          throw new Error("Could not retrieve email from Google login.");
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      setVerificationError(err.message || "Google authentication failed.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleSendOtp = async () => {
+    if (!phoneInput || !/^[0-9]{7,15}$/.test(phoneInput)) {
+      setVerificationError("Please enter a valid phone number (7 to 15 digits).");
+      return;
+    }
+    setSmsLoading(true);
+    setVerificationError(null);
+    setSuccessMessage(null);
+    const fullPhone = `${selectedCountryCode}${phoneInput}`;
+    try {
+      if (isMockFirebase) {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        setOtpSent(true);
+        setSuccessMessage(`OTP sent to ${fullPhone} successfully! (For Demo, enter 123456)`);
+      } else {
+        if (!recaptchaVerifierRef.current) {
+          recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
+            size: "invisible",
+            callback: () => {}
+          });
+        }
+        const confirmation = await signInWithPhoneNumber(auth, fullPhone, recaptchaVerifierRef.current);
+        setConfirmationResult(confirmation);
+        setOtpSent(true);
+        setSuccessMessage(`Verification code sent to ${fullPhone} successfully!`);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setVerificationError(err.message || "Failed to send OTP code. Please try again.");
+      if (recaptchaVerifierRef.current) {
+        recaptchaVerifierRef.current.clear();
+        recaptchaVerifierRef.current = null;
+      }
+    } finally {
+      setSmsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode || otpCode.length !== 6) {
+      setVerificationError("Please enter a valid 6-digit OTP code.");
+      return;
+    }
+    setSmsLoading(true);
+    setVerificationError(null);
+    setSuccessMessage(null);
+    const fullPhone = `${selectedCountryCode}${phoneInput}`;
+    try {
+      if (isMockFirebase) {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        if (otpCode === "123456") {
+          setSmsPhoneNumber(phoneInput);
+          setSmsCountryCode(selectedCountryCode);
+          setSuccessMessage("Phone number verified successfully!");
+        } else {
+          throw new Error("Invalid OTP code. Please enter 123456.");
+        }
+      } else {
+        if (!confirmationResult) {
+          throw new Error("No active verification session. Please request OTP again.");
+        }
+        const result = await confirmationResult.confirm(otpCode);
+        if (result.user) {
+          const verifiedE164 = result.user.phoneNumber || fullPhone;
+          const matchedCountry = countryCodes.find((c) => verifiedE164.startsWith(c.value));
+          if (matchedCountry) {
+            setSmsCountryCode(matchedCountry.value);
+            setSmsPhoneNumber(verifiedE164.substring(matchedCountry.value.length));
+          } else {
+            setSmsCountryCode(selectedCountryCode);
+            setSmsPhoneNumber(verifiedE164.replace(selectedCountryCode, ""));
+          }
+          setSuccessMessage("Phone number verified successfully!");
+        } else {
+          throw new Error("SMS verification failed.");
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      setVerificationError(err.message || "Incorrect verification code. Please try again.");
+    } finally {
+      setSmsLoading(false);
+    }
+  };
+
+  const handleResetSms = () => {
+    setOtpSent(false);
+    setOtpCode("");
+    setSmsPhoneNumber(null);
+    setSmsCountryCode(null);
+    setConfirmationResult(null);
+    setVerificationError(null);
+    setSuccessMessage(null);
+    if (recaptchaVerifierRef.current) {
+      recaptchaVerifierRef.current.clear();
+      recaptchaVerifierRef.current = null;
+    }
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -77,32 +243,374 @@ export default function ApplicationForm() {
     );
   }
 
+  // Identity Verification Step
+  if (step === "verify") {
+    return (
+      <div 
+        className="form application-form" 
+        style={{ 
+          display: "block", 
+          maxWidth: 600, 
+          margin: "0 auto", 
+          padding: 32, 
+          borderRadius: 8,
+          boxSizing: "border-box"
+        }}
+      >
+        <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--indigo)", marginBottom: 8, letterSpacing: "-0.02em" }}>
+          Identity Verification
+        </h2>
+        <p style={{ fontSize: 13, color: "rgba(8, 13, 38, 0.6)", marginBottom: 24, lineHeight: 1.5 }}>
+          Before proceeding with the membership application, please verify your identity using Google and SMS OTP.
+        </p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Google Auth status */}
+          <div style={{
+            background: "rgba(8, 13, 38, 0.03)",
+            border: "1px solid rgba(8, 13, 38, 0.08)",
+            borderRadius: 6,
+            padding: 20,
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--indigo)" }}>
+                1. Google Verification
+              </span>
+              {googleEmail ? (
+                <span style={{ fontSize: 10, background: "rgba(34, 197, 94, 0.1)", color: "#16a34a", padding: "2px 8px", borderRadius: 100, fontWeight: 600 }}>
+                  ✓ Connected
+                </span>
+              ) : (
+                <span style={{ fontSize: 10, background: "rgba(8, 13, 38, 0.05)", color: "rgba(8, 13, 38, 0.6)", padding: "2px 8px", borderRadius: 100, fontWeight: 600 }}>
+                  Required
+                </span>
+              )}
+            </div>
+
+            {googleEmail ? (
+              <div style={{ fontSize: 14, color: "var(--indigo)", fontWeight: 500 }}>
+                Verified Email: <strong style={{ color: "var(--indigo)" }}>{googleEmail}</strong>
+              </div>
+            ) : (
+              <div>
+                <p style={{ fontSize: 12, color: "rgba(8, 13, 38, 0.55)", marginBottom: 14 }}>
+                  Connect your Google account to verify your primary email address.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleGoogleVerify}
+                  disabled={googleLoading}
+                  style={{
+                    background: "var(--indigo)",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 4,
+                    padding: "9px 16px",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: googleLoading ? "not-allowed" : "pointer",
+                    transition: "opacity 0.2s",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.9"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+                >
+                  {googleLoading ? "Connecting..." : "Verify with Google"}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* SMS Verification status */}
+          <div style={{
+            background: "rgba(8, 13, 38, 0.03)",
+            border: "1px solid rgba(8, 13, 38, 0.08)",
+            borderRadius: 6,
+            padding: 20,
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--indigo)" }}>
+                2. SMS OTP Verification
+              </span>
+              {smsPhoneNumber ? (
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span style={{ fontSize: 10, background: "rgba(34, 197, 94, 0.1)", color: "#16a34a", padding: "2px 8px", borderRadius: 100, fontWeight: 600 }}>
+                    ✓ Verified
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleResetSms}
+                    style={{ fontSize: 11, background: "transparent", border: "none", color: "rgba(8, 13, 38, 0.4)", textDecoration: "underline", cursor: "pointer" }}
+                  >
+                    Change
+                  </button>
+                </div>
+              ) : (
+                <span style={{ fontSize: 10, background: "rgba(8, 13, 38, 0.05)", color: "rgba(8, 13, 38, 0.6)", padding: "2px 8px", borderRadius: 100, fontWeight: 600 }}>
+                  Required
+                </span>
+              )}
+            </div>
+
+            {smsPhoneNumber ? (
+              <div style={{ fontSize: 14, color: "var(--indigo)", fontWeight: 500 }}>
+                Verified Mobile: <strong style={{ color: "var(--indigo)" }}>{smsCountryCode} {smsPhoneNumber}</strong>
+              </div>
+            ) : (
+              <div>
+                {!otpSent ? (
+                  <div>
+                    <p style={{ fontSize: 12, color: "rgba(8, 13, 38, 0.55)", marginBottom: 14 }}>
+                      Verify your mobile number to ensure secure and direct communication.
+                    </p>
+                    <div style={{ display: "flex", gap: 8, maxWidth: "100%" }}>
+                      <select
+                        value={selectedCountryCode}
+                        onChange={(e) => setSelectedCountryCode(e.target.value)}
+                        style={{
+                          background: "white",
+                          border: "1px solid rgba(8, 13, 38, 0.15)",
+                          borderRadius: 4,
+                          padding: "8px 12px",
+                          fontSize: 13,
+                          color: "var(--indigo)",
+                          width: "35%",
+                        }}
+                      >
+                        {countryCodes.map((country) => (
+                          <option key={country.value} value={country.value}>{country.label}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="tel"
+                        value={phoneInput}
+                        onChange={(e) => setPhoneInput(e.target.value.replace(/[^0-9]/g, ""))}
+                        placeholder="9876543210"
+                        style={{
+                          background: "white",
+                          border: "1px solid rgba(8, 13, 38, 0.15)",
+                          borderRadius: 4,
+                          padding: "8px 12px",
+                          fontSize: 13,
+                          color: "var(--indigo)",
+                          flex: 1,
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      disabled={smsLoading || !phoneInput}
+                      style={{
+                        background: "var(--indigo)",
+                        color: "white",
+                        border: "none",
+                        borderRadius: 4,
+                        padding: "9px 16px",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: smsLoading || !phoneInput ? "not-allowed" : "pointer",
+                        marginTop: 14,
+                        transition: "opacity 0.2s",
+                        opacity: !phoneInput ? 0.5 : 1,
+                      }}
+                      onMouseEnter={(e) => { if (phoneInput) e.currentTarget.style.opacity = "0.9"; }}
+                      onMouseLeave={(e) => { if (phoneInput) e.currentTarget.style.opacity = "1"; }}
+                    >
+                      {smsLoading ? "Sending Code..." : "Send Verification Code"}
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <p style={{ fontSize: 12, color: "rgba(8, 13, 38, 0.55)", marginBottom: 14 }}>
+                      We sent a 6-digit OTP to <strong>{selectedCountryCode} {phoneInput}</strong>. Enter it below.
+                    </p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+                      <input
+                        type="text"
+                        maxLength={6}
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ""))}
+                        placeholder="123456"
+                        style={{
+                          background: "white",
+                          border: "1px solid rgba(8, 13, 38, 0.15)",
+                          borderRadius: 4,
+                          padding: "8px 12px",
+                          fontSize: 14,
+                          fontFamily: "monospace",
+                          color: "var(--indigo)",
+                          width: 120,
+                          textAlign: "center",
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVerifyOtp}
+                        disabled={smsLoading || otpCode.length !== 6}
+                        style={{
+                          background: "var(--gold-deep)",
+                          color: "white",
+                          border: "none",
+                          borderRadius: 4,
+                          padding: "8px 16px",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: smsLoading || otpCode.length !== 6 ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        {smsLoading ? "Verifying..." : "Verify Code"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleResetSms}
+                        style={{
+                          background: "transparent",
+                          border: "none",
+                          color: "rgba(8, 13, 38, 0.5)",
+                          fontSize: 12,
+                          textDecoration: "underline",
+                          cursor: "pointer",
+                          padding: "4px 8px",
+                        }}
+                      >
+                        Back
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {verificationError && (
+          <div style={{
+            background: "rgba(239, 68, 68, 0.08)",
+            border: "1px solid rgba(239, 68, 68, 0.15)",
+            borderRadius: 6,
+            padding: "10px 14px",
+            fontSize: 12.5,
+            color: "#b91c1c",
+            marginTop: 20,
+          }}>
+            ⚠️ {verificationError}
+          </div>
+        )}
+
+        {successMessage && (
+          <div style={{
+            background: "rgba(34, 197, 94, 0.08)",
+            border: "1px solid rgba(34, 197, 94, 0.15)",
+            borderRadius: 6,
+            padding: "10px 14px",
+            fontSize: 12.5,
+            color: "#15803d",
+            marginTop: 20,
+          }}>
+            ✓ {successMessage}
+          </div>
+        )}
+
+        {/* Recaptcha hidden container */}
+        <div id="recaptcha-container"></div>
+
+        <button
+          type="button"
+          onClick={() => setStep("form")}
+          disabled={!googleEmail || !smsPhoneNumber}
+          style={{
+            background: googleEmail && smsPhoneNumber ? "var(--gold)" : "rgba(8, 13, 38, 0.06)",
+            color: googleEmail && smsPhoneNumber ? "var(--indigo)" : "rgba(8, 13, 38, 0.35)",
+            border: "none",
+            borderRadius: 4,
+            padding: "12px 24px",
+            fontSize: 12,
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: "0.15em",
+            cursor: googleEmail && smsPhoneNumber ? "pointer" : "not-allowed",
+            transition: "all 0.3s",
+            width: "100%",
+            marginTop: 28,
+            boxShadow: googleEmail && smsPhoneNumber ? "0 8px 16px rgba(200, 169, 104, 0.2)" : "none",
+          }}
+        >
+          Proceed to Application Form
+        </button>
+      </div>
+    );
+  }
+
+  // Application Form Step
   return (
     <form className="form application-form" onSubmit={handleSubmit}>
       <div className="form-field full">
         <label htmlFor="application-full-name">Full name</label>
-        <input type="text" id="application-full-name" name="fullName" autoComplete="name" required />
+        <input 
+          type="text" 
+          id="application-full-name" 
+          name="fullName" 
+          autoComplete="name" 
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          required 
+        />
       </div>
+
       <div className="form-field phone-field">
         <label htmlFor="application-contact-number">Contact number</label>
         <div className="phone-row">
-          <select name="contactCountryCode" aria-label="Contact country code" defaultValue="+91" required>
-            {countryCodes.map((country) => (
-              <option key={country.value} value={country.value}>{country.label}</option>
-            ))}
-          </select>
-          <input
-            type="tel"
-            id="application-contact-number"
-            name="contactNumber"
-            inputMode="numeric"
-            pattern="[0-9]{7,15}"
-            placeholder="9876543210"
-            autoComplete="tel-national"
-            required
-          />
+          <div style={{ position: "relative" }}>
+            <select 
+              disabled 
+              value={smsCountryCode || "+91"} 
+              aria-label="Contact country code"
+              style={{
+                background: "rgba(8, 13, 38, 0.04)",
+                color: "rgba(8, 13, 38, 0.5)",
+                cursor: "not-allowed",
+                borderBottomColor: "rgba(8, 13, 38, 0.08)",
+              }}
+            >
+              {countryCodes.map((country) => (
+                <option key={country.value} value={country.value}>{country.label}</option>
+              ))}
+            </select>
+            <input type="hidden" name="contactCountryCode" value={smsCountryCode || "+91"} />
+          </div>
+          <div style={{ position: "relative", display: "flex", alignItems: "center", flex: 1 }}>
+            <input
+              type="tel"
+              id="application-contact-number"
+              name="contactNumber"
+              value={smsPhoneNumber || ""}
+              readOnly
+              required
+              style={{
+                background: "rgba(8, 13, 38, 0.04)",
+                color: "rgba(8, 13, 38, 0.5)",
+                cursor: "not-allowed",
+                borderBottomColor: "rgba(8, 13, 38, 0.08)",
+                paddingRight: 100,
+              }}
+            />
+            <span style={{
+              position: "absolute",
+              right: 12,
+              fontSize: 10,
+              background: "rgba(34, 197, 94, 0.1)",
+              color: "#16a34a",
+              padding: "2px 8px",
+              borderRadius: 100,
+              fontWeight: 600,
+              pointerEvents: "none"
+            }}>
+              🔒 Verified
+            </span>
+          </div>
         </div>
       </div>
+
       <div className="form-field phone-field">
         <label htmlFor="application-whatsapp-number">WhatsApp number</label>
         <div className="phone-row">
@@ -123,10 +631,42 @@ export default function ApplicationForm() {
           />
         </div>
       </div>
-      <div className="form-field full">
+
+      <div className="form-field full" style={{ position: "relative" }}>
         <label htmlFor="application-email">Mail ID</label>
-        <input type="email" id="application-email" name="email" autoComplete="email" required />
+        <div style={{ display: "flex", alignItems: "center", position: "relative" }}>
+          <input 
+            type="email" 
+            id="application-email" 
+            name="email" 
+            autoComplete="email" 
+            value={googleEmail || ""}
+            readOnly
+            required 
+            style={{
+              background: "rgba(8, 13, 38, 0.04)",
+              color: "rgba(8, 13, 38, 0.5)",
+              cursor: "not-allowed",
+              borderBottomColor: "rgba(8, 13, 38, 0.08)",
+              paddingRight: 100,
+            }}
+          />
+          <span style={{
+            position: "absolute",
+            right: 12,
+            fontSize: 10,
+            background: "rgba(34, 197, 94, 0.1)",
+            color: "#16a34a",
+            padding: "2px 8px",
+            borderRadius: 100,
+            fontWeight: 600,
+            pointerEvents: "none"
+          }}>
+            🔒 Verified
+          </span>
+        </div>
       </div>
+
       <fieldset className="social-fieldset full">
         <legend>Social media handles</legend>
         <p>Submit at least one profile URL.</p>
@@ -154,6 +694,7 @@ export default function ApplicationForm() {
         </div>
         {socialError && <div className="form-error">{socialError}</div>}
       </fieldset>
+
       <div className="checkbox-group full">
         <label>
           <input type="checkbox" name="termsAccepted" required />
@@ -164,6 +705,7 @@ export default function ApplicationForm() {
           <span>I agree to receive emails and newsletters from SICE.</span>
         </label>
       </div>
+
       <button type="submit" className="form-submit" disabled={submitting}>
         {submitting ? "Submitting…" : "Submit Application"}
       </button>
