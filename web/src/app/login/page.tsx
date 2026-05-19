@@ -139,14 +139,18 @@ export default function LoginPage() {
               Access your creator, merchant or admin portal.
             </p>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <form onSubmit={handleSubmit} autoComplete="off" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {/* Dummy inputs to prevent browser autofill */}
+              <input type="text" name="prevent_autofill_email" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+              <input type="password" name="prevent_autofill_password" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.45)' }}>
                   Email
                 </label>
                 <input
                   type="email"
-                  autoComplete="email"
+                  autoComplete="off"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -173,7 +177,7 @@ export default function LoginPage() {
                 </label>
                 <input
                   type="password"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
