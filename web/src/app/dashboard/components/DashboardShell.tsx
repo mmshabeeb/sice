@@ -49,7 +49,7 @@ const NAV: Record<string, NavItem[]> = {
     { label: 'Talent Discovery', href: '/dashboard/merchant/discover', icon: Search },
     { label: 'Campaigns', href: '/dashboard/merchant/campaigns', icon: Kanban },
     { label: 'Projects', href: '/dashboard/merchant/projects', icon: Briefcase },
-    { label: 'Wallet & Escrow', href: '/dashboard/merchant/wallet', icon: Wallet },
+    { label: 'Wallet & Secure Deposits', href: '/dashboard/merchant/wallet', icon: Wallet },
   ],
   admin: [
     { label: 'Command Center', href: '/dashboard/admin', icon: BarChart2 },
@@ -59,12 +59,19 @@ const NAV: Record<string, NavItem[]> = {
     { label: 'Events', href: '/dashboard/admin/events', icon: Calendar },
     { label: 'Arbitration', href: '/dashboard/admin/arbitration', icon: AlertTriangle },
   ],
+  super_admin: [
+    { label: 'Overview', href: '/dashboard/super_admin', icon: BarChart2 },
+    { label: 'Chapters', href: '/dashboard/super_admin/chapters', icon: Map },
+    { label: 'Creators', href: '/dashboard/super_admin/creators', icon: Users },
+    { label: 'Merchants', href: '/dashboard/super_admin/merchants', icon: ShoppingBag },
+  ],
 };
 
 const ROLE_LABELS: Record<string, string> = {
   creator: 'Creator',
   merchant: 'Merchant',
   admin: 'Chapter Admin',
+  super_admin: 'Super Admin',
 };
 
 /* ------------------------------------------------------------------ */

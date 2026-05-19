@@ -131,16 +131,15 @@ export default function MarketplacePage() {
   });
 
   return (
-    <div style={{ background: BG, minHeight: '100%' }} className="p-6 rounded-xl space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h1
-          className="text-2xl font-bold tracking-tight"
-          style={{ color: INDIGO, fontFamily: 'var(--font-bricolage, sans-serif)' }}
+          className="text-2xl font-bold tracking-tight text-white font-bricolage"
         >
           Brand Marketplace
         </h1>
-        <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
+        <p className="text-sm mt-1 text-gray-400">
           Discover and apply for campaigns that match your audience.
         </p>
       </div>
@@ -149,13 +148,13 @@ export default function MarketplacePage() {
       <div className="flex flex-wrap gap-3 items-center">
         {/* Search */}
         <div className="relative flex-1 min-w-48">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: '#9ca3af' }} />
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
           <Input
             placeholder="Search brand or campaign…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 text-sm"
-            style={{ background: '#fff', borderRadius: '10px', height: '38px' }}
+            className="pl-8 text-sm bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#C9A84C]"
+            style={{ borderRadius: '10px', height: '38px' }}
           />
         </div>
 
@@ -164,16 +163,16 @@ export default function MarketplacePage() {
 
         {/* Category filter */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs text-gray-500 flex items-center gap-1"><Tag size={12} />Category:</span>
+          <span className="text-xs text-gray-400 flex items-center gap-1"><Tag size={12} />Category:</span>
           {ALL_CATEGORIES.map((c) => (
             <button
               key={c}
               onClick={() => setCategory(c)}
-              className="text-xs px-2.5 py-1 rounded-full transition-all"
+              className="text-xs px-2.5 py-1 rounded-full transition-all border border-white/5"
               style={
                 category === c
-                  ? { background: INDIGO, color: '#fff' }
-                  : { background: '#fff', color: '#6b7280', border: '1px solid #e5e7eb' }
+                  ? { background: 'rgba(201, 168, 76, 0.25)', color: GOLD, borderColor: 'rgba(201, 168, 76, 0.35)' }
+                  : { background: 'rgba(255, 255, 255, 0.02)', color: '#9ca3af' }
               }
             >
               {c}
@@ -183,16 +182,16 @@ export default function MarketplacePage() {
 
         {/* Budget filter */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs text-gray-500 flex items-center gap-1"><IndianRupee size={12} />Budget:</span>
+          <span className="text-xs text-gray-400 flex items-center gap-1"><IndianRupee size={12} />Budget:</span>
           {BUDGET_RANGES.map((b) => (
             <button
               key={b}
               onClick={() => setBudget(b)}
-              className="text-xs px-2.5 py-1 rounded-full transition-all"
+              className="text-xs px-2.5 py-1 rounded-full transition-all border border-white/5"
               style={
                 budget === b
-                  ? { background: GOLD, color: '#fff' }
-                  : { background: '#fff', color: '#6b7280', border: '1px solid #e5e7eb' }
+                  ? { background: GOLD, color: '#0f172a', border: 'none', fontWeight: 'bold' }
+                  : { background: 'rgba(255, 255, 255, 0.02)', color: '#9ca3af' }
               }
             >
               {b}
@@ -202,8 +201,8 @@ export default function MarketplacePage() {
       </div>
 
       {/* Results count */}
-      <p className="text-sm" style={{ color: '#6b7280' }}>
-        Showing <span className="font-semibold" style={{ color: INDIGO }}>{filtered.length}</span> campaigns
+      <p className="text-sm text-gray-400">
+        Showing <span className="font-semibold text-white">{filtered.length}</span> campaigns
       </p>
 
       {/* Campaign grid */}
@@ -212,22 +211,27 @@ export default function MarketplacePage() {
           <Card
             key={c.id}
             className="border-0 shadow-sm flex flex-col"
-            style={{ background: '#fff', borderRadius: '16px', overflow: 'hidden' }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(240, 235, 224, 0.08)',
+              borderRadius: '16px',
+              overflow: 'hidden',
+            }}
           >
             <div style={{ height: '4px', background: c.color }} />
             <CardHeader className="pb-0 pt-4">
               <div className="flex items-center gap-3">
                 <div
-                  className="flex items-center justify-center w-10 h-10 rounded-xl text-xl"
-                  style={{ background: `${c.color}15` }}
+                  className="flex items-center justify-center w-10 h-10 rounded-xl text-xl border border-white/5"
+                  style={{ background: 'rgba(255, 255, 255, 0.02)' }}
                 >
                   {c.logo}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xs font-semibold" style={{ color: '#9ca3af' }}>
+                  <div className="text-xs font-semibold text-gray-400">
                     {c.brand}
                   </div>
-                  <CardTitle className="text-sm font-semibold mt-0.5 leading-snug" style={{ color: INDIGO }}>
+                  <CardTitle className="text-sm font-semibold mt-0.5 leading-snug text-white font-bricolage">
                     {c.title}
                   </CardTitle>
                 </div>
@@ -237,11 +241,11 @@ export default function MarketplacePage() {
             <CardContent className="pt-3 pb-4 flex-1 flex flex-col gap-3">
               {/* Budget */}
               <div
-                className="flex items-center justify-between rounded-xl px-3 py-2.5"
-                style={{ background: 'rgba(201,168,76,0.08)' }}
+                className="flex items-center justify-between rounded-xl px-3 py-2.5 border border-[#C9A84C]/25"
+                style={{ background: 'rgba(201,168,76,0.1)' }}
               >
-                <span className="text-xs" style={{ color: '#92400e' }}>Campaign Budget</span>
-                <span className="text-base font-bold" style={{ color: GOLD }}>
+                <span className="text-xs text-[#C9A84C]">Campaign Budget</span>
+                <span className="text-base font-bold text-[#C9A84C] font-bricolage">
                   {c.budget}
                 </span>
               </div>
@@ -251,12 +255,7 @@ export default function MarketplacePage() {
                 {c.languages.map((l) => (
                   <Badge
                     key={l}
-                    className="text-xs"
-                    style={{
-                      background: 'rgba(8,13,38,0.07)',
-                      color: INDIGO,
-                      border: 'none',
-                    }}
+                    className="text-xs bg-white/5 text-gray-300 border border-white/5"
                   >
                     {l}
                   </Badge>
@@ -264,17 +263,15 @@ export default function MarketplacePage() {
               </div>
 
               {/* Deadline */}
-              <div className="flex items-center gap-1.5 text-xs" style={{ color: '#6b7280' }}>
+              <div className="flex items-center gap-1.5 text-xs text-gray-400">
                 <Calendar size={12} />
                 <span>Deadline: {c.deadline}</span>
               </div>
 
               {/* Apply button */}
               <Button
-                className="w-full mt-auto font-semibold"
+                className="w-full mt-auto font-bold bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950"
                 style={{
-                  background: GOLD,
-                  color: '#fff',
                   border: 'none',
                   borderRadius: '10px',
                 }}
@@ -289,16 +286,16 @@ export default function MarketplacePage() {
 
       {/* Apply Dialog */}
       <Dialog open={!!applyTarget} onOpenChange={(open) => { if (!open) setApplyTarget(null); }}>
-        <DialogContent className="sm:max-w-sm" style={{ borderRadius: '16px' }}>
+        <DialogContent className="sm:max-w-sm bg-slate-950 border border-white/10 text-white" style={{ borderRadius: '16px' }}>
           <DialogHeader>
-            <DialogTitle>Apply for Campaign</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-white font-bricolage text-lg">Apply for Campaign</DialogTitle>
+            <DialogDescription className="text-gray-400 text-xs">
               You&apos;re applying for{' '}
-              <span className="font-semibold" style={{ color: INDIGO }}>
+              <span className="font-semibold text-white">
                 {applyTarget?.title}
               </span>{' '}
               by{' '}
-              <span className="font-semibold" style={{ color: INDIGO }}>
+              <span className="font-semibold text-white">
                 {applyTarget?.brand}
               </span>
               .
@@ -306,27 +303,23 @@ export default function MarketplacePage() {
           </DialogHeader>
 
           <div
-            className="rounded-xl px-4 py-3 text-sm"
-            style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.20)' }}
+            className="rounded-xl px-4 py-3 text-sm border border-[#C9A84C]/30 bg-[#C9A84C]/10"
           >
-            <p className="font-medium" style={{ color: GOLD }}>
+            <p className="font-semibold text-[#C9A84C] font-bricolage">
               Your media kit will be attached automatically.
             </p>
-            <p className="text-xs mt-1" style={{ color: '#92400e' }}>
+            <p className="text-xs mt-1 text-[#C9A84C]/80">
               SICE will share your verified follower stats, engagement rate, and platform data with the brand.
             </p>
           </div>
 
-          <DialogFooter>
-            <DialogClose
-              render={
-                <Button variant="outline" />
-              }
-            >
+          <DialogFooter className="gap-2 sm:gap-0">
+            <DialogClose render={<Button variant="outline" className="border-white/10 text-gray-300 hover:bg-white/5 hover:text-white bg-transparent" />}>
               Cancel
             </DialogClose>
             <Button
-              style={{ background: GOLD, color: '#fff', border: 'none' }}
+              className="bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950 font-bold"
+              style={{ border: 'none' }}
               onClick={() => {
                 alert(`Application submitted for "${applyTarget?.title}"! Your media kit has been attached.`);
                 setApplyTarget(null);
@@ -358,16 +351,16 @@ function FilterPills({
 }) {
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
-      <span className="text-xs text-gray-500">{label}:</span>
+      <span className="text-xs text-gray-400">{label}:</span>
       {options.map((o) => (
         <button
           key={o}
           onClick={() => onChange(o)}
-          className="text-xs px-2.5 py-1 rounded-full transition-all"
+          className="text-xs px-2.5 py-1 rounded-full transition-all border border-white/5"
           style={
             value === o
-              ? { background: '#3b82f6', color: '#fff' }
-              : { background: '#fff', color: '#6b7280', border: '1px solid #e5e7eb' }
+              ? { background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', borderColor: 'rgba(59, 130, 246, 0.3)' }
+              : { background: 'rgba(255, 255, 255, 0.02)', color: '#9ca3af' }
           }
         >
           {o}

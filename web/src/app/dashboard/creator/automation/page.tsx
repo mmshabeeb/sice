@@ -81,14 +81,14 @@ const BLUEPRINTS: Blueprint[] = [
 
 const TOOL_STYLES: Record<Tool, { bg: string; color: string; border: string }> = {
   n8n: {
-    bg: 'rgba(234,88,12,0.10)',
-    color: '#c2410c',
-    border: 'rgba(234,88,12,0.25)',
+    bg: 'rgba(234,88,12,0.15)',
+    color: '#ff7a45',
+    border: 'rgba(234,88,12,0.30)',
   },
   'Make.com': {
-    bg: 'rgba(99,102,241,0.10)',
-    color: '#4338ca',
-    border: 'rgba(99,102,241,0.25)',
+    bg: 'rgba(99,102,241,0.15)',
+    color: '#818cf8',
+    border: 'rgba(99,102,241,0.30)',
   },
 };
 
@@ -113,7 +113,12 @@ function BlueprintCard({ bp }: { bp: Blueprint }) {
   return (
     <Card
       className="border-0 shadow-sm flex flex-col"
-      style={{ background: '#fff', borderRadius: '16px', overflow: 'hidden' }}
+      style={{
+        background: 'rgba(255, 255, 255, 0.02)',
+        border: '1px solid rgba(240, 235, 224, 0.08)',
+        borderRadius: '16px',
+        overflow: 'hidden',
+      }}
     >
       {/* Top accent */}
       <div
@@ -136,38 +141,35 @@ function BlueprintCard({ bp }: { bp: Blueprint }) {
               <Zap size={16} style={{ color: ts.color }} />
             </div>
             <Badge
-              className="text-xs font-semibold px-2"
-              style={{ background: ts.bg, color: ts.color, border: `1px solid ${ts.border}` }}
+              className="text-xs font-semibold px-2 border-0"
+              style={{ background: ts.bg, color: ts.color }}
             >
               {bp.tool}
             </Badge>
           </div>
           <Badge
-            className="text-xs"
+            className="text-xs bg-white/5 text-gray-400 border-0"
             style={{
-              background: 'rgba(8,13,38,0.06)',
-              color: '#6b7280',
-              border: 'none',
               fontSize: '10px',
             }}
           >
             {bp.category}
           </Badge>
         </div>
-        <CardTitle className="text-sm font-semibold mt-2" style={{ color: INDIGO }}>
+        <CardTitle className="text-sm font-semibold mt-2 text-white font-bricolage">
           {bp.title}
         </CardTitle>
       </CardHeader>
 
       <CardContent className="pt-2 pb-4 flex flex-col gap-3 flex-1">
-        <p className="text-xs leading-relaxed" style={{ color: '#6b7280', flexGrow: 1 }}>
+        <p className="text-xs leading-relaxed text-gray-450" style={{ flexGrow: 1 }}>
           {bp.description}
         </p>
 
         {/* Webhook URL preview */}
         <div
-          className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-mono truncate"
-          style={{ background: '#f8f7f4', color: '#9ca3af' }}
+          className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-mono truncate border border-white/5"
+          style={{ background: 'rgba(255, 255, 255, 0.02)', color: '#9ca3af' }}
         >
           <Link2 size={10} style={{ color: '#9ca3af', flexShrink: 0 }} />
           <span className="truncate">{bp.webhookUrl}</span>
@@ -176,10 +178,8 @@ function BlueprintCard({ bp }: { bp: Blueprint }) {
         {/* Actions */}
         <div className="flex gap-2">
           <Button
-            className="flex-1 text-xs font-semibold h-8"
+            className="flex-1 text-xs bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950 font-bold h-8"
             style={{
-              background: GOLD,
-              color: '#fff',
               border: 'none',
               borderRadius: '8px',
             }}
@@ -190,7 +190,7 @@ function BlueprintCard({ bp }: { bp: Blueprint }) {
           </Button>
           <Button
             variant="outline"
-            className="flex-1 text-xs font-semibold h-8"
+            className="flex-1 text-xs font-semibold h-8 border-white/10 text-gray-300 hover:bg-white/5 hover:text-white bg-transparent"
             style={{ borderRadius: '8px' }}
             onClick={handleCopyWebhook}
           >
@@ -212,16 +212,15 @@ export default function AutomationPage() {
   const makeCount = BLUEPRINTS.filter((b) => b.tool === 'Make.com').length;
 
   return (
-    <div style={{ background: BG, minHeight: '100%' }} className="p-6 rounded-xl space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h1
-          className="text-2xl font-bold tracking-tight"
-          style={{ color: INDIGO, fontFamily: 'var(--font-bricolage, sans-serif)' }}
+          className="text-2xl font-bold tracking-tight text-white font-bricolage"
         >
           Automation Blueprints
         </h1>
-        <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
+        <p className="text-sm mt-1 text-gray-400">
           Pre-built n8n and Make.com workflows for content repurposing, scheduling, and invoicing.
         </p>
       </div>
@@ -229,34 +228,19 @@ export default function AutomationPage() {
       {/* Summary pills */}
       <div className="flex flex-wrap gap-3">
         <div
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
-          style={{
-            background: 'rgba(234,88,12,0.10)',
-            color: '#c2410c',
-            border: '1px solid rgba(234,88,12,0.20)',
-          }}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border border-orange-500/20 bg-orange-500/10 text-orange-400"
         >
           <Zap size={12} />
           {n8nCount} n8n blueprints
         </div>
         <div
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
-          style={{
-            background: 'rgba(99,102,241,0.10)',
-            color: '#4338ca',
-            border: '1px solid rgba(99,102,241,0.20)',
-          }}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border border-indigo-500/20 bg-indigo-500/10 text-indigo-400"
         >
           <Zap size={12} />
           {makeCount} Make.com blueprints
         </div>
         <div
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
-          style={{
-            background: 'rgba(201,168,76,0.10)',
-            color: GOLD,
-            border: '1px solid rgba(201,168,76,0.20)',
-          }}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border border-[#C9A84C]/20 bg-[#C9A84C]/10 text-[#C9A84C]"
         >
           {BLUEPRINTS.length} total blueprints ready
         </div>

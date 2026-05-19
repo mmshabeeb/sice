@@ -113,10 +113,10 @@ const CONTRACTS_DATA = [
 
 const LINE_COLORS: Record<string, string> = {
   Kozhikode: '#C9A84C',
-  Kochi: '#6366f1',
-  Bangalore: '#22c55e',
-  Chennai: '#f59e0b',
-  Hyderabad: '#ef4444',
+  Kochi: '#818cf8',
+  Bangalore: '#34d399',
+  Chennai: '#fbbf24',
+  Hyderabad: '#f87171',
 };
 
 const CHAPTER_KEYS = ['Kozhikode', 'Kochi', 'Bangalore', 'Chennai', 'Hyderabad'];
@@ -127,14 +127,14 @@ const CHAPTER_KEYS = ['Kozhikode', 'Kochi', 'Bangalore', 'Chennai', 'Hyderabad']
 
 function RankBadge({ rank }: { rank: number }) {
   const configs: Record<number, { bg: string; color: string; icon?: boolean }> = {
-    1: { bg: 'rgba(201,168,76,0.15)', color: '#C9A84C', icon: true },
-    2: { bg: 'rgba(107,114,128,0.12)', color: '#6b7280', icon: true },
-    3: { bg: 'rgba(180,83,9,0.12)', color: '#92400e', icon: true },
+    1: { bg: 'rgba(201,168,76,0.20)', color: '#C9A84C', icon: true },
+    2: { bg: 'rgba(255,255,255,0.12)', color: '#e5e7eb', icon: true },
+    3: { bg: 'rgba(245,158,11,0.20)', color: '#fbbf24', icon: true },
   };
-  const cfg = configs[rank] ?? { bg: 'rgba(8,13,38,0.06)', color: '#6b7280' };
+  const cfg = configs[rank] ?? { bg: 'rgba(255,255,255,0.06)', color: '#9ca3af' };
   return (
     <div
-      className="flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold"
+      className="flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold border border-white/5"
       style={{ background: cfg.bg, color: cfg.color }}
     >
       {rank <= 3 ? <Medal size={15} /> : rank}
@@ -147,10 +147,10 @@ function RankBadge({ rank }: { rank: number }) {
 /* ------------------------------------------------------------------ */
 
 function ScoreBar({ score }: { score: number }) {
-  const color = score >= 80 ? '#22c55e' : score >= 60 ? GOLD : '#ef4444';
+  const color = score >= 80 ? '#34d399' : score >= 60 ? GOLD : '#f87171';
   return (
     <div className="flex items-center gap-2 min-w-[80px]">
-      <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+      <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
         <div
           className="h-full rounded-full transition-all"
           style={{ width: `${score}%`, background: color }}
@@ -169,17 +169,16 @@ function ScoreBar({ score }: { score: number }) {
 
 export default function ChapterPerformancePage() {
   return (
-    <div style={{ background: BG, minHeight: '100%' }} className="p-6 rounded-xl space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1
-            className="text-2xl font-bold tracking-tight"
-            style={{ color: INDIGO, fontFamily: 'var(--font-bricolage, sans-serif)' }}
+            className="text-2xl font-bold tracking-tight text-white font-bricolage"
           >
             Chapter Performance
           </h1>
-          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
+          <p className="text-sm mt-1 text-gray-400">
             Comparative analytics across all active SICE chapters — May 2026
           </p>
         </div>
@@ -192,66 +191,86 @@ export default function ChapterPerformancePage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="leaderboard">
-        <TabsList className="mb-4">
-          <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-          <TabsTrigger value="engagement">Engagement Analytics</TabsTrigger>
-          <TabsTrigger value="contracts">Contract Activity</TabsTrigger>
+      <Tabs defaultValue="leaderboard" className="w-full">
+        <TabsList className="bg-white/5 border border-white/10 p-1 rounded-xl">
+          <TabsTrigger
+            value="leaderboard"
+            className="rounded-lg data-[state=active]:bg-[#C9A84C] data-[state=active]:text-slate-950 text-gray-300 font-medium"
+          >
+            Leaderboard
+          </TabsTrigger>
+          <TabsTrigger
+            value="engagement"
+            className="rounded-lg data-[state=active]:bg-[#C9A84C] data-[state=active]:text-slate-950 text-gray-300 font-medium"
+          >
+            Engagement Analytics
+          </TabsTrigger>
+          <TabsTrigger
+            value="contracts"
+            className="rounded-lg data-[state=active]:bg-[#C9A84C] data-[state=active]:text-slate-950 text-gray-300 font-medium"
+          >
+            Contract Activity
+          </TabsTrigger>
         </TabsList>
 
         {/* ── Leaderboard ── */}
-        <TabsContent value="leaderboard">
-          <Card className="border-0 shadow-sm" style={{ background: '#fff', borderRadius: 14 }}>
+        <TabsContent value="leaderboard" className="mt-4">
+          <Card
+            className="border-0 shadow-sm"
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(240, 235, 224, 0.08)',
+            }}
+          >
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold" style={{ color: INDIGO }}>
+              <CardTitle className="text-sm font-semibold text-white font-bricolage">
                 Chapter Leaderboard
               </CardTitle>
-              <p className="text-xs" style={{ color: '#9ca3af' }}>
+              <p className="text-xs text-gray-400">
                 Composite score based on GPV, engagement, creator count and deal velocity
               </p>
             </CardHeader>
-            <CardContent className="px-0">
+            <CardContent className="px-0 pb-0">
               <Table>
-                <TableHeader>
-                  <TableRow style={{ borderColor: 'rgba(8,13,38,0.06)' }}>
-                    <TableHead className="pl-6 text-xs" style={{ color: '#9ca3af' }}>Rank</TableHead>
-                    <TableHead className="text-xs" style={{ color: '#9ca3af' }}>Chapter</TableHead>
-                    <TableHead className="text-xs" style={{ color: '#9ca3af' }}>City</TableHead>
-                    <TableHead className="text-xs text-right" style={{ color: '#9ca3af' }}>Creators</TableHead>
-                    <TableHead className="text-xs text-right" style={{ color: '#9ca3af' }}>Campaigns</TableHead>
-                    <TableHead className="text-xs text-right" style={{ color: '#9ca3af' }}>Deals</TableHead>
-                    <TableHead className="text-xs text-right" style={{ color: '#9ca3af' }}>GPV</TableHead>
-                    <TableHead className="text-xs text-right" style={{ color: '#9ca3af' }}>Avg Eng.</TableHead>
-                    <TableHead className="text-xs pr-6" style={{ color: '#9ca3af' }}>Score</TableHead>
+                <TableHeader className="border-white/5">
+                  <TableRow className="border-white/5 hover:bg-transparent">
+                    <TableHead className="pl-6 text-xs text-gray-400">Rank</TableHead>
+                    <TableHead className="text-xs text-gray-400">Chapter</TableHead>
+                    <TableHead className="text-xs text-gray-400">City</TableHead>
+                    <TableHead className="text-xs text-right text-gray-400">Creators</TableHead>
+                    <TableHead className="text-xs text-right text-gray-400">Campaigns</TableHead>
+                    <TableHead className="text-xs text-right text-gray-400">Deals</TableHead>
+                    <TableHead className="text-xs text-right text-gray-400">GPV</TableHead>
+                    <TableHead className="text-xs text-right text-gray-400">Avg Eng.</TableHead>
+                    <TableHead className="text-xs pr-6 text-gray-400">Score</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {CHAPTERS.map((ch) => (
                     <TableRow
                       key={ch.rank}
-                      style={{ borderColor: 'rgba(8,13,38,0.04)' }}
-                      className="hover:bg-amber-50/40 transition-colors"
+                      className="border-white/5 hover:bg-white/[0.02] transition-colors"
                     >
                       <TableCell className="pl-6">
                         <RankBadge rank={ch.rank} />
                       </TableCell>
                       <TableCell>
-                        <span className="font-semibold text-sm" style={{ color: INDIGO }}>
+                        <span className="font-semibold text-sm text-white">
                           {ch.chapter}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className="text-xs" style={{ color: '#6b7280' }}>
+                        <span className="text-xs text-gray-400">
                           {ch.city}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right text-sm font-medium" style={{ color: INDIGO }}>
+                      <TableCell className="text-right text-sm font-medium text-[#F0EBE0]">
                         {ch.creators}
                       </TableCell>
-                      <TableCell className="text-right text-sm font-medium" style={{ color: INDIGO }}>
+                      <TableCell className="text-right text-sm font-medium text-[#F0EBE0]">
                         {ch.campaigns}
                       </TableCell>
-                      <TableCell className="text-right text-sm font-medium" style={{ color: INDIGO }}>
+                      <TableCell className="text-right text-sm font-medium text-[#F0EBE0]">
                         {ch.deals}
                       </TableCell>
                       <TableCell className="text-right text-sm font-semibold" style={{ color: GOLD }}>
@@ -263,16 +282,16 @@ export default function ChapterPerformancePage() {
                           style={{
                             background:
                               parseFloat(ch.engagement) >= 4
-                                ? 'rgba(34,197,94,0.12)'
+                                ? 'rgba(34,197,94,0.15)'
                                 : parseFloat(ch.engagement) >= 2
-                                ? 'rgba(201,168,76,0.12)'
-                                : 'rgba(239,68,68,0.10)',
+                                ? 'rgba(201,168,76,0.15)'
+                                : 'rgba(239,68,68,0.15)',
                             color:
                               parseFloat(ch.engagement) >= 4
-                                ? '#22c55e'
+                                ? '#34d399'
                                 : parseFloat(ch.engagement) >= 2
                                 ? GOLD
-                                : '#ef4444',
+                                : '#f87171',
                             border: 'none',
                           }}
                         >
@@ -291,13 +310,19 @@ export default function ChapterPerformancePage() {
         </TabsContent>
 
         {/* ── Engagement Analytics ── */}
-        <TabsContent value="engagement">
-          <Card className="border-0 shadow-sm" style={{ background: '#fff', borderRadius: 14 }}>
+        <TabsContent value="engagement" className="mt-4">
+          <Card
+            className="border-0 shadow-sm"
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(240, 235, 224, 0.08)',
+            }}
+          >
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold" style={{ color: INDIGO }}>
+              <CardTitle className="text-sm font-semibold text-white font-bricolage">
                 Engagement Score Trend by Chapter
               </CardTitle>
-              <p className="text-xs" style={{ color: '#9ca3af' }}>
+              <p className="text-xs text-gray-400">
                 Average engagement rate (%) across all creators per chapter — Jan to May 2026
               </p>
             </CardHeader>
@@ -307,16 +332,16 @@ export default function ChapterPerformancePage() {
                   data={ENGAGEMENT_TREND}
                   margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(8,13,38,0.06)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                   <XAxis
                     dataKey="month"
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: '#9ca3af', fontSize: 12 }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
                     tickFormatter={(v) => `${v}%`}
-                    tick={{ fill: '#6b7280', fontSize: 11 }}
+                    tick={{ fill: '#9ca3af', fontSize: 11 }}
                     axisLine={false}
                     tickLine={false}
                     width={38}
@@ -324,16 +349,18 @@ export default function ChapterPerformancePage() {
                   <Tooltip
                     formatter={(value, name) => [`${value}%`, name]}
                     contentStyle={{
-                      background: '#fff',
-                      border: '1px solid rgba(8,13,38,0.10)',
+                      background: '#080D26',
+                      border: '1px solid rgba(240, 235, 224, 0.15)',
                       borderRadius: 10,
                       fontSize: 13,
+                      color: '#F0EBE0',
                     }}
+                    labelStyle={{ color: '#fff', fontWeight: 'bold' }}
                   />
                   <Legend
                     iconType="circle"
                     iconSize={8}
-                    wrapperStyle={{ fontSize: 12, color: '#6b7280' }}
+                    wrapperStyle={{ fontSize: 12, color: '#9ca3af' }}
                   />
                   {CHAPTER_KEYS.map((key) => (
                     <Line
@@ -353,13 +380,19 @@ export default function ChapterPerformancePage() {
         </TabsContent>
 
         {/* ── Contract Activity ── */}
-        <TabsContent value="contracts">
-          <Card className="border-0 shadow-sm" style={{ background: '#fff', borderRadius: 14 }}>
+        <TabsContent value="contracts" className="mt-4">
+          <Card
+            className="border-0 shadow-sm"
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(240, 235, 224, 0.08)',
+            }}
+          >
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold" style={{ color: INDIGO }}>
+              <CardTitle className="text-sm font-semibold text-white font-bricolage">
                 Contracts Deployed by Chapter
               </CardTitle>
-              <p className="text-xs" style={{ color: '#9ca3af' }}>
+              <p className="text-xs text-gray-400">
                 Total contracts deployed, currently active and completed — MTD
               </p>
             </CardHeader>
@@ -369,35 +402,37 @@ export default function ChapterPerformancePage() {
                   data={CONTRACTS_DATA}
                   margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(8,13,38,0.06)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                   <XAxis
                     dataKey="chapter"
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: '#9ca3af', fontSize: 12 }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
-                    tick={{ fill: '#6b7280', fontSize: 11 }}
+                    tick={{ fill: '#9ca3af', fontSize: 11 }}
                     axisLine={false}
                     tickLine={false}
                     width={30}
                   />
                   <Tooltip
                     contentStyle={{
-                      background: '#fff',
-                      border: '1px solid rgba(8,13,38,0.10)',
+                      background: '#080D26',
+                      border: '1px solid rgba(240, 235, 224, 0.15)',
                       borderRadius: 10,
                       fontSize: 13,
+                      color: '#F0EBE0',
                     }}
+                    labelStyle={{ color: '#fff', fontWeight: 'bold' }}
                   />
                   <Legend
                     iconType="circle"
                     iconSize={8}
-                    wrapperStyle={{ fontSize: 12, color: '#6b7280' }}
+                    wrapperStyle={{ fontSize: 12, color: '#9ca3af' }}
                   />
-                  <Bar dataKey="deployed" name="Total Deployed" fill={INDIGO} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="deployed" name="Total Deployed" fill="#818cf8" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="active" name="Currently Active" fill={GOLD} radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="completed" name="Completed" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="completed" name="Completed" fill="#34d399" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>

@@ -88,13 +88,17 @@ function VideoCard({ video, index }: { video: Video; index: number }) {
   return (
     <Card
       className="border-0 shadow-sm flex flex-col overflow-hidden"
-      style={{ background: '#fff', borderRadius: '14px' }}
+      style={{
+        background: 'rgba(255, 255, 255, 0.02)',
+        border: '1px solid rgba(240, 235, 224, 0.08)',
+        borderRadius: '14px',
+      }}
     >
       {/* Thumbnail */}
       <div
-        className="relative flex items-center justify-center"
+        className="relative flex items-center justify-center border-b border-white/5"
         style={{
-          background: `linear-gradient(135deg, ${INDIGO} 0%, #1a2560 100%)`,
+          background: 'linear-gradient(135deg, rgba(8,13,38,0.2) 0%, rgba(26,37,96,0.3) 100%)',
           height: '140px',
         }}
       >
@@ -102,7 +106,7 @@ function VideoCard({ video, index }: { video: Video; index: number }) {
         <button
           className="flex items-center justify-center w-12 h-12 rounded-full transition-transform hover:scale-110"
           style={{
-            background: 'rgba(201,168,76,0.90)',
+            background: 'rgba(201,168,76,0.95)',
             boxShadow: '0 4px 16px rgba(201,168,76,0.40)',
           }}
           onClick={() =>
@@ -110,13 +114,13 @@ function VideoCard({ video, index }: { video: Video; index: number }) {
           }
           aria-label={`Play ${video.title}`}
         >
-          <Play size={18} fill="#fff" style={{ color: '#fff', marginLeft: '2px' }} />
+          <Play size={18} fill="#0f172a" style={{ color: '#0f172a', marginLeft: '2px' }} />
         </button>
 
         {/* Duration badge */}
         <div
-          className="absolute bottom-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium"
-          style={{ background: 'rgba(0,0,0,0.55)', color: '#fff', backdropFilter: 'blur(4px)' }}
+          className="absolute bottom-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium"
+          style={{ background: 'rgba(0,0,0,0.65)', color: '#fff', backdropFilter: 'blur(4px)' }}
         >
           <Clock size={10} />
           {video.duration}
@@ -125,8 +129,7 @@ function VideoCard({ video, index }: { video: Video; index: number }) {
         {/* "Watching" indicator for in-progress video */}
         {video.progress !== undefined && (
           <div
-            className="absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-semibold"
-            style={{ background: GOLD, color: '#fff' }}
+            className="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold bg-[#C9A84C] text-slate-950"
           >
             Continue watching
           </div>
@@ -135,41 +138,42 @@ function VideoCard({ video, index }: { video: Video; index: number }) {
 
       {/* Progress bar for first video */}
       {video.progress !== undefined && (
-        <div className="w-full h-1" style={{ background: '#e5e7eb' }}>
+        <div className="w-full h-1 bg-white/10">
           <div
-            className="h-full"
-            style={{ width: `${video.progress}%`, background: GOLD }}
+            className="h-full bg-[#C9A84C]"
+            style={{ width: `${video.progress}%` }}
           />
         </div>
       )}
 
       {/* Info */}
       <CardContent className="pt-3 pb-4 flex flex-col gap-2 flex-1">
-        <p className="text-sm font-semibold leading-snug" style={{ color: INDIGO }}>
+        <p className="text-sm font-semibold leading-snug text-white">
           {video.title}
         </p>
-        <div className="flex items-center gap-1.5 text-xs" style={{ color: '#9ca3af' }}>
+        <div className="flex items-center gap-1.5 text-xs text-gray-400">
           <User size={11} />
           <span>{video.instructor}</span>
         </div>
         {video.progress !== undefined && (
-          <p className="text-xs" style={{ color: '#9ca3af' }}>
+          <p className="text-xs text-gray-500">
             {video.progress}% watched
           </p>
         )}
         <Button
           className="mt-auto w-full text-xs font-semibold h-8"
           style={{
-            background: isFirst ? GOLD : 'rgba(8,13,38,0.06)',
-            color: isFirst ? '#fff' : INDIGO,
-            border: 'none',
+            background: isFirst ? GOLD : 'rgba(255, 255, 255, 0.05)',
+            color: isFirst ? '#0f172a' : '#cbd5e1',
+            border: isFirst ? 'none' : '1px solid rgba(255,255,255,0.08)',
             borderRadius: '8px',
+            fontWeight: 'bold',
           }}
           onClick={() =>
             alert('Video streaming would start here — integrate with your video host')
           }
         >
-          <Play size={12} />
+          <Play size={12} fill={isFirst ? '#0f172a' : '#cbd5e1'} />
           {isFirst ? 'Resume' : 'Play'}
         </Button>
       </CardContent>
@@ -183,16 +187,15 @@ function VideoCard({ video, index }: { video: Video; index: number }) {
 
 export default function StudioPage() {
   return (
-    <div style={{ background: BG, minHeight: '100%' }} className="p-6 rounded-xl space-y-8">
+    <div className="space-y-8">
       {/* Header */}
       <div>
         <h1
-          className="text-2xl font-bold tracking-tight"
-          style={{ color: INDIGO, fontFamily: 'var(--font-bricolage, sans-serif)' }}
+          className="text-2xl font-bold tracking-tight text-white font-bricolage"
         >
           Studio &amp; Learning
         </h1>
-        <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
+        <p className="text-sm mt-1 text-gray-400">
           Production tutorials curated for regional and South Indian content creators.
         </p>
       </div>
@@ -206,13 +209,16 @@ export default function StudioPage() {
         ].map(({ label, value }) => (
           <div
             key={label}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl"
-            style={{ background: '#fff', border: '1px solid #f3f4f6' }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border"
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              borderColor: 'rgba(240, 235, 224, 0.08)',
+            }}
           >
-            <span className="text-base font-bold" style={{ color: GOLD }}>
+            <span className="text-base font-bold text-[#C9A84C] font-bricolage">
               {value}
             </span>
-            <span className="text-xs" style={{ color: '#6b7280' }}>
+            <span className="text-xs text-gray-400">
               {label}
             </span>
           </div>
@@ -225,16 +231,11 @@ export default function StudioPage() {
           {/* Section header */}
           <div className="flex items-center gap-2">
             <span className="text-xl">{cat.icon}</span>
-            <h2 className="text-base font-bold" style={{ color: INDIGO }}>
+            <h2 className="text-base font-bold text-white font-bricolage">
               {cat.label}
             </h2>
             <Badge
-              className="text-xs ml-1"
-              style={{
-                background: 'rgba(8,13,38,0.07)',
-                color: INDIGO,
-                border: 'none',
-              }}
+              className="text-xs ml-1 bg-white/5 text-gray-400 border border-white/5"
             >
               {cat.videos.length} videos
             </Badge>

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-const DASHBOARD_ROLES = ['creator', 'merchant', 'admin'] as const;
+const DASHBOARD_ROLES = ['creator', 'merchant', 'admin', 'super_admin'] as const;
 
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;

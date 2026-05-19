@@ -140,9 +140,9 @@ const CREATORS: Creator[] = [
 ];
 
 const STATUS_CONFIG: Record<StatusType, { bg: string; color: string }> = {
-  Active: { bg: 'rgba(34,197,94,0.12)', color: '#16a34a' },
+  Active: { bg: 'rgba(34,197,94,0.15)', color: '#34d399' },
   Onboarding: { bg: 'rgba(201,168,76,0.15)', color: '#C9A84C' },
-  Suspended: { bg: 'rgba(239,68,68,0.10)', color: '#dc2626' },
+  Suspended: { bg: 'rgba(239,68,68,0.15)', color: '#f87171' },
 };
 
 /* ------------------------------------------------------------------ */
@@ -159,22 +159,27 @@ function StatCard({
   value: string | number;
 }) {
   return (
-    <Card className="border-0 shadow-sm" style={{ background: '#fff', borderRadius: 14 }}>
+    <Card
+      className="border-0 shadow-sm"
+      style={{
+        background: 'rgba(255, 255, 255, 0.02)',
+        border: '1px solid rgba(240, 235, 224, 0.08)',
+      }}
+    >
       <CardContent className="flex items-center gap-4 py-4 px-5">
         <div
-          className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0"
+          className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0 border border-[#C9A84C]/15"
           style={{ background: 'rgba(201,168,76,0.10)' }}
         >
           <Icon size={18} style={{ color: GOLD }} />
         </div>
         <div>
           <div
-            className="text-xl font-bold"
-            style={{ color: INDIGO, fontFamily: 'var(--font-bricolage, sans-serif)' }}
+            className="text-xl font-bold text-white font-bricolage"
           >
             {value}
           </div>
-          <div className="text-xs" style={{ color: '#9ca3af' }}>
+          <div className="text-xs text-gray-400">
             {label}
           </div>
         </div>
@@ -184,10 +189,10 @@ function StatCard({
 }
 
 function TrustBar({ score }: { score: number }) {
-  const color = score >= 80 ? '#22c55e' : score >= 60 ? GOLD : '#ef4444';
+  const color = score >= 80 ? '#34d399' : score >= 60 ? GOLD : '#f87171';
   return (
     <div className="flex items-center gap-2">
-      <div className="w-16 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+      <div className="w-16 h-1.5 rounded-full bg-white/10 overflow-hidden">
         <div
           className="h-full rounded-full"
           style={{ width: `${score}%`, background: color }}
@@ -217,30 +222,24 @@ export default function RosterPage() {
   });
 
   return (
-    <div style={{ background: BG, minHeight: '100%' }} className="p-6 rounded-xl space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <div className="flex items-center gap-3 flex-wrap">
             <h1
-              className="text-2xl font-bold tracking-tight"
-              style={{ color: INDIGO, fontFamily: 'var(--font-bricolage, sans-serif)' }}
+              className="text-2xl font-bold tracking-tight text-white font-bricolage"
             >
               My Chapter — Kozhikode
             </h1>
             <Badge
-              className="text-xs px-2.5 py-1 font-semibold flex items-center gap-1.5"
-              style={{
-                background: 'rgba(239,68,68,0.08)',
-                color: '#dc2626',
-                border: '1px solid rgba(239,68,68,0.20)',
-              }}
+              className="text-xs px-2.5 py-1 font-semibold flex items-center gap-1.5 bg-red-500/10 border-red-500/20 text-red-400"
             >
               <Lock size={10} />
               Restricted to your chapter only
             </Badge>
           </div>
-          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
+          <p className="text-sm mt-1 text-gray-400">
             Isolated chapter management console — Kozhikode, Kerala
           </p>
         </div>
@@ -254,10 +253,16 @@ export default function RosterPage() {
       </div>
 
       {/* Table card */}
-      <Card className="border-0 shadow-sm" style={{ background: '#fff', borderRadius: 14 }}>
+      <Card
+        className="border-0 shadow-sm"
+        style={{
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(240, 235, 224, 0.08)',
+        }}
+      >
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <CardTitle className="text-sm font-semibold" style={{ color: INDIGO }}>
+            <CardTitle className="text-sm font-semibold text-white font-bricolage">
               Creator Roster
             </CardTitle>
             <div className="flex items-center gap-3 flex-wrap">
@@ -265,27 +270,24 @@ export default function RosterPage() {
               <div className="relative">
                 <Search
                   size={14}
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2"
-                  style={{ color: '#9ca3af' }}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500"
                 />
                 <Input
                   placeholder="Search creator or email…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8 h-8 text-sm w-56"
-                  style={{ border: '1px solid rgba(8,13,38,0.12)', borderRadius: 8 }}
+                  className="pl-8 h-8 text-sm w-56 bg-white/5 border-white/10 text-white focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]"
                 />
               </div>
               {/* Status filter */}
               <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? '')}>
                 <SelectTrigger
                   size="sm"
-                  className="w-36 text-xs"
-                  style={{ border: '1px solid rgba(8,13,38,0.12)', borderRadius: 8 }}
+                  className="w-36 text-xs bg-white/5 border-white/10 text-white"
                 >
                   <SelectValue placeholder="Filter status" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-[#080D26] border-white/10 text-[#F0EBE0]">
                   <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="Active">Active</SelectItem>
                   <SelectItem value="Onboarding">Onboarding</SelectItem>
@@ -298,22 +300,22 @@ export default function RosterPage() {
 
         <CardContent className="px-0 pb-0">
           <Table>
-            <TableHeader>
-              <TableRow style={{ borderColor: 'rgba(8,13,38,0.06)' }}>
-                <TableHead className="pl-6 text-xs" style={{ color: '#9ca3af' }}>Name</TableHead>
-                <TableHead className="text-xs" style={{ color: '#9ca3af' }}>Email</TableHead>
-                <TableHead className="text-xs" style={{ color: '#9ca3af' }}>Platforms</TableHead>
-                <TableHead className="text-xs text-right" style={{ color: '#9ca3af' }}>Followers</TableHead>
-                <TableHead className="text-xs" style={{ color: '#9ca3af' }}>Trust Index</TableHead>
-                <TableHead className="text-xs" style={{ color: '#9ca3af' }}>Status</TableHead>
-                <TableHead className="text-xs" style={{ color: '#9ca3af' }}>Joined</TableHead>
-                <TableHead className="text-xs pr-6" style={{ color: '#9ca3af' }}>Actions</TableHead>
+            <TableHeader className="border-white/5">
+              <TableRow className="border-white/5 hover:bg-transparent">
+                <TableHead className="pl-6 text-xs text-gray-400">Name</TableHead>
+                <TableHead className="text-xs text-gray-400">Email</TableHead>
+                <TableHead className="text-xs text-gray-400">Platforms</TableHead>
+                <TableHead className="text-xs text-right text-gray-400">Followers</TableHead>
+                <TableHead className="text-xs text-gray-400">Trust Index</TableHead>
+                <TableHead className="text-xs text-gray-400">Status</TableHead>
+                <TableHead className="text-xs text-gray-400">Joined</TableHead>
+                <TableHead className="text-xs pr-6 text-gray-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-10 text-sm" style={{ color: '#9ca3af' }}>
+                <TableRow className="border-white/5 hover:bg-transparent">
+                  <TableCell colSpan={8} className="text-center py-10 text-sm text-gray-500">
                     No creators match your filters.
                   </TableCell>
                 </TableRow>
@@ -323,15 +325,14 @@ export default function RosterPage() {
                   return (
                     <TableRow
                       key={creator.id}
-                      style={{ borderColor: 'rgba(8,13,38,0.04)' }}
-                      className="hover:bg-amber-50/30 transition-colors"
+                      className="border-white/5 hover:bg-white/[0.02] transition-colors"
                     >
                       <TableCell className="pl-6">
                         <div className="flex items-center gap-2.5">
                           <div
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 border border-[#C9A84C]/25"
                             style={{
-                              background: 'rgba(201,168,76,0.12)',
+                              background: 'rgba(201,168,76,0.15)',
                               color: GOLD,
                             }}
                           >
@@ -341,13 +342,13 @@ export default function RosterPage() {
                               .join('')
                               .slice(0, 2)}
                           </div>
-                          <span className="text-sm font-semibold" style={{ color: INDIGO }}>
+                          <span className="text-sm font-semibold text-white">
                             {creator.name}
                           </span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="text-xs" style={{ color: '#6b7280' }}>
+                        <span className="text-xs text-gray-400">
                           {creator.email}
                         </span>
                       </TableCell>
@@ -356,12 +357,7 @@ export default function RosterPage() {
                           {creator.platforms.map((p) => (
                             <Badge
                               key={p}
-                              className="text-xs px-1.5"
-                              style={{
-                                background: 'rgba(8,13,38,0.06)',
-                                color: INDIGO,
-                                border: 'none',
-                              }}
+                              className="text-xs px-1.5 bg-white/5 text-gray-300 border-0"
                             >
                               {p}
                             </Badge>
@@ -369,7 +365,7 @@ export default function RosterPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <span className="text-sm font-medium" style={{ color: INDIGO }}>
+                        <span className="text-sm font-medium text-[#F0EBE0]">
                           {creator.followers}
                         </span>
                       </TableCell>
@@ -385,7 +381,7 @@ export default function RosterPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <span className="text-xs" style={{ color: '#6b7280' }}>
+                        <span className="text-xs text-gray-400">
                           {creator.joined}
                         </span>
                       </TableCell>
@@ -394,12 +390,7 @@ export default function RosterPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-7 px-2 text-xs gap-1"
-                            style={{
-                              border: '1px solid rgba(8,13,38,0.15)',
-                              color: INDIGO,
-                              borderRadius: 7,
-                            }}
+                            className="h-7 px-2 text-xs gap-1 border-white/10 text-gray-300 hover:bg-white/5 hover:text-white bg-transparent"
                           >
                             <Eye size={12} />
                             Profile
@@ -408,12 +399,7 @@ export default function RosterPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 px-2 text-xs gap-1"
-                              style={{
-                                border: '1px solid rgba(239,68,68,0.25)',
-                                color: '#dc2626',
-                                borderRadius: 7,
-                              }}
+                              className="h-7 px-2 text-xs gap-1 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-white bg-transparent"
                             >
                               <Ban size={12} />
                               Suspend
@@ -422,12 +408,7 @@ export default function RosterPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-7 px-2 text-xs gap-1"
-                            style={{
-                              border: '1px solid rgba(99,102,241,0.25)',
-                              color: '#6366f1',
-                              borderRadius: 7,
-                            }}
+                            className="h-7 px-2 text-xs gap-1 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 hover:text-white bg-transparent"
                           >
                             <MessageSquare size={12} />
                             Msg
@@ -442,10 +423,9 @@ export default function RosterPage() {
           </Table>
 
           <div
-            className="flex items-center justify-between px-6 py-3 text-xs"
+            className="flex items-center justify-between px-6 py-3 text-xs text-gray-500"
             style={{
-              borderTop: '1px solid rgba(8,13,38,0.06)',
-              color: '#9ca3af',
+              borderTop: '1px solid rgba(255,255,255,0.05)',
             }}
           >
             <span>

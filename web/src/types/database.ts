@@ -1,4 +1,4 @@
-export type UserRole = 'creator' | 'merchant' | 'admin';
+export type UserRole = 'creator' | 'merchant' | 'admin' | 'super_admin';
 export type EscrowStatus = 'pending' | 'deposited' | 'in_escrow' | 'content_approved' | 'released' | 'refunded' | 'disputed';
 export type CampaignStatus = 'draft' | 'active' | 'in_progress' | 'completed' | 'cancelled' | 'paused';
 export type Platform = 'instagram' | 'youtube' | 'facebook' | 'x' | 'linkedin' | 'tiktok';

@@ -8,16 +8,16 @@ import { Button } from '@/components/ui/button';
 const GOLD = '#C9A84C';
 const INDIGO = '#080D26';
 const BG = '#F8F7F4';
-const GREEN = '#22c55e';
-const GRAY = '#d1d5db';
+const GREEN = '#34d399';
+const GRAY = 'rgba(255, 255, 255, 0.15)';
 
 /* ------------------------------------------------------------------ */
 /* Types & data                                                          */
 /* ------------------------------------------------------------------ */
 
-type MilestoneKey = 'Deposited' | 'In Escrow' | 'Content Approved' | 'Released';
+type MilestoneKey = 'Deposited' | 'In Secure Deposit' | 'Content Approved' | 'Released';
 
-const MILESTONES: MilestoneKey[] = ['Deposited', 'In Escrow', 'Content Approved', 'Released'];
+const MILESTONES: MilestoneKey[] = ['Deposited', 'In Secure Deposit', 'Content Approved', 'Released'];
 
 interface Deal {
   id: number;
@@ -48,7 +48,7 @@ const DEALS: Deal[] = [
     brand: 'KFC India',
     campaign: 'South India Launch',
     amount: '₹1,20,000',
-    currentStep: 'In Escrow',
+    currentStep: 'In Secure Deposit',
     deadline: 'June 30, 2026',
     deliverables: 5,
     logo: '🍗',
@@ -81,8 +81,8 @@ function MilestoneStepper({ currentStep }: { currentStep: MilestoneKey }) {
         const isCurrent = i === currentIdx;
         const isPending = i > currentIdx;
 
-        const dotColor = isCompleted ? GREEN : isCurrent ? GOLD : GRAY;
-        const lineColor = isCompleted ? GREEN : GRAY;
+        const dotColor = isCompleted ? GREEN : isCurrent ? GOLD : 'rgba(255,255,255,0.2)';
+        const lineColor = isCompleted ? GREEN : 'rgba(255,255,255,0.06)';
 
         return (
           <div key={step} className="flex items-center flex-1 last:flex-none">
@@ -92,10 +92,10 @@ function MilestoneStepper({ currentStep }: { currentStep: MilestoneKey }) {
                 className="flex items-center justify-center w-7 h-7 rounded-full transition-all"
                 style={{
                   background: isCompleted
-                    ? 'rgba(34,197,94,0.12)'
+                    ? 'rgba(52,211,153,0.12)'
                     : isCurrent
                     ? 'rgba(201,168,76,0.15)'
-                    : 'rgba(209,213,219,0.30)',
+                    : 'rgba(255,255,255,0.03)',
                   border: `2px solid ${dotColor}`,
                 }}
               >
@@ -104,13 +104,13 @@ function MilestoneStepper({ currentStep }: { currentStep: MilestoneKey }) {
                 ) : isCurrent ? (
                   <div className="w-2.5 h-2.5 rounded-full" style={{ background: GOLD }} />
                 ) : (
-                  <Circle size={13} style={{ color: GRAY }} />
+                  <Circle size={13} className="text-gray-600" />
                 )}
               </div>
               <span
                 className="text-xs mt-1 font-medium text-center leading-tight"
                 style={{
-                  color: isCompleted ? GREEN : isCurrent ? GOLD : GRAY,
+                  color: isCompleted ? GREEN : isCurrent ? GOLD : '#6b7280',
                   fontSize: '10px',
                   maxWidth: '64px',
                   lineHeight: '1.2',
@@ -140,16 +140,16 @@ function MilestoneStepper({ currentStep }: { currentStep: MilestoneKey }) {
 
 function StepBadge({ step }: { step: MilestoneKey }) {
   const styles: Record<MilestoneKey, { bg: string; color: string }> = {
-    Deposited: { bg: 'rgba(59,130,246,0.10)', color: '#1d4ed8' },
-    'In Escrow': { bg: 'rgba(245,158,11,0.10)', color: '#b45309' },
-    'Content Approved': { bg: 'rgba(201,168,76,0.12)', color: GOLD },
-    Released: { bg: 'rgba(34,197,94,0.10)', color: '#15803d' },
+    Deposited: { bg: 'rgba(59,130,246,0.15)', color: '#60a5fa' },
+    'In Secure Deposit': { bg: 'rgba(245,158,11,0.15)', color: '#fbbf24' },
+    'Content Approved': { bg: 'rgba(201,168,76,0.15)', color: GOLD },
+    Released: { bg: 'rgba(34,197,94,0.15)', color: '#34d399' },
   };
   const s = styles[step];
   return (
     <Badge
-      className="text-xs font-semibold px-2 py-0.5"
-      style={{ background: s.bg, color: s.color, border: 'none' }}
+      className="text-xs font-semibold px-2 py-0.5 border-0"
+      style={{ background: s.bg, color: s.color }}
     >
       {step}
     </Badge>
@@ -162,36 +162,38 @@ function StepBadge({ step }: { step: MilestoneKey }) {
 
 export default function DealsPage() {
   return (
-    <div style={{ background: BG, minHeight: '100%' }} className="p-6 rounded-xl space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h1
-          className="text-2xl font-bold tracking-tight"
-          style={{ color: INDIGO, fontFamily: 'var(--font-bricolage, sans-serif)' }}
+          className="text-2xl font-bold tracking-tight text-white font-bricolage"
         >
           My Deals
         </h1>
-        <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
-          Track escrow milestones and deliverables for your active campaigns.
+        <p className="text-sm mt-1 text-gray-400">
+          Track secure deposit milestones and deliverables for your active campaigns.
         </p>
       </div>
 
       {/* Summary strip */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Active Deals', value: '3', color: INDIGO },
-          { label: 'Total Locked in Escrow', value: '₹2,65,000', color: GOLD },
-          { label: 'Deliverables Remaining', value: '8', color: '#6b7280' },
+          { label: 'Active Deals', value: '3', color: 'white' },
+          { label: 'Total Securely Deposited', value: '₹2,65,000', color: GOLD },
+          { label: 'Deliverables Remaining', value: '8', color: '#9ca3af' },
         ].map(({ label, value, color }) => (
           <div
             key={label}
-            className="text-center rounded-xl py-3"
-            style={{ background: '#fff', border: '1px solid #f3f4f6' }}
+            className="text-center rounded-xl py-3 border"
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              borderColor: 'rgba(240, 235, 224, 0.08)',
+            }}
           >
-            <div className="text-lg font-bold" style={{ color }}>
+            <div className="text-lg font-bold font-bricolage" style={{ color }}>
               {value}
             </div>
-            <div className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>
+            <div className="text-xs mt-0.5 text-gray-400">
               {label}
             </div>
           </div>
@@ -204,23 +206,28 @@ export default function DealsPage() {
           <Card
             key={deal.id}
             className="border-0 shadow-sm"
-            style={{ background: '#fff', borderRadius: '16px', overflow: 'hidden' }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(240, 235, 224, 0.08)',
+              borderRadius: '16px',
+              overflow: 'hidden',
+            }}
           >
             <div style={{ height: '4px', background: deal.color }} />
             <CardHeader className="pb-2 pt-4">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-3">
                   <div
-                    className="flex items-center justify-center w-11 h-11 rounded-xl text-xl"
-                    style={{ background: `${deal.color}12` }}
+                    className="flex items-center justify-center w-11 h-11 rounded-xl text-xl border border-white/5"
+                    style={{ background: 'rgba(255, 255, 255, 0.02)' }}
                   >
                     {deal.logo}
                   </div>
                   <div>
-                    <div className="text-xs font-medium" style={{ color: '#9ca3af' }}>
+                    <div className="text-xs font-medium text-gray-400">
                       {deal.brand}
                     </div>
-                    <CardTitle className="text-base font-semibold" style={{ color: INDIGO }}>
+                    <CardTitle className="text-base font-semibold text-white font-bricolage">
                       {deal.campaign}
                     </CardTitle>
                     <div className="flex items-center gap-2 mt-1">
@@ -242,10 +249,10 @@ export default function DealsPage() {
 
               {/* Footer info */}
               <div
-                className="flex items-center justify-between gap-4 pt-2 flex-wrap"
-                style={{ borderTop: '1px solid #f3f4f6' }}
+                className="flex items-center justify-between gap-4 pt-3 flex-wrap"
+                style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
               >
-                <div className="flex items-center gap-4 text-xs" style={{ color: '#6b7280' }}>
+                <div className="flex items-center gap-4 text-xs text-gray-400">
                   <div className="flex items-center gap-1.5">
                     <Clock size={12} />
                     <span>Deadline: {deal.deadline}</span>
@@ -257,7 +264,7 @@ export default function DealsPage() {
                 </div>
                 <Button
                   variant="outline"
-                  className="text-xs font-semibold h-7 px-3"
+                  className="text-xs font-semibold h-7 px-3 bg-transparent hover:text-white"
                   style={{
                     borderColor: deal.color,
                     color: deal.color,

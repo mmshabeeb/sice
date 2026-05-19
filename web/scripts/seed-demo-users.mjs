@@ -43,6 +43,13 @@ const DEMO_USERS = [
     role: 'admin',
     chapter_id: 'kozhikode',
   },
+  {
+    email: 'demo.superadmin@sice.media',
+    password: 'Demo@1234',
+    displayName: 'Global Super Admin',
+    role: 'super_admin',
+    chapter_id: null,
+  },
 ];
 
 // ── Seed ─────────────────────────────────────────────────────────────────────

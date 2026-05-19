@@ -12,6 +12,7 @@ const DEMO_ACCOUNTS = [
   { role: 'Creator', email: 'demo.creator@sice.media', password: 'Demo@1234', description: 'Social accounts, metrics, brand deals' },
   { role: 'Merchant', email: 'demo.merchant@sice.media', password: 'Demo@1234', description: 'Talent discovery, campaigns, wallet' },
   { role: 'Admin', email: 'demo.admin@sice.media', password: 'Demo@1234', description: 'Chapter mgmt, applications, arbitration' },
+  { role: 'Super Admin', email: 'demo.superadmin@sice.media', password: 'Demo@1234', description: 'Manage chapters, creators, and merchants' },
 ];
 
 export default function LoginPage() {
@@ -27,8 +28,29 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const { user } = await signInWithEmailAndPassword(auth, email, password);
-      const idToken = await user.getIdToken();
+      const isMockFirebase = !process.env.NEXT_PUBLIC_FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY === 'mock-api-key-for-prerendering';
+      const isDemo = DEMO_ACCOUNTS.find(
+        (acc) => acc.email.toLowerCase() === email.toLowerCase() && acc.password === password
+      );
+
+      let idToken: string;
+      let role: UserRole;
+
+      if (isMockFirebase && isDemo) {
+        idToken = `mock-id-token-${isDemo.role.replace(' ', '_').toLowerCase()}`;
+        role = isDemo.role.replace(' ', '_').toLowerCase() as UserRole;
+      } else {
+        const { user } = await signInWithEmailAndPassword(auth, email, password);
+        idToken = await user.getIdToken();
+
+        const profileSnap = await getDoc(doc(db, 'users', user.uid));
+        if (!profileSnap.exists()) {
+          setError('Profile not found. Please contact support.');
+          setLoading(false);
+          return;
+        }
+        role = profileSnap.data().role as UserRole;
+      }
 
       const res = await fetch('/api/auth/session', {
         method: 'POST',
@@ -38,14 +60,6 @@ export default function LoginPage() {
 
       if (!res.ok) throw new Error('Session creation failed. Please try again.');
 
-      const profileSnap = await getDoc(doc(db, 'users', user.uid));
-      if (!profileSnap.exists()) {
-        setError('Profile not found. Please contact support.');
-        setLoading(false);
-        return;
-      }
-
-      const role = profileSnap.data().role as UserRole;
       router.push(`/dashboard/${role}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Sign in failed. Please try again.';

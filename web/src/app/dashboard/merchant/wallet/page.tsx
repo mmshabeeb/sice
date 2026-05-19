@@ -123,7 +123,7 @@ const TRANSACTIONS: Transaction[] = [
   {
     id: 2,
     date: 'May 15, 2025',
-    description: 'Escrow deposit — South India Launch Series',
+    description: 'Secure deposit — South India Launch Series',
     amount: '₹1,20,000',
     type: 'debit',
     status: 'completed',
@@ -147,7 +147,7 @@ const TRANSACTIONS: Transaction[] = [
   {
     id: 5,
     date: 'May 5, 2025',
-    description: 'Escrow deposit — Kerala Onam Campaign',
+    description: 'Secure deposit — Kerala Onam Campaign',
     amount: '₹85,000',
     type: 'debit',
     status: 'completed',
@@ -179,9 +179,9 @@ const TRANSACTIONS: Transaction[] = [
 ];
 
 const ESCROW_STATUS_LABELS: Record<EscrowStatus, { label: string; bg: string; color: string }> = {
-  deposited: { label: 'Deposited', bg: 'rgba(14,165,233,0.10)', color: '#0284c7' },
-  in_escrow: { label: 'In Escrow', bg: 'rgba(251,191,36,0.12)', color: '#d97706' },
-  content_approved: { label: 'Content Approved', bg: 'rgba(34,197,94,0.10)', color: '#16a34a' },
+  deposited: { label: 'Deposited', bg: 'rgba(14,165,233,0.15)', color: '#38bdf8' },
+  in_escrow: { label: 'In Secure Deposit', bg: 'rgba(251,191,36,0.15)', color: '#fbbf24' },
+  content_approved: { label: 'Content Approved', bg: 'rgba(34,197,94,0.15)', color: '#4ade80' },
 };
 
 /* ------------------------------------------------------------------ */
@@ -224,15 +224,15 @@ export default function WalletPage() {
   const displayReleased = 820000 + totalReleased;
 
   return (
-    <div style={{ background: BG, minHeight: '100%' }} className="p-6 space-y-7">
+    <div className="space-y-7">
       {/* ── Page header ── */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: INDIGO }}>
-            Wallet &amp; Escrow
+          <h1 className="text-2xl font-bold tracking-tight text-white font-bricolage">
+            Wallet &amp; Secure Deposits
           </h1>
-          <p className="text-sm mt-1 text-gray-500">
-            Manage your funds, escrow deposits, and creator payment releases.
+          <p className="text-sm mt-1 text-gray-400">
+            Manage your funds, secure deposits, and creator payment releases.
           </p>
         </div>
 
@@ -241,31 +241,31 @@ export default function WalletPage() {
           <DialogTrigger
             render={
               <Button
-                className="h-9 px-5 text-sm font-semibold gap-2"
-                style={{ background: GOLD, color: INDIGO, border: 'none' }}
+                className="h-9 px-5 text-sm font-bold gap-2 bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950"
+                style={{ border: 'none' }}
               />
             }
           >
             <Plus size={15} /> Add Funds
           </DialogTrigger>
 
-          <DialogContent className="sm:max-w-sm">
+          <DialogContent className="sm:max-w-sm bg-slate-950 border border-white/10 text-white">
             <DialogHeader>
-              <DialogTitle>Add Funds to Wallet</DialogTitle>
+              <DialogTitle className="text-white font-bricolage">Add Funds to Wallet</DialogTitle>
             </DialogHeader>
 
             <div className="space-y-4 py-2">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Amount (₹)</Label>
+                <Label className="text-xs font-semibold text-gray-300">Amount (₹)</Label>
                 <div className="relative">
                   <IndianRupee
                     size={13}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
                   />
                   <Input
                     type="number"
                     placeholder="Enter amount"
-                    className="pl-7"
+                    className="pl-7 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#C9A84C]"
                     value={fundAmount}
                     onChange={(e) => setFundAmount(e.target.value)}
                   />
@@ -273,27 +273,26 @@ export default function WalletPage() {
               </div>
 
               <div
-                className="rounded-xl p-3 text-xs space-y-1"
-                style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.20)' }}
+                className="rounded-xl p-3 text-xs space-y-1 border border-[#C9A84C]/25 bg-[#C9A84C]/10"
               >
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-gray-400">
                   <span>Amount</span>
                   <span>₹{fundAmount ? parseInt(fundAmount).toLocaleString('en-IN') : '0'}</span>
                 </div>
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-gray-400">
                   <span>Platform Fee (1.5%)</span>
                   <span>₹{fundAmount ? Math.round(parseInt(fundAmount) * 0.015).toLocaleString('en-IN') : '0'}</span>
                 </div>
-                <Separator className="my-1" />
-                <div className="flex justify-between font-semibold" style={{ color: INDIGO }}>
+                <Separator className="my-1 bg-white/10" />
+                <div className="flex justify-between font-bold text-white">
                   <span>Total Payable</span>
                   <span>₹{fundAmount ? Math.round(parseInt(fundAmount) * 1.015).toLocaleString('en-IN') : '0'}</span>
                 </div>
               </div>
 
               <Button
-                className="w-full h-10 text-sm font-semibold gap-2"
-                style={{ background: INDIGO, color: '#fff', border: 'none' }}
+                className="w-full h-10 text-sm font-bold gap-2 bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950"
+                style={{ border: 'none' }}
                 onClick={handleRazorpay}
               >
                 <CreditCard size={15} /> Pay via Razorpay
@@ -310,21 +309,24 @@ export default function WalletPage() {
         {/* Available balance */}
         <Card
           className="border-0 shadow-sm"
-          style={{ background: '#fff', borderRadius: 14 }}
+          style={{
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(240, 235, 224, 0.08)',
+            borderRadius: 14,
+          }}
         >
           <CardContent className="flex items-center gap-4 py-5">
             <div
-              className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0"
-              style={{ background: 'rgba(34,197,94,0.08)' }}
+              className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0 border border-white/5 bg-green-500/10"
             >
-              <Wallet size={22} style={{ color: '#22c55e' }} />
+              <Wallet size={22} className="text-green-400" />
             </div>
             <div>
-              <div className="text-xs text-gray-400 font-medium">Available Balance</div>
-              <div className="text-2xl font-bold mt-0.5" style={{ color: '#16a34a' }}>
+              <div className="text-xs text-gray-450 font-medium">Available Balance</div>
+              <div className="text-2xl font-bold mt-0.5 font-bricolage text-green-400">
                 ₹1,25,000
               </div>
-              <div className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
+              <div className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1">
                 <TrendingUp size={9} /> Ready to deploy
               </div>
             </div>
@@ -334,21 +336,24 @@ export default function WalletPage() {
         {/* Locked in escrow */}
         <Card
           className="border-0 shadow-sm"
-          style={{ background: '#fff', borderRadius: 14 }}
+          style={{
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(240, 235, 224, 0.08)',
+            borderRadius: 14,
+          }}
         >
           <CardContent className="flex items-center gap-4 py-5">
             <div
-              className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0"
-              style={{ background: 'rgba(201,168,76,0.08)' }}
+              className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0 border border-white/5 bg-[#C9A84C]/10"
             >
               <Lock size={22} style={{ color: GOLD }} />
             </div>
             <div>
-              <div className="text-xs text-gray-400 font-medium">Locked in Escrow</div>
-              <div className="text-2xl font-bold mt-0.5" style={{ color: GOLD }}>
+              <div className="text-xs text-gray-450 font-medium">Securely Deposited</div>
+              <div className="text-2xl font-bold mt-0.5 font-bricolage text-[#C9A84C]">
                 ₹3,45,000
               </div>
-              <div className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
+              <div className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1">
                 <Clock size={9} /> 4 active contracts
               </div>
             </div>
@@ -358,21 +363,24 @@ export default function WalletPage() {
         {/* Total released */}
         <Card
           className="border-0 shadow-sm"
-          style={{ background: '#fff', borderRadius: 14 }}
+          style={{
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(240, 235, 224, 0.08)',
+            borderRadius: 14,
+          }}
         >
           <CardContent className="flex items-center gap-4 py-5">
             <div
-              className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0"
-              style={{ background: 'rgba(99,102,241,0.08)' }}
+              className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0 border border-white/5 bg-indigo-500/10"
             >
-              <CheckCircle2 size={22} style={{ color: '#6366f1' }} />
+              <CheckCircle2 size={22} className="text-indigo-400" />
             </div>
             <div>
-              <div className="text-xs text-gray-400 font-medium">Total Released</div>
-              <div className="text-2xl font-bold mt-0.5" style={{ color: '#6366f1' }}>
+              <div className="text-xs text-gray-450 font-medium">Total Released</div>
+              <div className="text-2xl font-bold mt-0.5 font-bricolage text-indigo-400">
                 ₹{displayReleased.toLocaleString('en-IN')}
               </div>
-              <div className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
+              <div className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1">
                 <CheckCircle2 size={9} /> 12 payments completed
               </div>
             </div>
@@ -380,19 +388,23 @@ export default function WalletPage() {
         </Card>
       </div>
 
-      {/* ── Active escrow table ── */}
+      {/* ── Active secure deposits table ── */}
       <div>
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">
-          Active Escrow Contracts
+        <h2 className="text-xs font-bold uppercase tracking-widest text-[#C9A84C] font-bricolage mb-3">
+          Active Secure Deposits
         </h2>
         <Card
           className="border-0 shadow-sm overflow-hidden"
-          style={{ background: '#fff', borderRadius: 14 }}
+          style={{
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(240, 235, 224, 0.08)',
+            borderRadius: 14,
+          }}
         >
           <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow className="border-b border-gray-100">
+                <TableRow className="border-b border-white/10 hover:bg-transparent">
                   <TableHead className="pl-5 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     Campaign
                   </TableHead>
@@ -418,10 +430,10 @@ export default function WalletPage() {
                   const s = ESCROW_STATUS_LABELS[row.status];
                   const released = releasedIds.includes(row.id);
                   return (
-                    <TableRow key={row.id} className="border-b border-gray-50">
+                    <TableRow key={row.id} className="border-b border-white/5 hover:bg-white/5">
                       {/* Campaign */}
                       <TableCell className="pl-5">
-                        <span className="font-medium text-sm" style={{ color: INDIGO }}>
+                        <span className="font-semibold text-sm text-white font-bricolage">
                           {row.campaign}
                         </span>
                       </TableCell>
@@ -430,18 +442,17 @@ export default function WalletPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div
-                            className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold text-white shrink-0"
-                            style={{ background: INDIGO }}
+                            className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold text-white shrink-0 border border-white/10 bg-white/10"
                           >
                             {getInitials(row.creator)}
                           </div>
-                          <span className="text-sm text-gray-700">{row.creator}</span>
+                          <span className="text-sm text-gray-300">{row.creator}</span>
                         </div>
                       </TableCell>
 
                       {/* Amount */}
                       <TableCell>
-                        <span className="text-sm font-bold" style={{ color: INDIGO }}>
+                        <span className="text-sm font-bold text-white font-bricolage">
                           {row.amount}
                         </span>
                       </TableCell>
@@ -449,8 +460,8 @@ export default function WalletPage() {
                       {/* Status */}
                       <TableCell>
                         <span
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
-                          style={{ background: s.bg, color: s.color }}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-white/5"
+                          style={{ background: released ? 'rgba(34,197,94,0.15)' : s.bg, color: released ? '#4ade80' : s.color }}
                         >
                           {released ? 'Payment Released' : s.label}
                         </span>
@@ -458,8 +469,8 @@ export default function WalletPage() {
 
                       {/* Contract ID */}
                       <TableCell>
-                        <div className="flex items-center gap-1 text-xs text-gray-500 font-mono">
-                          <FileText size={11} />
+                        <div className="flex items-center gap-1 text-xs text-gray-405 font-mono">
+                          <FileText size={11} className="text-gray-500" />
                           {row.contractId}
                         </div>
                       </TableCell>
@@ -468,20 +479,20 @@ export default function WalletPage() {
                       <TableCell className="pr-5">
                         {!released && row.status === 'content_approved' ? (
                           <Button
-                            className="h-8 px-3 text-xs font-semibold gap-1"
-                            style={{ background: GOLD, color: INDIGO, border: 'none' }}
+                            className="h-8 px-3 text-xs font-bold gap-1 bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950"
+                            style={{ border: 'none' }}
                             onClick={() => handleReleasePayment(row.id)}
                           >
                             <ArrowUpRight size={12} /> Release Payment
                           </Button>
                         ) : released ? (
-                          <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+                          <span className="text-xs text-green-400 font-semibold flex items-center gap-1">
                             <CheckCircle2 size={12} /> Released
                           </span>
                         ) : (
                           <Button
                             variant="outline"
-                            className="h-8 px-3 text-xs gap-1"
+                            className="h-8 px-3 text-xs gap-1 border-white/10 text-gray-300 hover:bg-white/5 hover:text-white bg-transparent"
                           >
                             <ExternalLink size={12} /> View Contract
                           </Button>
@@ -499,21 +510,25 @@ export default function WalletPage() {
       {/* ── Transaction history ── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-[#C9A84C] font-bricolage">
             Transaction History
           </h2>
-          <Button variant="outline" className="h-7 px-3 text-xs gap-1">
+          <Button variant="outline" className="h-7 px-3 text-xs gap-1 border-white/10 text-gray-300 hover:bg-white/5 hover:text-white bg-transparent">
             <FileText size={11} /> Export CSV
           </Button>
         </div>
         <Card
           className="border-0 shadow-sm overflow-hidden"
-          style={{ background: '#fff', borderRadius: 14 }}
+          style={{
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(240, 235, 224, 0.08)',
+            borderRadius: 14,
+          }}
         >
           <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow className="border-b border-gray-100">
+                <TableRow className="border-b border-white/10 hover:bg-transparent">
                   <TableHead className="pl-5 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     Date
                   </TableHead>
@@ -533,30 +548,30 @@ export default function WalletPage() {
               </TableHeader>
               <TableBody>
                 {TRANSACTIONS.map((tx) => (
-                  <TableRow key={tx.id} className="border-b border-gray-50">
+                  <TableRow key={tx.id} className="border-b border-white/5 hover:bg-white/5">
                     {/* Date */}
                     <TableCell className="pl-5">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                        <Clock size={11} />
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <Clock size={11} className="text-gray-500" />
                         {tx.date}
                       </div>
                     </TableCell>
 
                     {/* Description */}
                     <TableCell>
-                      <span className="text-sm text-gray-700">{tx.description}</span>
+                      <span className="text-sm text-gray-300">{tx.description}</span>
                     </TableCell>
 
                     {/* Amount */}
                     <TableCell>
                       <div
-                        className="flex items-center gap-1 text-sm font-semibold"
-                        style={{ color: tx.type === 'credit' ? '#16a34a' : INDIGO }}
+                        className="flex items-center gap-1 text-sm font-bold font-bricolage"
+                        style={{ color: tx.type === 'credit' ? '#4ade80' : '#ffffff' }}
                       >
                         {tx.type === 'credit' ? (
-                          <ArrowDownLeft size={13} style={{ color: '#16a34a' }} />
+                          <ArrowDownLeft size={13} className="text-green-400" />
                         ) : (
-                          <ArrowUpRight size={13} style={{ color: '#dc2626' }} />
+                          <ArrowUpRight size={13} className="text-red-400" />
                         )}
                         {tx.amount}
                       </div>
@@ -565,11 +580,11 @@ export default function WalletPage() {
                     {/* Type */}
                     <TableCell>
                       <span
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize"
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold capitalize border border-white/5"
                         style={
                           tx.type === 'credit'
-                            ? { background: 'rgba(34,197,94,0.10)', color: '#16a34a' }
-                            : { background: 'rgba(239,68,68,0.08)', color: '#dc2626' }
+                            ? { background: 'rgba(34,197,94,0.15)', color: '#4ade80' }
+                            : { background: 'rgba(239,68,68,0.15)', color: '#f87171' }
                         }
                       >
                         {tx.type === 'credit' ? 'Credit' : 'Debit'}
@@ -583,10 +598,10 @@ export default function WalletPage() {
                         style={{
                           color:
                             tx.status === 'completed'
-                              ? '#16a34a'
+                              ? '#4ade80'
                               : tx.status === 'pending'
-                              ? '#d97706'
-                              : '#dc2626',
+                              ? '#fbbf24'
+                              : '#f87171',
                         }}
                       >
                         {tx.status === 'completed' && <CheckCircle2 size={11} />}
@@ -602,32 +617,32 @@ export default function WalletPage() {
         </Card>
       </div>
 
-      {/* ── Escrow info banner ── */}
+      {/* ── Secure deposit info banner ── */}
       <Card
         className="border-0 shadow-sm"
         style={{
-          background: INDIGO,
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(240, 235, 224, 0.08)',
           borderRadius: 14,
         }}
       >
         <CardContent className="flex flex-col sm:flex-row items-start sm:items-center gap-4 py-4 px-5">
           <div
-            className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0"
-            style={{ background: 'rgba(201,168,76,0.15)' }}
+            className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0 border border-white/5 bg-[#C9A84C]/10"
           >
             <Lock size={20} style={{ color: GOLD }} />
           </div>
           <div className="flex-1">
-            <div className="text-white font-semibold text-sm">
-              How SICE Escrow Works
+            <div className="text-white font-semibold text-sm font-bricolage">
+              How SICE Secure Deposits Work
             </div>
-            <div className="text-xs mt-1" style={{ color: 'rgba(240,235,224,0.65)' }}>
-              Funds are locked in SICE-managed escrow when a campaign is created. Payment is released automatically once you approve the creator&apos;s deliverables. This protects both parties and ensures fair compensation.
+            <div className="text-xs mt-1 text-gray-400">
+              Funds are locked in SICE-managed secure deposits when a campaign is created. Payment is released automatically once you approve the creator&apos;s deliverables. This protects both parties and ensures fair compensation.
             </div>
           </div>
           <Button
             variant="outline"
-            className="shrink-0 text-xs h-8 px-4 border-white/20 text-white hover:bg-white/10"
+            className="shrink-0 text-xs h-8 px-4 border-white/10 text-gray-300 hover:bg-white/5 hover:text-white bg-transparent"
           >
             Learn More
           </Button>

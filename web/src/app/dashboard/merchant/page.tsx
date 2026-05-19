@@ -55,7 +55,7 @@ const STATS = [
     bg: 'rgba(14,165,233,0.08)',
   },
   {
-    label: 'Escrow Locked',
+    label: 'Securely Deposited',
     value: '₹3,45,000',
     icon: Lock,
     sub: 'Across 4 active deals',
@@ -116,11 +116,11 @@ const ACTIVITY = [
 ];
 
 const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }> = {
-  approved: { bg: 'rgba(34,197,94,0.10)', color: '#16a34a', label: 'Content Approved' },
-  review: { bg: 'rgba(99,102,241,0.10)', color: '#6366f1', label: 'In Review' },
-  revision: { bg: 'rgba(251,191,36,0.12)', color: '#d97706', label: 'Revision Requested' },
-  submitted: { bg: 'rgba(14,165,233,0.10)', color: '#0284c7', label: 'Submitted' },
-  active: { bg: 'rgba(201,168,76,0.10)', color: GOLD, label: 'Active' },
+  approved: { bg: 'rgba(34,197,94,0.15)', color: '#4ade80', label: 'Content Approved' },
+  review: { bg: 'rgba(99,102,241,0.15)', color: '#818cf8', label: 'In Review' },
+  revision: { bg: 'rgba(251,191,36,0.15)', color: '#fbbf24', label: 'Revision Requested' },
+  submitted: { bg: 'rgba(14,165,233,0.15)', color: '#38bdf8', label: 'Submitted' },
+  active: { bg: 'rgba(201,168,76,0.15)', color: GOLD, label: 'Active' },
 };
 
 const QUICK_ACTIONS = [
@@ -140,7 +140,7 @@ const QUICK_ACTIONS = [
     label: 'View Wallet',
     href: '/dashboard/merchant/wallet',
     icon: Wallet,
-    desc: 'Manage escrow & payments',
+    desc: 'Manage secure deposits & payments',
   },
 ];
 
@@ -154,17 +154,16 @@ export default function MerchantOverviewPage() {
     hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   return (
-    <div style={{ background: BG, minHeight: '100%' }} className="p-6 space-y-8">
+    <div className="space-y-8">
       {/* ── Welcome header ── */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1
-            className="text-2xl font-bold tracking-tight"
-            style={{ color: INDIGO }}
+            className="text-2xl font-bold tracking-tight text-white font-bricolage"
           >
             {greeting}, Malabar Gold &amp; Diamonds
           </h1>
-          <p className="text-sm mt-1 text-gray-500">
+          <p className="text-sm mt-1 text-gray-400">
             Here&apos;s your campaign overview for today.
           </p>
         </div>
@@ -186,15 +185,19 @@ export default function MerchantOverviewPage() {
           <Card
             key={label}
             className="border-0 shadow-sm"
-            style={{ background: '#fff', borderRadius: 14 }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(240, 235, 224, 0.08)',
+              borderRadius: 14,
+            }}
           >
             <CardHeader className="pb-0">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                   {label}
                 </span>
                 <div
-                  className="flex items-center justify-center w-9 h-9 rounded-xl"
+                  className="flex items-center justify-center w-9 h-9 rounded-xl border border-white/5"
                   style={{ background: bg }}
                 >
                   <Icon size={18} style={{ color }} />
@@ -202,10 +205,10 @@ export default function MerchantOverviewPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-2">
-              <div className="text-3xl font-bold" style={{ color }}>
+              <div className="text-3xl font-bold font-bricolage" style={{ color }}>
                 {value}
               </div>
-              <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+              <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
                 <TrendingUp size={11} />
                 {sub}
               </div>
@@ -216,32 +219,36 @@ export default function MerchantOverviewPage() {
 
       {/* ── Quick actions ── */}
       <div>
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-3">
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {QUICK_ACTIONS.map(({ label, href, icon: Icon, desc }) => (
             <Link key={href} href={href} className="group">
               <Card
-                className="border-0 shadow-sm cursor-pointer transition-all duration-200 group-hover:shadow-md group-hover:-translate-y-0.5"
-                style={{ background: '#fff', borderRadius: 14 }}
+                className="border-0 shadow-sm cursor-pointer transition-all duration-200 group-hover:-translate-y-0.5"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(240, 235, 224, 0.08)',
+                  borderRadius: 14,
+                }}
               >
                 <CardContent className="flex items-center gap-4 py-4">
                   <div
-                    className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0"
+                    className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0 border border-white/5"
                     style={{ background: 'rgba(201,168,76,0.10)' }}
                   >
                     <Icon size={20} style={{ color: GOLD }} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold" style={{ color: INDIGO }}>
+                    <div className="text-sm font-semibold text-white">
                       {label}
                     </div>
                     <div className="text-xs text-gray-400 mt-0.5">{desc}</div>
                   </div>
                   <ArrowRight
                     size={16}
-                    className="text-gray-300 group-hover:text-gray-500 transition-colors shrink-0"
+                    className="text-gray-500 group-hover:text-[#C9A84C] transition-colors shrink-0"
                   />
                 </CardContent>
               </Card>
@@ -253,7 +260,7 @@ export default function MerchantOverviewPage() {
       {/* ── Recent activity table ── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-500">
             Recent Campaign Activity
           </h2>
           <Link
@@ -266,12 +273,16 @@ export default function MerchantOverviewPage() {
         </div>
         <Card
           className="border-0 shadow-sm overflow-hidden"
-          style={{ background: '#fff', borderRadius: 14 }}
+          style={{
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(240, 235, 224, 0.08)',
+            borderRadius: 14,
+          }}
         >
           <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow className="border-b border-gray-100">
+                <TableRow className="border-b border-white/10 hover:bg-transparent">
                   <TableHead className="pl-5 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     Campaign
                   </TableHead>
@@ -293,36 +304,35 @@ export default function MerchantOverviewPage() {
                 {ACTIVITY.map((row, i) => {
                   const s = STATUS_STYLES[row.statusType];
                   return (
-                    <TableRow key={i} className="border-b border-gray-50">
+                    <TableRow key={i} className="border-b border-white/5 hover:bg-white/5">
                       <TableCell className="pl-5">
-                        <span className="font-medium text-sm" style={{ color: INDIGO }}>
+                        <span className="font-semibold text-sm text-white font-bricolage">
                           {row.campaign}
                         </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div
-                            className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold text-white shrink-0"
-                            style={{ background: INDIGO }}
+                            className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold text-white shrink-0 border border-white/10 bg-white/10"
                           >
                             {row.creator
                               .split(' ')
                               .map((n) => n[0])
                               .join('')}
                           </div>
-                          <span className="text-sm text-gray-700">{row.creator}</span>
+                          <span className="text-sm text-gray-300">{row.creator}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <span
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-white/5"
                           style={{ background: s.bg, color: s.color }}
                         >
                           {s.label}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm font-semibold" style={{ color: INDIGO }}>
+                        <span className="text-sm font-bold text-[#C9A84C] font-bricolage">
                           {row.amount}
                         </span>
                       </TableCell>
@@ -344,21 +354,25 @@ export default function MerchantOverviewPage() {
       {/* ── Performance summary footer ── */}
       <Card
         className="border-0 shadow-sm"
-        style={{ background: INDIGO, borderRadius: 14 }}
+        style={{
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(240, 235, 224, 0.08)',
+          borderRadius: 14,
+        }}
       >
         <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-4 py-5">
           <div>
-            <div className="text-white font-semibold text-base">
+            <div className="text-white font-bold text-base font-bricolage">
               Campaign Performance Summary
             </div>
-            <div className="text-xs mt-1" style={{ color: 'rgba(240,235,224,0.65)' }}>
+            <div className="text-xs mt-1 text-gray-400">
               Your campaigns are performing 28% above industry average this quarter.
             </div>
           </div>
           <Link href="/dashboard/merchant/campaigns">
             <Button
-              className="shrink-0 font-semibold text-sm px-5"
-              style={{ background: GOLD, color: INDIGO, border: 'none' }}
+              className="shrink-0 font-bold text-sm px-5 bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950"
+              style={{ border: 'none' }}
             >
               View All Campaigns
             </Button>

@@ -17,23 +17,54 @@ export default async function DashboardLayout({
   }
 
   let uid: string;
-  try {
-    const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
-    uid = decoded.uid;
-  } catch {
-    redirect('/login');
-  }
-
-  const profileSnap = await adminDb.collection('users').doc(uid).get();
-  if (!profileSnap.exists) {
-    redirect('/login');
-  }
-
-  const profile = profileSnap.data() as {
+  let profile: {
     role: UserRole;
     full_name: string | null;
     avatar_url: string | null;
   };
+
+  if (sessionCookie.startsWith('mock-session-')) {
+    if (process.env.NODE_ENV === 'production') {
+      redirect('/login');
+    }
+    const role = sessionCookie.replace('mock-session-', '') as UserRole;
+    uid = `mock-uid-${role}`;
+    
+    let fullName = `Demo ${role.charAt(0).toUpperCase() + role.slice(1)}`;
+    if (role === 'super_admin') {
+      fullName = 'Global Super Admin';
+    } else if (role === 'admin') {
+      fullName = 'Chapter Admin';
+    } else if (role === 'merchant') {
+      fullName = 'Malabar Gold';
+    } else if (role === 'creator') {
+      fullName = 'Arjun Menon';
+    }
+
+    profile = {
+      role,
+      full_name: fullName,
+      avatar_url: null,
+    };
+  } else {
+    try {
+      const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
+      uid = decoded.uid;
+    } catch {
+      redirect('/login');
+    }
+
+    const profileSnap = await adminDb.collection('users').doc(uid).get();
+    if (!profileSnap.exists) {
+      redirect('/login');
+    }
+
+    profile = profileSnap.data() as {
+      role: UserRole;
+      full_name: string | null;
+      avatar_url: string | null;
+    };
+  }
 
   return (
     <DashboardShell

@@ -82,7 +82,7 @@ const QUICK_LINKS = [
     label: 'My Deals',
     href: '/dashboard/creator/deals',
     icon: Briefcase,
-    desc: 'Track escrow milestones',
+    desc: 'Track secure deposit milestones',
   },
   {
     label: 'Studio & Learning',
@@ -143,23 +143,21 @@ const ACTIVITY = [
 
 export default function CreatorOverviewPage() {
   return (
-    <div style={{ background: BG, minHeight: '100%' }} className="p-6 rounded-xl space-y-8">
+    <div className="space-y-8">
       {/* Welcome header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1
-            className="text-2xl font-bold tracking-tight"
-            style={{ color: INDIGO, fontFamily: 'var(--font-bricolage, sans-serif)' }}
+            className="text-2xl font-bold tracking-tight text-white font-bricolage"
           >
             Welcome back, Arjun 👋
           </h1>
-          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
+          <p className="text-sm mt-1 text-gray-400">
             Here&apos;s a snapshot of your creator activity today.
           </p>
         </div>
         <Badge
-          className="text-xs px-3 py-1 font-semibold"
-          style={{ background: 'rgba(201,168,76,0.12)', color: GOLD, border: `1px solid rgba(201,168,76,0.30)` }}
+          className="text-xs px-3 py-1 font-semibold bg-[#C9A84C]/12 text-[#C9A84C] border border-[#C9A84C]/30"
         >
           Creator · Arjun Menon
         </Badge>
@@ -171,15 +169,18 @@ export default function CreatorOverviewPage() {
           <Card
             key={label}
             className="border-0 shadow-sm"
-            style={{ background: '#fff', borderRadius: '14px' }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(240, 235, 224, 0.08)',
+            }}
           >
             <CardHeader className="pb-0">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium uppercase tracking-wider" style={{ color: '#9ca3af' }}>
+                <span className="text-xs font-medium uppercase tracking-wider text-gray-400">
                   {label}
                 </span>
                 <div
-                  className="flex items-center justify-center w-8 h-8 rounded-lg"
+                  className="flex items-center justify-center w-8 h-8 rounded-lg border border-[#C9A84C]/15"
                   style={{ background: 'rgba(201,168,76,0.10)' }}
                 >
                   <Icon size={16} style={{ color: GOLD }} />
@@ -187,12 +188,12 @@ export default function CreatorOverviewPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-2">
-              <div className="text-2xl font-bold" style={{ color: GOLD }}>
+              <div className="text-2xl font-bold text-white font-bricolage">
                 {value}
               </div>
               <div
-                className="text-xs mt-1"
-                style={{ color: positive ? '#22c55e' : '#f59e0b' }}
+                className="text-xs mt-1 font-medium"
+                style={{ color: positive ? '#34d399' : '#f59e0b' }}
               >
                 {delta}
               </div>
@@ -203,28 +204,28 @@ export default function CreatorOverviewPage() {
 
       {/* Quick links */}
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: '#6b7280' }}>
+        <h2 className="text-sm font-semibold uppercase tracking-wider mb-3 text-gray-400">
           Quick Access
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {QUICK_LINKS.map(({ label, href, icon: Icon, desc }) => (
             <Link key={href} href={href} className="group">
               <Card
-                className="border-0 shadow-sm cursor-pointer transition-all duration-200 group-hover:shadow-md"
-                style={{ background: '#fff', borderRadius: '14px' }}
+                className="border-0 shadow-sm cursor-pointer transition-all duration-200 hover:scale-[1.02] bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-[#C9A84C]/30"
+                style={{ borderRadius: '14px' }}
               >
                 <CardContent className="flex items-start gap-3 py-4">
                   <div
-                    className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0"
-                    style={{ background: 'rgba(8,13,38,0.06)' }}
+                    className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 border border-white/10 group-hover:border-[#C9A84C]/30 transition-colors"
+                    style={{ background: 'rgba(255,255,255,0.03)' }}
                   >
-                    <Icon size={18} style={{ color: INDIGO }} />
+                    <Icon size={18} className="text-gray-300 group-hover:text-[#C9A84C] transition-colors" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold" style={{ color: INDIGO }}>
+                    <div className="text-sm font-semibold text-white group-hover:text-[#C9A84C] transition-colors">
                       {label}
                     </div>
-                    <div className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>
+                    <div className="text-xs mt-0.5 text-gray-400">
                       {desc}
                     </div>
                   </div>
@@ -237,24 +238,33 @@ export default function CreatorOverviewPage() {
 
       {/* Recent activity */}
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: '#6b7280' }}>
+        <h2 className="text-sm font-semibold uppercase tracking-wider mb-3 text-gray-400">
           Recent Activity
         </h2>
-        <Card className="border-0 shadow-sm" style={{ background: '#fff', borderRadius: '14px' }}>
-          <CardContent className="py-2 divide-y divide-gray-100">
+        <Card
+          className="border-0 shadow-sm"
+          style={{
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(240, 235, 224, 0.08)',
+          }}
+        >
+          <CardContent className="py-2 divide-y divide-white/5">
             {ACTIVITY.map(({ icon: Icon, color, text, time }, i) => (
               <div key={i} className="flex items-start gap-3 py-3">
                 <div
-                  className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 mt-0.5"
-                  style={{ background: `${color}18` }}
+                  className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 mt-0.5 border"
+                  style={{
+                    background: `${color}18`,
+                    borderColor: `${color}35`,
+                  }}
                 >
                   <Icon size={14} style={{ color }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm" style={{ color: INDIGO }}>
+                  <p className="text-sm text-white">
                     {text}
                   </p>
-                  <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>
+                  <p className="text-xs mt-0.5 text-gray-500">
                     {time}
                   </p>
                 </div>

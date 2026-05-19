@@ -109,8 +109,8 @@ const INVOICES: Invoice[] = [
 ];
 
 const STATUS_STYLE: Record<InvoiceStatus, { bg: string; color: string }> = {
-  Paid: { bg: 'rgba(34,197,94,0.10)', color: '#15803d' },
-  Pending: { bg: 'rgba(245,158,11,0.10)', color: '#b45309' },
+  Paid: { bg: 'rgba(52,211,153,0.15)', color: '#34d399' },
+  Pending: { bg: 'rgba(245,158,11,0.15)', color: '#fbbf24' },
 };
 
 function fmt(n: number) {
@@ -156,23 +156,22 @@ export default function LegalPage() {
   }
 
   return (
-    <div style={{ background: BG, minHeight: '100%' }} className="p-6 rounded-xl space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1
-            className="text-2xl font-bold tracking-tight"
-            style={{ color: INDIGO, fontFamily: 'var(--font-bricolage, sans-serif)' }}
+            className="text-2xl font-bold tracking-tight text-white font-bricolage"
           >
             Legal &amp; Invoicing
           </h1>
-          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
+          <p className="text-sm mt-1 text-gray-400">
             Contract templates and GST-compliant invoicing for creator campaigns.
           </p>
         </div>
         <Button
-          className="flex items-center gap-2 font-semibold"
-          style={{ background: GOLD, color: '#fff', border: 'none', borderRadius: '10px' }}
+          className="flex items-center gap-2 bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950 font-bold"
+          style={{ border: 'none', borderRadius: '10px' }}
           onClick={() => setNewInvoiceOpen(true)}
         >
           <Plus size={15} />
@@ -182,13 +181,13 @@ export default function LegalPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="contracts">
-        <TabsList className="mb-4">
-          <TabsTrigger value="contracts">
-            <FileText size={14} />
+        <TabsList className="mb-4 bg-white/5 border border-white/10 p-1">
+          <TabsTrigger value="contracts" className="data-[state=active]:bg-[#C9A84C] data-[state=active]:text-slate-950 text-gray-300">
+            <FileText size={14} className="mr-2" />
             Contracts
           </TabsTrigger>
-          <TabsTrigger value="invoices">
-            <IndianRupee size={14} />
+          <TabsTrigger value="invoices" className="data-[state=active]:bg-[#C9A84C] data-[state=active]:text-slate-950 text-gray-300">
+            <IndianRupee size={14} className="mr-2" />
             Invoices
           </TabsTrigger>
         </TabsList>
@@ -200,32 +199,31 @@ export default function LegalPage() {
               <Card
                 key={c.id}
                 className="border-0 shadow-sm"
-                style={{ background: '#fff', borderRadius: '14px' }}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(240, 235, 224, 0.08)',
+                  borderRadius: '14px',
+                }}
               >
                 <CardHeader className="pb-0">
                   <div className="flex items-start gap-3">
                     <div
-                      className="flex items-center justify-center w-10 h-10 rounded-xl text-xl shrink-0"
-                      style={{ background: 'rgba(8,13,38,0.06)' }}
+                      className="flex items-center justify-center w-10 h-10 rounded-xl text-xl shrink-0 border border-white/5"
+                      style={{ background: 'rgba(255, 255, 255, 0.02)' }}
                     >
                       {c.icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-sm font-semibold" style={{ color: INDIGO }}>
+                      <CardTitle className="text-sm font-semibold text-white font-bricolage">
                         {c.title}
                       </CardTitle>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <Badge
-                          style={{
-                            background: 'rgba(8,13,38,0.06)',
-                            color: '#6b7280',
-                            border: 'none',
-                            fontSize: '10px',
-                          }}
+                          className="bg-white/5 text-gray-400 border-0 text-[10px]"
                         >
                           {c.pages} pages
                         </Badge>
-                        <span className="text-xs" style={{ color: '#9ca3af' }}>
+                        <span className="text-xs text-gray-500">
                           Updated {c.updated}
                         </span>
                       </div>
@@ -233,13 +231,13 @@ export default function LegalPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-2 pb-4">
-                  <p className="text-xs leading-relaxed mb-3" style={{ color: '#6b7280' }}>
+                  <p className="text-xs leading-relaxed mb-3 text-gray-400">
                     {c.desc}
                   </p>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      className="text-xs font-semibold h-8 gap-1.5"
+                      className="text-xs font-semibold h-8 gap-1.5 border-white/10 text-gray-300 hover:bg-white/5 hover:text-white bg-transparent"
                       style={{ borderRadius: '8px' }}
                       onClick={() => alert(`Opening preview for "${c.title}"`)}
                     >
@@ -247,10 +245,8 @@ export default function LegalPage() {
                       Preview
                     </Button>
                     <Button
-                      className="text-xs font-semibold h-8 gap-1.5"
+                      className="text-xs bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950 font-bold h-8 gap-1.5"
                       style={{
-                        background: GOLD,
-                        color: '#fff',
                         border: 'none',
                         borderRadius: '8px',
                       }}
@@ -268,14 +264,21 @@ export default function LegalPage() {
 
         {/* ── Invoices tab ── */}
         <TabsContent value="invoices">
-          <Card className="border-0 shadow-sm" style={{ background: '#fff', borderRadius: '14px' }}>
+          <Card
+            className="border-0 shadow-sm overflow-hidden"
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(240, 235, 224, 0.08)',
+              borderRadius: '14px',
+            }}
+          >
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow style={{ borderBottomColor: '#f3f4f6' }}>
+                  <TableRow className="border-b border-white/5 hover:bg-transparent">
                     {['Invoice #', 'Brand', 'Amount', 'GST (18%)', 'Total', 'Status', 'Date', 'Action'].map(
                       (h) => (
-                        <TableHead key={h} className="text-xs font-semibold" style={{ color: '#9ca3af' }}>
+                        <TableHead key={h} className="text-xs font-semibold text-gray-400">
                           {h}
                         </TableHead>
                       )
@@ -286,49 +289,49 @@ export default function LegalPage() {
                   {INVOICES.map((inv) => {
                     const s = STATUS_STYLE[inv.status];
                     return (
-                      <TableRow key={inv.id} style={{ borderBottomColor: '#f9fafb' }}>
+                      <TableRow key={inv.id} className="border-b border-white/5 hover:bg-white/[0.01]">
                         <TableCell>
-                          <span className="font-mono text-xs font-medium" style={{ color: INDIGO }}>
+                          <span className="font-mono text-xs font-medium text-white">
                             {inv.id}
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm font-medium" style={{ color: INDIGO }}>
+                          <span className="text-sm font-medium text-white">
                             {inv.brand}
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm" style={{ color: '#374151' }}>
+                          <span className="text-sm text-gray-300">
                             {fmt(inv.amount)}
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm" style={{ color: '#374151' }}>
+                          <span className="text-sm text-gray-300">
                             {fmt(inv.gst)}
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm font-bold" style={{ color: GOLD }}>
+                          <span className="text-sm font-bold text-[#C9A84C] font-bricolage">
                             {fmt(inv.total)}
                           </span>
                         </TableCell>
                         <TableCell>
                           <Badge
-                            className="text-xs font-semibold px-2"
-                            style={{ background: s.bg, color: s.color, border: 'none' }}
+                            className="text-xs font-semibold px-2 border-0"
+                            style={{ background: s.bg, color: s.color }}
                           >
                             {inv.status}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <span className="text-xs" style={{ color: '#6b7280' }}>
+                          <span className="text-xs text-gray-400">
                             {inv.date}
                           </span>
                         </TableCell>
                         <TableCell>
                           <Button
                             variant="ghost"
-                            className="h-7 text-xs px-2 gap-1"
+                            className="h-7 text-xs px-2 gap-1 text-gray-300 hover:text-white hover:bg-white/5"
                             onClick={() => alert(`Downloading invoice ${inv.id}`)}
                           >
                             <Download size={12} />
@@ -347,27 +350,28 @@ export default function LegalPage() {
 
       {/* ── Generate invoice dialog ── */}
       <Dialog open={newInvoiceOpen} onOpenChange={setNewInvoiceOpen}>
-        <DialogContent className="sm:max-w-sm" style={{ borderRadius: '16px' }}>
+        <DialogContent className="sm:max-w-sm bg-slate-950 border border-white/10 text-white" style={{ borderRadius: '16px' }}>
           <DialogHeader>
-            <DialogTitle>Generate New Invoice</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-white font-bricolage text-lg">Generate New Invoice</DialogTitle>
+            <DialogDescription className="text-gray-400 text-xs">
               Fill in the details below. A GST-compliant invoice PDF will be created automatically.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label className="text-xs font-medium" style={{ color: INDIGO }}>
+              <Label className="text-xs font-medium text-gray-300">
                 Brand Name
               </Label>
               <Input
                 placeholder="e.g. Malabar Gold"
                 value={form.brand}
                 onChange={(e) => setForm({ ...form, brand: e.target.value })}
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#C9A84C]"
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium" style={{ color: INDIGO }}>
+              <Label className="text-xs font-medium text-gray-300">
                 Amount (₹)
               </Label>
               <Input
@@ -375,10 +379,11 @@ export default function LegalPage() {
                 placeholder="e.g. 85000"
                 value={form.amount}
                 onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#C9A84C]"
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium" style={{ color: INDIGO }}>
+              <Label className="text-xs font-medium text-gray-300">
                 GST %
               </Label>
               <Input
@@ -386,40 +391,41 @@ export default function LegalPage() {
                 placeholder="18"
                 value={form.gst}
                 onChange={(e) => setForm({ ...form, gst: e.target.value })}
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#C9A84C]"
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium" style={{ color: INDIGO }}>
+              <Label className="text-xs font-medium text-gray-300">
                 Description
               </Label>
               <Input
                 placeholder="e.g. Content creation for Onam Campaign"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#C9A84C]"
               />
             </div>
 
             {/* GST preview */}
             {form.amount && form.gst && (
               <div
-                className="rounded-xl px-3 py-2.5 text-xs space-y-1"
-                style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.20)' }}
+                className="rounded-xl px-3 py-2.5 text-xs space-y-1 border border-[#C9A84C]/20 bg-[#C9A84C]/5"
               >
                 <div className="flex justify-between">
-                  <span style={{ color: '#92400e' }}>Base amount</span>
-                  <span className="font-semibold" style={{ color: INDIGO }}>
+                  <span className="text-gray-400">Base amount</span>
+                  <span className="font-semibold text-white">
                     {fmt(Number(form.amount))}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span style={{ color: '#92400e' }}>GST ({form.gst}%)</span>
-                  <span className="font-semibold" style={{ color: INDIGO }}>
+                  <span className="text-gray-400">GST ({form.gst}%)</span>
+                  <span className="font-semibold text-white">
                     {fmt(Math.round((Number(form.amount) * Number(form.gst)) / 100))}
                   </span>
                 </div>
-                <div className="flex justify-between font-bold pt-1" style={{ borderTop: '1px solid rgba(201,168,76,0.20)' }}>
-                  <span style={{ color: GOLD }}>Total</span>
-                  <span style={{ color: GOLD }}>
+                <div className="flex justify-between font-bold pt-1.5 border-t border-[#C9A84C]/25">
+                  <span className="text-[#C9A84C]">Total</span>
+                  <span className="text-[#C9A84C] font-bricolage">
                     {fmt(
                       Math.round(Number(form.amount) * (1 + Number(form.gst) / 100))
                     )}
@@ -429,11 +435,12 @@ export default function LegalPage() {
             )}
           </div>
 
-          <DialogFooter>
-            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <DialogClose render={<Button variant="outline" className="border-white/10 text-gray-300 hover:bg-white/5 hover:text-white bg-transparent" />}>Cancel</DialogClose>
             <Button
               disabled={generating}
-              style={{ background: GOLD, color: '#fff', border: 'none' }}
+              className="bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950 font-bold"
+              style={{ border: 'none' }}
               onClick={handleGenerate}
             >
               {generating ? 'Generating…' : 'Generate Invoice'}

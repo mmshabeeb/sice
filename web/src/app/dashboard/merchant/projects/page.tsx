@@ -142,10 +142,10 @@ const COLUMNS: {
   bg: string;
   icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>;
 }[] = [
-  { id: 'pending', label: 'Pending', color: '#d97706', bg: 'rgba(217,119,6,0.08)', icon: Clock },
-  { id: 'submitted', label: 'Submitted', color: '#6366f1', bg: 'rgba(99,102,241,0.08)', icon: Eye },
-  { id: 'revision', label: 'Revision Requested', color: '#dc2626', bg: 'rgba(220,38,38,0.08)', icon: RotateCcw },
-  { id: 'approved', label: 'Approved', color: '#16a34a', bg: 'rgba(22,163,74,0.08)', icon: CheckCircle2 },
+  { id: 'pending', label: 'Pending', color: '#fbbf24', bg: 'rgba(251,191,36,0.15)', icon: Clock },
+  { id: 'submitted', label: 'Submitted', color: '#818cf8', bg: 'rgba(99,102,241,0.15)', icon: Eye },
+  { id: 'revision', label: 'Revision Requested', color: '#f87171', bg: 'rgba(220,38,38,0.15)', icon: RotateCcw },
+  { id: 'approved', label: 'Approved', color: '#4ade80', bg: 'rgba(34,197,94,0.15)', icon: CheckCircle2 },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -173,53 +173,56 @@ function DeliverableCard({
   return (
     <Card
       className="border-0 shadow-sm mb-3"
-      style={{ background: '#fff', borderRadius: 12 }}
+      style={{
+        background: 'rgba(255, 255, 255, 0.02)',
+        border: '1px solid rgba(240, 235, 224, 0.08)',
+        borderRadius: 12,
+      }}
     >
       <CardContent className="p-3.5 space-y-2.5">
         {/* Creator + deliverable */}
         <div className="flex items-start gap-2.5">
           <div
-            className="flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold text-white shrink-0"
-            style={{ background: INDIGO }}
+            className="flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold text-white shrink-0 border border-white/10 bg-white/10"
           >
             {getInitials(item.creator)}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-sm leading-tight" style={{ color: INDIGO }}>
+            <div className="font-semibold text-sm leading-tight text-white font-bricolage">
               {item.title}
             </div>
-            <div className="text-xs text-gray-500 mt-0.5">{item.creator}</div>
-            <div className="text-[10px] text-gray-400 mt-0.5">{item.campaign}</div>
+            <div className="text-xs text-gray-400 mt-0.5">{item.creator}</div>
+            <div className="text-[10px] text-gray-500 mt-0.5">{item.campaign}</div>
           </div>
         </div>
 
         {/* Metadata */}
         <div className="space-y-1">
           {item.dueDate && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-500">
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
               <Clock size={11} className="text-amber-500" />
               Due {item.dueDate}
             </div>
           )}
           {item.submittedDate && item.status !== 'revision' && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-500">
-              <CheckCircle2 size={11} className="text-indigo-500" />
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              <CheckCircle2 size={11} className="text-indigo-400" />
               Submitted {item.submittedDate}
             </div>
           )}
           {item.submittedDate && item.status === 'revision' && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-500">
-              <Clock size={11} className="text-gray-400" />
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              <Clock size={11} className="text-gray-500" />
               Submitted {item.submittedDate}
             </div>
           )}
           {item.approvedDate && (
-            <div className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
+            <div className="flex items-center gap-1.5 text-xs text-green-400 font-semibold">
               <CheckCircle2 size={11} /> Approved {item.approvedDate}
             </div>
           )}
           {item.note && (
-            <div className="text-[10px] font-medium text-indigo-500 flex items-center gap-1">
+            <div className="text-[10px] font-semibold text-indigo-400 flex items-center gap-1">
               <AlertCircle size={10} /> {item.note}
             </div>
           )}
@@ -229,7 +232,7 @@ function DeliverableCard({
         {item.status === 'revision' && item.feedback && item.feedback.length > 0 && (
           <div>
             <button
-              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors"
               onClick={() => setFeedbackOpen((o) => !o)}
             >
               <MessageSquare size={11} />
@@ -241,27 +244,26 @@ function DeliverableCard({
             </button>
 
             {feedbackOpen && (
-              <div className="mt-2 space-y-2 pl-1 border-l-2 border-gray-100">
+              <div className="mt-2 space-y-2 pl-1 border-l-2 border-white/10">
                 {item.feedback.map((fb, idx) => (
                   <div key={idx} className="pl-2">
                     <div className="flex items-center gap-1.5 mb-0.5">
                       <div
-                        className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+                        className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-slate-950"
                         style={{
-                          background: fb.role === 'merchant' ? INDIGO : GOLD,
+                          background: fb.role === 'merchant' ? '#C9A84C' : '#818cf8',
                         }}
                       >
                         {fb.author[0]}
                       </div>
                       <span
-                        className="text-[10px] font-semibold"
-                        style={{ color: fb.role === 'merchant' ? INDIGO : '#92702a' }}
+                        className="text-[10px] font-semibold text-gray-300"
                       >
                         {fb.author}
                       </span>
-                      <span className="text-[10px] text-gray-400">{fb.timestamp}</span>
+                      <span className="text-[10px] text-gray-500">{fb.timestamp}</span>
                     </div>
-                    <p className="text-xs text-gray-600 leading-relaxed">{fb.message}</p>
+                    <p className="text-xs text-gray-400 leading-relaxed">{fb.message}</p>
                   </div>
                 ))}
               </div>
@@ -274,8 +276,7 @@ function DeliverableCard({
           {item.status === 'pending' && (
             <Button
               variant="outline"
-              className="h-7 text-xs flex-1"
-              style={{ borderColor: '#d1d5db', color: '#6b7280' }}
+              className="h-7 text-xs flex-1 border-white/10 text-gray-500 bg-transparent cursor-default"
             >
               <Clock size={11} className="mr-1" /> Awaiting
             </Button>
@@ -283,16 +284,15 @@ function DeliverableCard({
           {item.status === 'submitted' && (
             <>
               <Button
-                className="h-7 text-xs flex-1 font-semibold"
-                style={{ background: GOLD, color: INDIGO, border: 'none' }}
+                className="h-7 text-xs flex-1 font-bold bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950"
+                style={{ border: 'none' }}
                 onClick={() => onAction(item.id, 'approve')}
               >
                 <ThumbsUp size={11} className="mr-1" /> Approve
               </Button>
               <Button
                 variant="outline"
-                className="h-7 text-xs flex-1"
-                style={{ borderColor: '#fca5a5', color: '#dc2626' }}
+                className="h-7 text-xs flex-1 border-red-500/20 text-red-400 bg-transparent hover:bg-red-950/20"
                 onClick={() => onAction(item.id, 'requestRevision')}
               >
                 <RotateCcw size={11} className="mr-1" /> Revise
@@ -302,7 +302,7 @@ function DeliverableCard({
           {item.status === 'revision' && (
             <Button
               variant="outline"
-              className="h-7 text-xs flex-1"
+              className="h-7 text-xs flex-1 border-white/10 text-gray-300 hover:bg-white/5 hover:text-white bg-transparent"
               onClick={() => onAction(item.id, 'review')}
             >
               <Eye size={11} className="mr-1" /> View Submission
@@ -311,8 +311,7 @@ function DeliverableCard({
           {item.status === 'approved' && (
             <Button
               variant="outline"
-              className="h-7 text-xs flex-1"
-              style={{ borderColor: '#bbf7d0', color: '#16a34a' }}
+              className="h-7 text-xs flex-1 border-green-500/20 text-green-400 bg-transparent hover:bg-green-950/20"
             >
               <CheckCircle2 size={11} className="mr-1" /> Payment Released
             </Button>
@@ -375,28 +374,28 @@ export default function ProjectsPage() {
   );
 
   return (
-    <div style={{ background: BG, minHeight: '100%' }} className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* ── Page header ── */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: INDIGO }}>
+          <h1 className="text-2xl font-bold tracking-tight text-white font-bricolage">
             Projects &amp; Deliverables
           </h1>
-          <p className="text-sm mt-1 text-gray-500">
+          <p className="text-sm mt-1 text-gray-400">
             Review, approve, or request revisions on creator-submitted content.
           </p>
         </div>
 
         {/* Campaign selector */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Filter by:</span>
+          <span className="text-xs text-gray-400 font-medium whitespace-nowrap">Filter by:</span>
           <Select value={selectedCampaign} onValueChange={(v) => setSelectedCampaign(v ?? "")}>
-            <SelectTrigger className="h-9 text-sm min-w-52">
+            <SelectTrigger className="h-9 text-sm min-w-52 bg-white/5 border-white/10 text-white focus:ring-[#C9A84C]">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-slate-950 border-white/10 text-white">
               {CAMPAIGNS.map((c) => (
-                <SelectItem key={c} value={c}>
+                <SelectItem key={c} value={c} className="focus:bg-white/5 focus:text-white">
                   {c}
                 </SelectItem>
               ))}
@@ -410,7 +409,7 @@ export default function ProjectsPage() {
         {COLUMNS.map((col) => (
           <div
             key={col.id}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-white/5"
             style={{ background: col.bg, color: col.color }}
           >
             <col.icon size={12} />
@@ -430,16 +429,16 @@ export default function ProjectsPage() {
                 className="flex items-center gap-2 mb-3 px-1"
               >
                 <div
-                  className="flex items-center justify-center w-6 h-6 rounded-md"
+                  className="flex items-center justify-center w-6 h-6 rounded-md border border-white/5"
                   style={{ background: col.bg }}
                 >
                   <col.icon size={13} style={{ color: col.color }} />
                 </div>
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: col.color }}>
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-300 font-bricolage">
                   {col.label}
                 </span>
                 <span
-                  className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full"
+                  className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full border border-white/5"
                   style={{ background: col.bg, color: col.color }}
                 >
                   {items.length}
@@ -448,13 +447,13 @@ export default function ProjectsPage() {
 
               {/* Cards */}
               <div
-                className="min-h-28 rounded-xl p-2"
-                style={{ background: `${col.bg}` }}
+                className="min-h-28 rounded-xl p-2 border border-white/5"
+                style={{ background: 'rgba(255, 255, 255, 0.01)' }}
               >
                 {items.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-center">
                     <col.icon size={20} style={{ color: col.color, opacity: 0.3 }} />
-                    <p className="text-xs text-gray-400 mt-2">No deliverables</p>
+                    <p className="text-xs text-gray-500 mt-2">No deliverables</p>
                   </div>
                 ) : (
                   items.map((item) => (

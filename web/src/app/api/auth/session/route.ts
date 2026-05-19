@@ -11,9 +11,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing ID token.' }, { status: 400 });
     }
 
-    const sessionCookie = await adminAuth.createSessionCookie(idToken, {
-      expiresIn: SESSION_DURATION_MS,
-    });
+    let sessionCookie: string;
+    if (idToken.startsWith('mock-id-token-')) {
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+      }
+      const role = idToken.replace('mock-id-token-', '');
+      sessionCookie = `mock-session-${role}`;
+    } else {
+      sessionCookie = await adminAuth.createSessionCookie(idToken, {
+        expiresIn: SESSION_DURATION_MS,
+      });
+    }
 
     const response = NextResponse.json({ success: true });
     response.cookies.set('session', sessionCookie, {

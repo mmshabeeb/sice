@@ -216,16 +216,16 @@ const CASES: ArbitrationCase[] = [
 /* ------------------------------------------------------------------ */
 
 const SEVERITY_CONFIG: Record<Severity, { bg: string; color: string }> = {
-  HIGH: { bg: 'rgba(239,68,68,0.12)', color: '#dc2626' },
-  MEDIUM: { bg: 'rgba(245,158,11,0.12)', color: '#d97706' },
-  LOW: { bg: 'rgba(34,197,94,0.12)', color: '#16a34a' },
+  HIGH: { bg: 'rgba(239,68,68,0.15)', color: '#f87171' },
+  MEDIUM: { bg: 'rgba(245,158,11,0.15)', color: '#fbbf24' },
+  LOW: { bg: 'rgba(34,197,94,0.15)', color: '#34d399' },
 };
 
 const STATUS_CONFIG: Record<CaseStatus, { bg: string; color: string }> = {
-  Open: { bg: 'rgba(239,68,68,0.10)', color: '#dc2626' },
-  'Under Review': { bg: 'rgba(99,102,241,0.12)', color: '#6366f1' },
-  Monitoring: { bg: 'rgba(245,158,11,0.10)', color: '#d97706' },
-  Resolved: { bg: 'rgba(34,197,94,0.12)', color: '#16a34a' },
+  Open: { bg: 'rgba(239,68,68,0.15)', color: '#f87171' },
+  'Under Review': { bg: 'rgba(99,102,241,0.15)', color: '#818cf8' },
+  Monitoring: { bg: 'rgba(245,158,11,0.15)', color: '#fbbf24' },
+  Resolved: { bg: 'rgba(34,197,94,0.15)', color: '#34d399' },
 };
 
 const TYPE_ICONS: Record<CaseType, React.ElementType> = {
@@ -235,12 +235,12 @@ const TYPE_ICONS: Record<CaseType, React.ElementType> = {
 };
 
 const FILE_STATUS_CONFIG: Record<string, { color: string }> = {
-  Approved: { color: '#16a34a' },
-  Rejected: { color: '#dc2626' },
-  'Under Review': { color: '#d97706' },
-  'Pending Review': { color: '#6366f1' },
-  Submitted: { color: '#6b7280' },
-  Disputed: { color: '#dc2626' },
+  Approved: { color: '#34d399' },
+  Rejected: { color: '#f87171' },
+  'Under Review': { color: '#fbbf24' },
+  'Pending Review': { color: '#818cf8' },
+  Submitted: { color: '#9ca3af' },
+  Disputed: { color: '#f87171' },
 };
 
 /* ------------------------------------------------------------------ */
@@ -268,13 +268,17 @@ function ArbitrationWorkspaceDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="sm:max-w-2xl"
-        style={{ background: '#fff', borderRadius: 16, maxHeight: '90vh', overflowY: 'auto' }}
+        className="sm:max-w-2xl text-white border-white/10 bg-slate-950"
+        style={{
+          borderRadius: '16px',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+        }}
       >
         <DialogHeader>
           <div className="flex items-center gap-3 flex-wrap">
             <Scale size={18} style={{ color: GOLD }} />
-            <DialogTitle style={{ color: INDIGO }}>
+            <DialogTitle className="text-white font-bricolage">
               Arbitration Workspace — {arbitrationCase.id}
             </DialogTitle>
             <Badge
@@ -292,45 +296,44 @@ function ArbitrationWorkspaceDialog({
 
         {resolved && (
           <div
-            className="flex items-center gap-2 p-3 rounded-xl text-sm"
-            style={{ background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.20)', color: '#16a34a' }}
+            className="flex items-center gap-2 p-3 rounded-xl text-sm bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
           >
             <CheckCircle2 size={15} />
-            Case resolved. Both parties have been notified and escrow action has been executed.
+            Case resolved. Both parties have been notified and secure deposit action has been executed.
           </div>
         )}
 
-        <div className="space-y-5">
+        <div className="space-y-5 mt-4">
           {/* Contract Summary */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: '#9ca3af' }}>
+            <h3 className="text-xs font-semibold uppercase tracking-wider mb-2.5 text-gray-400">
               Contract Summary
             </h3>
             <div
               className="p-4 rounded-xl space-y-2.5"
-              style={{ background: 'rgba(8,13,38,0.03)', border: '1px solid rgba(8,13,38,0.07)' }}
+              style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(240, 235, 224, 0.08)' }}
             >
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <span className="text-xs" style={{ color: '#9ca3af' }}>Creator</span>
-                  <p className="font-semibold mt-0.5" style={{ color: INDIGO }}>{arbitrationCase.creator}</p>
+                  <span className="text-xs text-gray-400">Creator</span>
+                  <p className="font-semibold mt-0.5 text-white">{arbitrationCase.creator}</p>
                 </div>
                 <div>
-                  <span className="text-xs" style={{ color: '#9ca3af' }}>Merchant</span>
-                  <p className="font-semibold mt-0.5" style={{ color: INDIGO }}>{arbitrationCase.merchant}</p>
+                  <span className="text-xs text-gray-400">Merchant</span>
+                  <p className="font-semibold mt-0.5 text-white">{arbitrationCase.merchant}</p>
                 </div>
                 <div>
-                  <span className="text-xs" style={{ color: '#9ca3af' }}>Campaign</span>
-                  <p className="font-semibold mt-0.5" style={{ color: INDIGO }}>{arbitrationCase.campaign}</p>
+                  <span className="text-xs text-gray-400">Campaign</span>
+                  <p className="font-semibold mt-0.5 text-white">{arbitrationCase.campaign}</p>
                 </div>
                 <div>
-                  <span className="text-xs" style={{ color: '#9ca3af' }}>Escrow Amount</span>
+                  <span className="text-xs text-gray-400">Secure Deposit Amount</span>
                   <p className="font-bold mt-0.5" style={{ color: GOLD }}>{arbitrationCase.amount}</p>
                 </div>
               </div>
               <div>
-                <span className="text-xs" style={{ color: '#9ca3af' }}>Deliverables</span>
-                <p className="text-sm mt-0.5" style={{ color: INDIGO }}>{arbitrationCase.deliverables}</p>
+                <span className="text-xs text-gray-400">Deliverables</span>
+                <p className="text-sm mt-0.5 text-gray-300">{arbitrationCase.deliverables}</p>
               </div>
               <div className="flex items-center gap-2 pt-1">
                 <Badge
@@ -343,18 +346,18 @@ function ArbitrationWorkspaceDialog({
                 >
                   {arbitrationCase.status}
                 </Badge>
-                <span className="text-xs" style={{ color: '#6b7280' }}>
+                <span className="text-xs text-gray-400">
                   Open for {arbitrationCase.daysOpen} day{arbitrationCase.daysOpen !== 1 ? 's' : ''}
                 </span>
               </div>
             </div>
           </div>
 
-          <Separator />
+          <Separator className="bg-white/10" />
 
           {/* Communication Log */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: '#9ca3af' }}>
+            <h3 className="text-xs font-semibold uppercase tracking-wider mb-2.5 text-gray-400">
               <MessageSquare size={12} className="inline mr-1.5" />
               Communication Log
             </h3>
@@ -374,9 +377,14 @@ function ArbitrationWorkspaceDialog({
                         background: isAdmin
                           ? 'rgba(201,168,76,0.15)'
                           : isCreator
-                          ? 'rgba(99,102,241,0.12)'
-                          : 'rgba(8,13,38,0.08)',
-                        color: isAdmin ? GOLD : isCreator ? '#6366f1' : INDIGO,
+                          ? 'rgba(99,102,241,0.15)'
+                          : 'rgba(255,255,255,0.08)',
+                        color: isAdmin ? GOLD : isCreator ? '#818cf8' : '#F0EBE0',
+                        border: isAdmin
+                          ? '1px solid rgba(201,168,76,0.25)'
+                          : isCreator
+                          ? '1px solid rgba(99,102,241,0.25)'
+                          : '1px solid rgba(255,255,255,0.15)',
                       }}
                     >
                       {entry.sender[0]}
@@ -385,25 +393,29 @@ function ArbitrationWorkspaceDialog({
                       className="flex-1 p-3 rounded-xl text-sm"
                       style={{
                         background: isCreator
-                          ? 'rgba(99,102,241,0.07)'
+                          ? 'rgba(99,102,241,0.08)'
                           : isAdmin
-                          ? 'rgba(201,168,76,0.08)'
-                          : 'rgba(8,13,38,0.04)',
-                        border: isAdmin ? '1px solid rgba(201,168,76,0.20)' : '1px solid rgba(8,13,38,0.06)',
+                          ? 'rgba(201,168,76,0.12)'
+                          : 'rgba(255,255,255,0.03)',
+                        border: isAdmin
+                          ? '1px solid rgba(201,168,76,0.20)'
+                          : isCreator
+                          ? '1px solid rgba(99,102,241,0.15)'
+                          : '1px solid rgba(255,255,255,0.06)',
                       }}
                     >
                       <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
                         <span
                           className="text-xs font-semibold"
-                          style={{ color: isAdmin ? GOLD : isCreator ? '#6366f1' : INDIGO }}
+                          style={{ color: isAdmin ? GOLD : isCreator ? '#818cf8' : '#fff' }}
                         >
                           {entry.sender}
                         </span>
-                        <span className="text-xs" style={{ color: '#9ca3af' }}>
+                        <span className="text-xs text-gray-400">
                           {entry.time}
                         </span>
                       </div>
-                      <p style={{ color: '#374151', lineHeight: 1.5 }}>{entry.message}</p>
+                      <p className="text-gray-200" style={{ lineHeight: 1.5 }}>{entry.message}</p>
                     </div>
                   </div>
                 );
@@ -411,11 +423,11 @@ function ArbitrationWorkspaceDialog({
             </div>
           </div>
 
-          <Separator />
+          <Separator className="bg-white/10" />
 
           {/* File Submission History */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: '#9ca3af' }}>
+            <h3 className="text-xs font-semibold uppercase tracking-wider mb-2.5 text-gray-400">
               <Upload size={12} className="inline mr-1.5" />
               File Submission History
             </h3>
@@ -426,14 +438,14 @@ function ArbitrationWorkspaceDialog({
                   <div
                     key={i}
                     className="flex items-center justify-between p-2.5 rounded-lg text-sm"
-                    style={{ background: 'rgba(8,13,38,0.03)', border: '1px solid rgba(8,13,38,0.05)' }}
+                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(240,235,224,0.06)' }}
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <Upload size={12} style={{ color: '#9ca3af' }} />
-                      <span className="font-medium truncate" style={{ color: INDIGO }}>
+                      <span className="font-medium truncate text-white">
                         {file.name}
                       </span>
-                      <span className="text-xs shrink-0" style={{ color: '#9ca3af' }}>
+                      <span className="text-xs shrink-0 text-gray-400">
                         by {file.submittedBy} · {file.date}
                       </span>
                     </div>
@@ -449,17 +461,17 @@ function ArbitrationWorkspaceDialog({
             </div>
           </div>
 
-          <Separator />
+          <Separator className="bg-white/10" />
 
           {/* Resolution section */}
           {!resolved && (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: '#9ca3af' }}>
+              <h3 className="text-xs font-semibold uppercase tracking-wider mb-2.5 text-gray-400">
                 Resolution
               </h3>
               <div className="space-y-3">
                 <div>
-                  <Label className="text-xs font-semibold" style={{ color: '#374151' }}>
+                  <Label className="text-xs font-semibold text-gray-300">
                     Resolution Notes / Reason
                   </Label>
                   <Textarea
@@ -467,8 +479,8 @@ function ArbitrationWorkspaceDialog({
                     onChange={(e) => setResolveReason(e.target.value)}
                     placeholder="Document your arbitration decision, findings, and reasoning…"
                     rows={3}
-                    className="mt-1.5"
-                    style={{ border: '1px solid rgba(8,13,38,0.15)', borderRadius: 8, resize: 'none' }}
+                    className="mt-1.5 bg-white/5 border-white/15 text-white focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]"
+                    style={{ resize: 'none' }}
                   />
                 </div>
 
@@ -478,28 +490,28 @@ function ArbitrationWorkspaceDialog({
                     style={{
                       background:
                         confirmAction === 'release'
-                          ? 'rgba(34,197,94,0.08)'
-                          : 'rgba(239,68,68,0.08)',
+                          ? 'rgba(34,197,94,0.10)'
+                          : 'rgba(239,68,68,0.10)',
                       border: `1px solid ${confirmAction === 'release' ? 'rgba(34,197,94,0.20)' : 'rgba(239,68,68,0.20)'}`,
                     }}
                   >
-                    <p className="text-sm font-semibold" style={{ color: INDIGO }}>
+                    <p className="text-sm font-semibold text-white">
                       {confirmAction === 'release'
                         ? `Confirm: Release ${arbitrationCase.amount} to ${arbitrationCase.creator}?`
                         : `Confirm: Issue ${arbitrationCase.amount} refund to ${arbitrationCase.merchant}?`}
                     </p>
-                    <p className="text-xs" style={{ color: '#6b7280' }}>
+                    <p className="text-xs text-gray-400">
                       This action is irreversible and will be logged in the platform audit trail.
                     </p>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
-                        className="gap-1.5"
+                        className="gap-1.5 font-bold"
                         onClick={handleConfirm}
                         style={{
-                          background: confirmAction === 'release' ? '#22c55e' : '#ef4444',
+                          background: confirmAction === 'release' ? '#10b981' : '#ef4444',
                           color: '#fff',
-                          borderRadius: 7,
+                          borderRadius: '8px',
                           border: 'none',
                         }}
                       >
@@ -510,7 +522,8 @@ function ArbitrationWorkspaceDialog({
                         size="sm"
                         variant="outline"
                         onClick={() => setConfirmAction(null)}
-                        style={{ borderRadius: 7, color: '#6b7280' }}
+                        className="border-white/10 text-gray-300 hover:bg-white/5 hover:text-white bg-transparent"
+                        style={{ borderRadius: '8px' }}
                       >
                         Cancel
                       </Button>
@@ -521,13 +534,10 @@ function ArbitrationWorkspaceDialog({
                 {!confirmAction && (
                   <div className="flex gap-3 flex-wrap">
                     <Button
-                      className="gap-2 flex-1"
+                      className="gap-2 flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
                       style={{
-                        background: '#22c55e',
-                        color: '#fff',
-                        borderRadius: 9,
+                        borderRadius: '8px',
                         border: 'none',
-                        fontWeight: 600,
                       }}
                       onClick={() => setConfirmAction('release')}
                     >
@@ -535,13 +545,10 @@ function ArbitrationWorkspaceDialog({
                       Release Payment to Creator
                     </Button>
                     <Button
-                      className="gap-2 flex-1"
+                      className="gap-2 flex-1 bg-red-600 hover:bg-red-700 text-white font-bold"
                       style={{
-                        background: '#ef4444',
-                        color: '#fff',
-                        borderRadius: 9,
+                        borderRadius: '8px',
                         border: 'none',
-                        fontWeight: 600,
                       }}
                       onClick={() => setConfirmAction('refund')}
                     >
@@ -581,9 +588,9 @@ export default function ArbitrationPage() {
       return (
         <Button
           size="sm"
-          className="h-7 px-3 text-xs font-semibold gap-1"
+          className="h-7 px-3 text-xs font-semibold gap-1 bg-red-500/80 hover:bg-red-500 text-white"
           onClick={() => openWorkspace(c)}
-          style={{ background: '#ef4444', color: '#fff', borderRadius: 7, border: 'none' }}
+          style={{ borderRadius: 7, border: 'none' }}
         >
           <Scale size={11} />
           Resolve
@@ -595,9 +602,9 @@ export default function ArbitrationPage() {
         <Button
           size="sm"
           variant="outline"
-          className="h-7 px-3 text-xs gap-1"
+          className="h-7 px-3 text-xs gap-1 border-[#C9A84C]/30 text-[#C9A84C] bg-transparent hover:bg-[#C9A84C]/10 hover:text-white"
           onClick={() => openWorkspace(c)}
-          style={{ border: '1px solid rgba(201,168,76,0.35)', color: GOLD, borderRadius: 7 }}
+          style={{ borderRadius: 7 }}
         >
           <FileSearch size={11} />
           Audit
@@ -608,9 +615,9 @@ export default function ArbitrationPage() {
       <Button
         size="sm"
         variant="outline"
-        className="h-7 px-3 text-xs gap-1"
+        className="h-7 px-3 text-xs gap-1 border-white/10 text-gray-300 bg-transparent hover:bg-white/5 hover:text-white"
         onClick={() => openWorkspace(c)}
-        style={{ border: '1px solid rgba(8,13,38,0.15)', color: INDIGO, borderRadius: 7 }}
+        style={{ borderRadius: 7 }}
       >
         <Eye size={11} />
         View
@@ -619,16 +626,15 @@ export default function ArbitrationPage() {
   }
 
   return (
-    <div style={{ background: BG, minHeight: '100%' }} className="p-6 rounded-xl space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h1
-          className="text-2xl font-bold tracking-tight"
-          style={{ color: INDIGO, fontFamily: 'var(--font-bricolage, sans-serif)' }}
+          className="text-2xl font-bold tracking-tight text-white font-bricolage"
         >
           Arbitration &amp; Conflict Resolution
         </h1>
-        <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
+        <p className="text-sm mt-1 text-gray-400">
           Review, mediate, and resolve disputes between creators and merchants
         </p>
       </div>
@@ -636,18 +642,14 @@ export default function ArbitrationPage() {
       {/* Alert banner */}
       {urgentCases.length > 0 && (
         <div
-          className="flex items-center gap-3 px-4 py-3 rounded-xl"
-          style={{
-            background: 'rgba(239,68,68,0.08)',
-            border: '1px solid rgba(239,68,68,0.25)',
-          }}
+          className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/25"
         >
-          <AlertCircle size={18} style={{ color: '#dc2626' }} className="shrink-0" />
+          <AlertCircle size={18} className="shrink-0 text-red-400" />
           <div>
-            <p className="text-sm font-semibold" style={{ color: '#dc2626' }}>
+            <p className="text-sm font-semibold text-red-400">
               {urgentCases.length} case{urgentCases.length > 1 ? 's' : ''} require immediate attention
             </p>
-            <p className="text-xs mt-0.5" style={{ color: '#ef4444' }}>
+            <p className="text-xs mt-0.5 text-red-300/80">
               {urgentCases.map((c) => c.id).join(', ')} — HIGH severity disputes are open and unresolved
             </p>
           </div>
@@ -657,22 +659,29 @@ export default function ArbitrationPage() {
       {/* Summary stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Open Cases', value: CASES.filter((c) => c.status === 'Open').length, color: '#dc2626', bg: 'rgba(239,68,68,0.08)' },
-          { label: 'Under Review', value: CASES.filter((c) => c.status === 'Under Review').length, color: '#6366f1', bg: 'rgba(99,102,241,0.08)' },
-          { label: 'Monitoring', value: CASES.filter((c) => c.status === 'Monitoring').length, color: '#d97706', bg: 'rgba(245,158,11,0.08)' },
-          { label: 'HIGH Severity', value: CASES.filter((c) => c.severity === 'HIGH').length, color: '#dc2626', bg: 'rgba(239,68,68,0.06)' },
+          { label: 'Open Cases', value: CASES.filter((c) => c.status === 'Open').length, color: '#f87171', bg: 'rgba(239,68,68,0.10)' },
+          { label: 'Under Review', value: CASES.filter((c) => c.status === 'Under Review').length, color: '#818cf8', bg: 'rgba(99,102,241,0.10)' },
+          { label: 'Monitoring', value: CASES.filter((c) => c.status === 'Monitoring').length, color: '#fbbf24', bg: 'rgba(245,158,11,0.10)' },
+          { label: 'HIGH Severity', value: CASES.filter((c) => c.severity === 'HIGH').length, color: '#f87171', bg: 'rgba(239,68,68,0.08)' },
         ].map(({ label, value, color, bg }) => (
-          <Card key={label} className="border-0 shadow-sm" style={{ background: '#fff', borderRadius: 14 }}>
+          <Card
+            key={label}
+            className="border-0 shadow-sm"
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(240, 235, 224, 0.08)',
+            }}
+          >
             <CardContent className="flex items-center gap-3 py-4 px-5">
               <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: bg }}
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border"
+                style={{ background: bg, borderColor: `${color}15` }}
               >
                 <AlertTriangle size={16} style={{ color }} />
               </div>
               <div>
-                <div className="text-xl font-bold" style={{ color: INDIGO }}>{value}</div>
-                <div className="text-xs" style={{ color: '#9ca3af' }}>{label}</div>
+                <div className="text-xl font-bold text-[#F0EBE0] font-bricolage">{value}</div>
+                <div className="text-xs text-gray-400">{label}</div>
               </div>
             </CardContent>
           </Card>
@@ -680,27 +689,33 @@ export default function ArbitrationPage() {
       </div>
 
       {/* Cases table */}
-      <Card className="border-0 shadow-sm" style={{ background: '#fff', borderRadius: 14 }}>
+      <Card
+        className="border-0 shadow-sm"
+        style={{
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(240, 235, 224, 0.08)',
+        }}
+      >
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold" style={{ color: INDIGO }}>
+          <CardTitle className="text-sm font-semibold text-white font-bricolage">
             Active Cases
           </CardTitle>
-          <p className="text-xs" style={{ color: '#9ca3af' }}>
+          <p className="text-xs text-gray-400">
             All open and in-progress arbitration cases across the platform
           </p>
         </CardHeader>
         <CardContent className="px-0 pb-0">
           <Table>
-            <TableHeader>
-              <TableRow style={{ borderColor: 'rgba(8,13,38,0.06)' }}>
-                <TableHead className="pl-6 text-xs" style={{ color: '#9ca3af' }}>Case #</TableHead>
-                <TableHead className="text-xs" style={{ color: '#9ca3af' }}>Type</TableHead>
-                <TableHead className="text-xs" style={{ color: '#9ca3af' }}>Campaign</TableHead>
-                <TableHead className="text-xs" style={{ color: '#9ca3af' }}>Parties</TableHead>
-                <TableHead className="text-xs text-center" style={{ color: '#9ca3af' }}>Days Open</TableHead>
-                <TableHead className="text-xs" style={{ color: '#9ca3af' }}>Severity</TableHead>
-                <TableHead className="text-xs" style={{ color: '#9ca3af' }}>Status</TableHead>
-                <TableHead className="text-xs pr-6" style={{ color: '#9ca3af' }}>Action</TableHead>
+            <TableHeader className="border-white/5">
+              <TableRow className="border-white/5 hover:bg-transparent">
+                <TableHead className="pl-6 text-xs text-gray-400">Case #</TableHead>
+                <TableHead className="text-xs text-gray-400">Type</TableHead>
+                <TableHead className="text-xs text-gray-400">Campaign</TableHead>
+                <TableHead className="text-xs text-gray-400">Parties</TableHead>
+                <TableHead className="text-xs text-center text-gray-400">Days Open</TableHead>
+                <TableHead className="text-xs text-gray-400">Severity</TableHead>
+                <TableHead className="text-xs text-gray-400">Status</TableHead>
+                <TableHead className="text-xs pr-6 text-gray-400">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -711,8 +726,7 @@ export default function ArbitrationPage() {
                 return (
                   <TableRow
                     key={c.id}
-                    style={{ borderColor: 'rgba(8,13,38,0.04)' }}
-                    className="hover:bg-red-50/20 transition-colors"
+                    className="border-white/5 hover:bg-white/[0.02] transition-colors"
                   >
                     <TableCell className="pl-6">
                       <span className="font-mono text-sm font-bold" style={{ color: GOLD }}>
@@ -721,28 +735,27 @@ export default function ArbitrationPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5">
-                        <TypeIcon size={13} style={{ color: '#6b7280' }} />
-                        <span className="text-xs font-medium" style={{ color: INDIGO }}>
+                        <TypeIcon size={13} className="text-gray-400" />
+                        <span className="text-xs font-medium text-white">
                           {c.type}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="text-xs" style={{ color: '#6b7280' }}>
+                      <span className="text-xs text-gray-400">
                         {c.campaign}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <div className="text-xs" style={{ color: INDIGO }}>
+                      <div className="text-xs text-gray-200">
                         <span className="font-medium">{c.creator}</span>
-                        <span style={{ color: '#9ca3af' }}> vs </span>
+                        <span className="text-gray-400"> vs </span>
                         <span className="font-medium">{c.merchant}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
                       <span
-                        className="text-sm font-bold"
-                        style={{ color: c.daysOpen >= 5 ? '#dc2626' : c.daysOpen >= 3 ? '#d97706' : INDIGO }}
+                        className={`text-sm font-bold ${c.daysOpen >= 5 ? 'text-red-400' : c.daysOpen >= 3 ? 'text-amber-400' : 'text-gray-200'}`}
                       >
                         {c.daysOpen}d
                       </span>
@@ -773,8 +786,8 @@ export default function ArbitrationPage() {
           </Table>
 
           <div
-            className="px-6 py-3 text-xs flex items-center justify-between"
-            style={{ borderTop: '1px solid rgba(8,13,38,0.06)', color: '#9ca3af' }}
+            className="px-6 py-3 text-xs flex items-center justify-between text-gray-500"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
           >
             <span>{CASES.length} total cases · 2 require immediate resolution</span>
             <span>All actions are logged in the platform audit trail</span>

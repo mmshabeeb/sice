@@ -87,26 +87,25 @@ const SYNC_TIME = 'Today · 00:00:00 IST';
 
 export default function SocialAccountsPage() {
   return (
-    <div style={{ background: BG, minHeight: '100%' }} className="p-6 rounded-xl space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1
-            className="text-2xl font-bold tracking-tight"
-            style={{ color: INDIGO, fontFamily: 'var(--font-bricolage, sans-serif)' }}
+            className="text-2xl font-bold tracking-tight text-white font-bricolage"
           >
             Social Accounts
           </h1>
-          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
+          <p className="text-sm mt-1 text-gray-400">
             Connect and manage your creator platforms in one place.
           </p>
         </div>
         <div
-          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
-          style={{ background: 'rgba(201,168,76,0.10)', color: '#92400e', border: '1px solid rgba(201,168,76,0.20)' }}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-[#C9A84C]/30"
+          style={{ background: 'rgba(201,168,76,0.10)', color: GOLD }}
         >
           <Clock size={12} style={{ color: GOLD }} />
-          <span style={{ color: GOLD }}>Last synced: {SYNC_TIME}</span>
+          <span>Last synced: {SYNC_TIME}</span>
         </div>
       </div>
 
@@ -132,7 +131,12 @@ function ConnectedCard({ platform: p }: { platform: Platform }) {
   return (
     <Card
       className="border-0 shadow-sm"
-      style={{ background: '#fff', borderRadius: '14px', overflow: 'hidden' }}
+      style={{
+        background: 'rgba(255, 255, 255, 0.02)',
+        border: '1px solid rgba(240, 235, 224, 0.08)',
+        borderRadius: '14px',
+        overflow: 'hidden',
+      }}
     >
       {/* Color bar */}
       <div style={{ height: '4px', background: p.color }} />
@@ -143,28 +147,22 @@ function ConnectedCard({ platform: p }: { platform: Platform }) {
             <span className="text-2xl leading-none">{p.emoji}</span>
             <div>
               <CardTitle
-                className="text-base font-semibold leading-tight"
-                style={{ color: INDIGO }}
+                className="text-base font-semibold leading-tight text-white font-bricolage"
               >
                 {p.name}
               </CardTitle>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-xs" style={{ color: '#6b7280' }}>
+                <span className="text-xs text-gray-400">
                   {p.username}
                 </span>
                 {p.verified && (
-                  <CheckCircle2 size={11} style={{ color: '#3b82f6' }} />
+                  <CheckCircle2 size={11} className="text-[#818cf8]" />
                 )}
               </div>
             </div>
           </div>
           <Badge
-            className="text-xs font-medium"
-            style={{
-              background: 'rgba(34,197,94,0.10)',
-              color: '#15803d',
-              border: '1px solid rgba(34,197,94,0.25)',
-            }}
+            className="text-xs font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
           >
             Connected
           </Badge>
@@ -173,20 +171,19 @@ function ConnectedCard({ platform: p }: { platform: Platform }) {
 
       <CardContent className="pt-3 pb-4">
         <div
-          className="flex items-end justify-between rounded-xl p-3"
-          style={{ background: 'rgba(8,13,38,0.04)' }}
+          className="flex items-end justify-between rounded-xl p-3 border border-white/5"
+          style={{ background: 'rgba(255, 255, 255, 0.02)' }}
         >
           <div>
-            <div className="text-xl font-bold" style={{ color: GOLD }}>
+            <div className="text-xl font-bold text-[#C9A84C] font-bricolage">
               {p.followers}
             </div>
-            <div className="text-xs" style={{ color: '#9ca3af' }}>
+            <div className="text-xs text-gray-450">
               {p.unit}
             </div>
           </div>
           <button
-            className="flex items-center gap-1 text-xs px-2 py-1 rounded-md transition-colors"
-            style={{ color: '#6b7280', background: 'rgba(0,0,0,0.04)' }}
+            className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-md transition-colors border border-white/10 hover:border-white/20 text-gray-300 hover:text-white bg-white/5"
             onClick={() => alert(`Opening ${p.name} profile — ${p.username}`)}
           >
             <ExternalLink size={11} />
@@ -194,7 +191,7 @@ function ConnectedCard({ platform: p }: { platform: Platform }) {
           </button>
         </div>
 
-        <div className="mt-2 text-xs" style={{ color: '#9ca3af' }}>
+        <div className="mt-2 text-xs text-gray-500">
           Last synced: {SYNC_TIME}
         </div>
       </CardContent>
@@ -211,31 +208,27 @@ function DisconnectedCard({ platform: p }: { platform: Platform }) {
     <Card
       className="border-0 shadow-sm"
       style={{
-        background: '#fff',
+        background: 'rgba(255, 255, 255, 0.02)',
+        border: '1px solid rgba(240, 235, 224, 0.04)',
         borderRadius: '14px',
         overflow: 'hidden',
-        opacity: 0.85,
+        opacity: 0.75,
       }}
     >
-      <div style={{ height: '4px', background: '#e5e7eb' }} />
+      <div style={{ height: '4px', background: '#374151' }} />
 
       <CardHeader className="pb-0 pt-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-2xl leading-none" style={{ filter: 'grayscale(0.5)' }}>
+            <span className="text-2xl leading-none grayscale" style={{ opacity: 0.5 }}>
               {p.emoji}
             </span>
-            <CardTitle className="text-base font-semibold" style={{ color: '#9ca3af' }}>
+            <CardTitle className="text-base font-semibold text-gray-500 font-bricolage">
               {p.name}
             </CardTitle>
           </div>
           <Badge
-            className="text-xs font-medium"
-            style={{
-              background: 'rgba(156,163,175,0.12)',
-              color: '#9ca3af',
-              border: '1px solid rgba(156,163,175,0.25)',
-            }}
+            className="text-xs font-medium bg-white/5 text-gray-500 border border-white/10"
           >
             Not connected
           </Badge>
@@ -243,14 +236,12 @@ function DisconnectedCard({ platform: p }: { platform: Platform }) {
       </CardHeader>
 
       <CardContent className="pt-3 pb-4">
-        <p className="text-xs mb-3" style={{ color: '#9ca3af' }}>
+        <p className="text-xs mb-3 text-gray-400">
           Connect your {p.name} account to track followers, sync posts, and apply for brand deals.
         </p>
         <Button
-          className="w-full text-sm font-semibold"
+          className="w-full text-sm font-bold bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950"
           style={{
-            background: GOLD,
-            color: '#fff',
             border: 'none',
             height: '36px',
             borderRadius: '10px',
