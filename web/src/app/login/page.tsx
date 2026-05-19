@@ -9,24 +9,9 @@ import { auth, db } from '@/lib/firebase/client';
 import type { UserRole } from '@/types/database';
 
 const DEMO_ACCOUNTS = [
-  {
-    role: 'Creator',
-    email: 'demo.creator@sice.media',
-    password: 'Demo@1234',
-    description: 'Social accounts, metrics, brand deals',
-  },
-  {
-    role: 'Merchant',
-    email: 'demo.merchant@sice.media',
-    password: 'Demo@1234',
-    description: 'Talent discovery, campaigns, wallet',
-  },
-  {
-    role: 'Admin',
-    email: 'demo.admin@sice.media',
-    password: 'Demo@1234',
-    description: 'Chapter mgmt, applications, arbitration',
-  },
+  { role: 'Creator', email: 'demo.creator@sice.media', password: 'Demo@1234', description: 'Social accounts, metrics, brand deals' },
+  { role: 'Merchant', email: 'demo.merchant@sice.media', password: 'Demo@1234', description: 'Talent discovery, campaigns, wallet' },
+  { role: 'Admin', email: 'demo.admin@sice.media', password: 'Demo@1234', description: 'Chapter mgmt, applications, arbitration' },
 ];
 
 export default function LoginPage() {
@@ -43,20 +28,16 @@ export default function LoginPage() {
 
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
-
-      // Get ID token and create server-side session cookie
       const idToken = await user.getIdToken();
+
       const res = await fetch('/api/auth/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken }),
       });
 
-      if (!res.ok) {
-        throw new Error('Session creation failed. Please try again.');
-      }
+      if (!res.ok) throw new Error('Session creation failed. Please try again.');
 
-      // Read role from Firestore
       const profileSnap = await getDoc(doc(db, 'users', user.uid));
       if (!profileSnap.exists()) {
         setError('Profile not found. Please contact support.');
@@ -80,187 +61,232 @@ export default function LoginPage() {
   }
 
   return (
-    <main
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
-      style={{ background: '#080D26' }}
-    >
-      {/* Brand */}
-      <div className="mb-10 text-center">
-        <div
-          className="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4"
-          style={{ background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.35)' }}
-        >
-          <span
-            className="text-2xl font-bold tracking-tighter select-none"
-            style={{ color: '#C9A84C', fontFamily: 'var(--font-bricolage, sans-serif)' }}
-          >
-            S
-          </span>
-        </div>
-        <h1
-          className="text-3xl font-bold tracking-tight"
-          style={{ color: '#F0EBE0', fontFamily: 'var(--font-bricolage, sans-serif)' }}
-        >
-          SICE
-        </h1>
-        <p className="mt-1 text-sm" style={{ color: 'rgba(240,235,224,0.55)' }}>
-          South Indian Creators Economy
-        </p>
-      </div>
-
-      {/* Card */}
-      <div
-        className="w-full max-w-sm rounded-2xl p-8"
-        style={{
-          background: 'rgba(255,255,255,0.035)',
-          border: '1px solid rgba(240,235,224,0.10)',
-        }}
-      >
-        <h2
-          className="text-lg font-semibold mb-1"
-          style={{ color: '#F0EBE0' }}
-        >
-          Sign in to your portal
-        </h2>
-        <p className="text-sm mb-6" style={{ color: 'rgba(240,235,224,0.50)' }}>
-          Enter your credentials to continue.
-        </p>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="email"
-              className="text-xs font-medium uppercase tracking-wider"
-              style={{ color: 'rgba(240,235,224,0.55)' }}
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none transition-colors"
-              style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(240,235,224,0.12)',
-                color: '#F0EBE0',
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(201,168,76,0.55)'; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(240,235,224,0.12)'; }}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="password"
-              className="text-xs font-medium uppercase tracking-wider"
-              style={{ color: 'rgba(240,235,224,0.55)' }}
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none transition-colors"
-              style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(240,235,224,0.12)',
-                color: '#F0EBE0',
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(201,168,76,0.55)'; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(240,235,224,0.12)'; }}
-            />
-          </div>
-
-          {error && (
-            <div
-              className="rounded-lg px-3.5 py-2.5 text-sm"
-              style={{
-                background: 'rgba(220,38,38,0.12)',
-                border: '1px solid rgba(220,38,38,0.30)',
-                color: '#fca5a5',
-              }}
-            >
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition-opacity disabled:opacity-60"
-            style={{ background: '#C9A84C', color: '#080D26' }}
-          >
-            {loading ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
-
-        <p className="mt-5 text-center text-sm" style={{ color: 'rgba(240,235,224,0.45)' }}>
-          New creator?{' '}
-          <Link
-            href="/apply"
-            className="font-medium underline underline-offset-2 transition-colors"
-            style={{ color: '#C9A84C' }}
-          >
-            Apply for membership
+    <>
+      {/* Reuse the same nav style as landing page */}
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        background: 'rgba(8, 13, 38, 0.85)',
+        backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(240, 235, 224, 0.06)',
+      }}>
+        <div style={{ maxWidth: 1240, margin: '0 auto', padding: '18px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link href="/" style={{ fontFamily: 'var(--font-bricolage, sans-serif)', fontWeight: 600, fontSize: 22, letterSpacing: '-0.05em', color: '#F0EBE0' }}>
+            SICE
           </Link>
-        </p>
-      </div>
-
-      {/* Demo credentials */}
-      <div className="mt-8 w-full max-w-sm">
-        <p
-          className="text-center text-xs font-medium uppercase tracking-widest mb-3"
-          style={{ color: 'rgba(240,235,224,0.30)' }}
-        >
-          Demo accounts for reviewers
-        </p>
-        <div className="flex flex-col gap-2">
-          {DEMO_ACCOUNTS.map((account) => (
-            <button
-              key={account.role}
-              type="button"
-              onClick={() => fillDemo(account.email, account.password)}
-              className="w-full text-left rounded-xl px-4 py-3 transition-colors"
-              style={{
-                background: 'rgba(201,168,76,0.06)',
-                border: '1px solid rgba(201,168,76,0.18)',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(201,168,76,0.12)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(201,168,76,0.06)'; }}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <span
-                    className="text-xs font-bold uppercase tracking-wider"
-                    style={{ color: '#C9A84C' }}
-                  >
-                    {account.role}
-                  </span>
-                  <p className="text-xs mt-0.5" style={{ color: 'rgba(240,235,224,0.45)' }}>
-                    {account.description}
-                  </p>
-                </div>
-                <span className="text-xs shrink-0" style={{ color: 'rgba(240,235,224,0.30)' }}>
-                  Click to fill
-                </span>
-              </div>
-              <p className="text-xs mt-1.5 font-mono" style={{ color: 'rgba(240,235,224,0.55)' }}>
-                {account.email}
-              </p>
-            </button>
-          ))}
+          <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+            <Link href="/" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.65)' }}>
+              Home
+            </Link>
+            <Link href="/apply" style={{
+              fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em',
+              color: '#080D26', background: '#C8A968',
+              padding: '9px 18px', borderRadius: 100, fontWeight: 500,
+            }}>
+              Apply
+            </Link>
+          </div>
         </div>
-      </div>
-    </main>
+      </nav>
+
+      <main style={{ minHeight: '100vh', background: '#080D26', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '100px 24px 60px' }}>
+
+        {/* Subtle background orbs matching hero */}
+        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
+          <div style={{ position: 'absolute', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(200,169,104,0.10), transparent 70%)', top: -200, left: -200, filter: 'blur(80px)' }} />
+          <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(168,136,74,0.08), transparent 70%)', bottom: -150, right: -150, filter: 'blur(80px)' }} />
+        </div>
+
+        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 420 }}>
+
+          {/* Wordmark */}
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ height: 1, width: 40, background: 'rgba(200,169,104,0.4)' }} />
+                <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#C8A968' }} />
+                <div style={{ height: 1, width: 40, background: 'rgba(200,169,104,0.4)' }} />
+              </div>
+              <div style={{ fontFamily: 'var(--font-bricolage, sans-serif)', fontSize: 48, fontWeight: 700, letterSpacing: '-0.05em', color: '#F0EBE0', lineHeight: 1 }}>
+                SICE
+              </div>
+              <div style={{ height: 1, width: 80, background: 'rgba(200,169,104,0.3)' }} />
+            </div>
+            <p style={{ fontSize: 13, color: 'rgba(240,235,224,0.45)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              Member Portal
+            </p>
+          </div>
+
+          {/* Card */}
+          <div style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(240,235,224,0.08)',
+            borderRadius: 16,
+            padding: 36,
+          }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: '#F0EBE0', marginBottom: 6, fontFamily: 'var(--font-bricolage, sans-serif)' }}>
+              Sign in
+            </h2>
+            <p style={{ fontSize: 13, color: 'rgba(240,235,224,0.45)', marginBottom: 28 }}>
+              Access your creator, merchant or admin portal.
+            </p>
+
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.45)' }}>
+                  Email
+                </label>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(240,235,224,0.10)',
+                    borderRadius: 8,
+                    padding: '11px 14px',
+                    fontSize: 14,
+                    color: '#F0EBE0',
+                    outline: 'none',
+                    transition: 'border-color 0.2s',
+                    width: '100%',
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(200,169,104,0.50)'; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(240,235,224,0.10)'; }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.45)' }}>
+                  Password
+                </label>
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(240,235,224,0.10)',
+                    borderRadius: 8,
+                    padding: '11px 14px',
+                    fontSize: 14,
+                    color: '#F0EBE0',
+                    outline: 'none',
+                    transition: 'border-color 0.2s',
+                    width: '100%',
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(200,169,104,0.50)'; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(240,235,224,0.10)'; }}
+                />
+              </div>
+
+              {error && (
+                <div style={{
+                  background: 'rgba(220,38,38,0.10)',
+                  border: '1px solid rgba(220,38,38,0.25)',
+                  borderRadius: 8,
+                  padding: '10px 14px',
+                  fontSize: 13,
+                  color: '#fca5a5',
+                }}>
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  background: '#C8A968',
+                  color: '#080D26',
+                  border: 'none',
+                  borderRadius: 100,
+                  padding: '12px 24px',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.15em',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.6 : 1,
+                  transition: 'all 0.3s',
+                  width: '100%',
+                  marginTop: 4,
+                }}
+              >
+                {loading ? 'Signing in…' : 'Sign in'}
+              </button>
+            </form>
+
+            <p style={{ marginTop: 20, textAlign: 'center', fontSize: 13, color: 'rgba(240,235,224,0.40)' }}>
+              New creator?{' '}
+              <Link href="/apply" style={{ color: '#C8A968', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                Apply for membership
+              </Link>
+            </p>
+          </div>
+
+          {/* Demo accounts */}
+          <div style={{ marginTop: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div style={{ flex: 1, height: 1, background: 'rgba(240,235,224,0.08)' }} />
+              <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.25)' }}>
+                Demo accounts
+              </span>
+              <div style={{ flex: 1, height: 1, background: 'rgba(240,235,224,0.08)' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {DEMO_ACCOUNTS.map((account) => (
+                <button
+                  key={account.role}
+                  type="button"
+                  onClick={() => fillDemo(account.email, account.password)}
+                  style={{
+                    background: 'rgba(200,169,104,0.05)',
+                    border: '1px solid rgba(200,169,104,0.15)',
+                    borderRadius: 10,
+                    padding: '12px 16px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s',
+                    width: '100%',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(200,169,104,0.10)';
+                    e.currentTarget.style.borderColor = 'rgba(200,169,104,0.30)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(200,169,104,0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(200,169,104,0.15)';
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#C8A968' }}>
+                        {account.role}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'rgba(240,235,224,0.40)', marginTop: 2 }}>
+                        {account.description}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 10, color: 'rgba(240,235,224,0.25)', flexShrink: 0, marginLeft: 12 }}>
+                      Click to fill
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'rgba(240,235,224,0.45)', marginTop: 6 }}>
+                    {account.email}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </>
   );
 }

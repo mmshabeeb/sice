@@ -58,6 +58,7 @@ export default function Nav() {
           <a href="#membership" className="nav-link">Membership</a>
           <a href="#editorial" className="nav-link">Editorial</a>
           <a href="/apply" className="nav-cta">Apply</a>
+          <a href="/login" className="nav-login">Login</a>
         </div>
         <button className="nav-toggle" aria-label="Open menu">&#9776;</button>
       </div>

@@ -98,6 +98,13 @@
       transition: all 0.3s;
     }
     .nav-cta:hover { transform: translateY(-1px); background: var(--gold-bright); }
+    .nav-login {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em;
+      color: var(--cream); border: 1px solid rgba(240, 235, 224, 0.25);
+      padding: 9px 18px; border-radius: 100px; font-weight: 500;
+      transition: all 0.3s;
+    }
+    .nav-login:hover { border-color: var(--gold); color: var(--gold); }
     .nav-toggle { display: none; background: none; border: none; color: var(--cream); cursor: pointer; font-size: 22px; }
 
     /* ============================================== */
