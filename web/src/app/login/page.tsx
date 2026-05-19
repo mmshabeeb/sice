@@ -68,11 +68,6 @@ export default function LoginPage() {
     }
   }
 
-  function fillDemo(demoEmail: string, demoPassword: string) {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setError(null);
-  }
 
   return (
     <>
@@ -244,60 +239,6 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Demo accounts — development only */}
-          {process.env.NODE_ENV === 'development' && <div style={{ marginTop: 32 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              <div style={{ flex: 1, height: 1, background: 'rgba(240,235,224,0.08)' }} />
-              <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.25)' }}>
-                Demo accounts
-              </span>
-              <div style={{ flex: 1, height: 1, background: 'rgba(240,235,224,0.08)' }} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {DEMO_ACCOUNTS.map((account) => (
-                <button
-                  key={account.role}
-                  type="button"
-                  onClick={() => fillDemo(account.email, account.password)}
-                  style={{
-                    background: 'rgba(200,169,104,0.05)',
-                    border: '1px solid rgba(200,169,104,0.15)',
-                    borderRadius: 10,
-                    padding: '12px 16px',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
-                    width: '100%',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(200,169,104,0.10)';
-                    e.currentTarget.style.borderColor = 'rgba(200,169,104,0.30)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(200,169,104,0.05)';
-                    e.currentTarget.style.borderColor = 'rgba(200,169,104,0.15)';
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#C8A968' }}>
-                        {account.role}
-                      </div>
-                      <div style={{ fontSize: 12, color: 'rgba(240,235,224,0.40)', marginTop: 2 }}>
-                        {account.description}
-                      </div>
-                    </div>
-                    <span style={{ fontSize: 10, color: 'rgba(240,235,224,0.25)', flexShrink: 0, marginLeft: 12 }}>
-                      Click to fill
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'rgba(240,235,224,0.45)', marginTop: 6 }}>
-                    {account.email}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>}
 
         </div>
       </main>
