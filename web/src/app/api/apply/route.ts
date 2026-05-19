@@ -18,6 +18,8 @@ export async function POST(request: NextRequest) {
       youtubeUrl,
       xUrl,
       linkedinUrl,
+      googleVerified,
+      phoneVerified,
     } = data;
 
     if (!fullName || !contactNumber || !whatsappNumber || !email) {
@@ -42,6 +44,8 @@ export async function POST(request: NextRequest) {
       x_url: String(xUrl || '').trim(),
       linkedin_url: String(linkedinUrl || '').trim(),
       status: 'pending',
+      google_verified: !!googleVerified,
+      phone_verified: !!phoneVerified,
     });
 
     return NextResponse.json({ success: true });

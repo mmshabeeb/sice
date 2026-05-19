@@ -26,6 +26,8 @@ export default function ApplicationForm() {
   const [googleName, setGoogleName] = useState<string | null>(null);
   const [smsPhoneNumber, setSmsPhoneNumber] = useState<string | null>(null);
   const [smsCountryCode, setSmsCountryCode] = useState<string | null>(null);
+  const [isGoogleVerified, setIsGoogleVerified] = useState(false);
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
 
   const [step, setStep] = useState<"verify" | "form">("verify");
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -65,6 +67,7 @@ export default function ApplicationForm() {
         const name = result.user.displayName || "";
         setGoogleName(name);
         setFullName(name);
+        setIsGoogleVerified(true);
         setSuccessMessage("Google account connected successfully!");
       } else {
         throw new Error("Could not retrieve email from Google login.");
@@ -79,6 +82,14 @@ export default function ApplicationForm() {
     } finally {
       setGoogleLoading(false);
     }
+  };
+
+  const handleResetGoogle = () => {
+    setGoogleEmail(null);
+    setGoogleName("");
+    setIsGoogleVerified(false);
+    setVerificationError(null);
+    setSuccessMessage(null);
   };
 
   const handleSendOtp = async () => {
@@ -141,6 +152,7 @@ export default function ApplicationForm() {
           setSmsCountryCode(selectedCountryCode);
           setSmsPhoneNumber(verifiedE164.replace(selectedCountryCode, ""));
         }
+        setIsPhoneVerified(true);
         setSuccessMessage("Phone number verified successfully!");
       } else {
         throw new Error("SMS verification failed.");
@@ -158,6 +170,7 @@ export default function ApplicationForm() {
     setOtpCode("");
     setSmsPhoneNumber(null);
     setSmsCountryCode(null);
+    setIsPhoneVerified(false);
     setConfirmationResult(null);
     setVerificationError(null);
     setSuccessMessage(null);
@@ -171,8 +184,10 @@ export default function ApplicationForm() {
     setGoogleEmail("demo.creator@sice.media");
     setGoogleName("Demo Creator");
     setFullName("Demo Creator");
+    setIsGoogleVerified(true);
     setSmsPhoneNumber("9876543210");
     setSmsCountryCode("+91");
+    setIsPhoneVerified(true);
     setSuccessMessage("Identity verified with offline demo credentials!");
     setVerificationError(null);
   };
@@ -210,6 +225,8 @@ export default function ApplicationForm() {
           youtubeUrl: formData.get("youtubeUrl"),
           xUrl: formData.get("xUrl"),
           linkedinUrl: formData.get("linkedinUrl"),
+          googleVerified: isGoogleVerified,
+          phoneVerified: isPhoneVerified,
         }),
       });
 
@@ -254,7 +271,7 @@ export default function ApplicationForm() {
           Identity Verification
         </h2>
         <p style={{ fontSize: 13, color: "rgba(8, 13, 38, 0.6)", marginBottom: 24, lineHeight: 1.5 }}>
-          Before proceeding with the membership application, please verify your identity using Google and SMS OTP.
+          Before proceeding with the membership application, please verify your identity using either Google or SMS OTP.
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -269,18 +286,27 @@ export default function ApplicationForm() {
               <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--indigo)" }}>
                 1. Google Verification
               </span>
-              {googleEmail ? (
-                <span style={{ fontSize: 10, background: "rgba(34, 197, 94, 0.1)", color: "#16a34a", padding: "2px 8px", borderRadius: 100, fontWeight: 600 }}>
-                  ✓ Connected
-                </span>
+              {isGoogleVerified ? (
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span style={{ fontSize: 10, background: "rgba(34, 197, 94, 0.1)", color: "#16a34a", padding: "2px 8px", borderRadius: 100, fontWeight: 600 }}>
+                    ✓ Connected
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleResetGoogle}
+                    style={{ fontSize: 11, background: "transparent", border: "none", color: "rgba(8, 13, 38, 0.4)", textDecoration: "underline", cursor: "pointer" }}
+                  >
+                    Change
+                  </button>
+                </div>
               ) : (
                 <span style={{ fontSize: 10, background: "rgba(8, 13, 38, 0.05)", color: "rgba(8, 13, 38, 0.6)", padding: "2px 8px", borderRadius: 100, fontWeight: 600 }}>
-                  Required
+                  Optional
                 </span>
               )}
             </div>
 
-            {googleEmail ? (
+            {isGoogleVerified ? (
               <div style={{ fontSize: 14, color: "var(--indigo)", fontWeight: 500 }}>
                 Verified Email: <strong style={{ color: "var(--indigo)" }}>{googleEmail}</strong>
               </div>
@@ -341,7 +367,7 @@ export default function ApplicationForm() {
               <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--indigo)" }}>
                 2. SMS OTP Verification
               </span>
-              {smsPhoneNumber ? (
+              {isPhoneVerified ? (
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <span style={{ fontSize: 10, background: "rgba(34, 197, 94, 0.1)", color: "#16a34a", padding: "2px 8px", borderRadius: 100, fontWeight: 600 }}>
                     ✓ Verified
@@ -356,7 +382,7 @@ export default function ApplicationForm() {
                 </div>
               ) : (
                 <span style={{ fontSize: 10, background: "rgba(8, 13, 38, 0.05)", color: "rgba(8, 13, 38, 0.6)", padding: "2px 8px", borderRadius: 100, fontWeight: 600 }}>
-                  Required
+                  Optional
                 </span>
               )}
             </div>
@@ -527,10 +553,10 @@ export default function ApplicationForm() {
         <button
           type="button"
           onClick={() => setStep("form")}
-          disabled={!googleEmail || !smsPhoneNumber}
+          disabled={!isGoogleVerified && !isPhoneVerified}
           style={{
-            background: googleEmail && smsPhoneNumber ? "var(--gold)" : "rgba(8, 13, 38, 0.06)",
-            color: googleEmail && smsPhoneNumber ? "var(--indigo)" : "rgba(8, 13, 38, 0.35)",
+            background: (isGoogleVerified || isPhoneVerified) ? "var(--gold)" : "rgba(8, 13, 38, 0.06)",
+            color: (isGoogleVerified || isPhoneVerified) ? "var(--indigo)" : "rgba(8, 13, 38, 0.35)",
             border: "none",
             borderRadius: 4,
             padding: "12px 24px",
@@ -538,11 +564,11 @@ export default function ApplicationForm() {
             fontWeight: 600,
             textTransform: "uppercase",
             letterSpacing: "0.15em",
-            cursor: googleEmail && smsPhoneNumber ? "pointer" : "not-allowed",
+            cursor: (isGoogleVerified || isPhoneVerified) ? "pointer" : "not-allowed",
             transition: "all 0.3s",
             width: "100%",
             marginTop: 28,
-            boxShadow: googleEmail && smsPhoneNumber ? "0 8px 16px rgba(200, 169, 104, 0.2)" : "none",
+            boxShadow: (isGoogleVerified || isPhoneVerified) ? "0 8px 16px rgba(200, 169, 104, 0.2)" : "none",
           }}
         >
           Proceed to Application Form
@@ -608,22 +634,40 @@ export default function ApplicationForm() {
         <label htmlFor="application-contact-number">Contact number</label>
         <div className="phone-row">
           <div style={{ position: "relative" }}>
-            <select 
-              disabled 
-              value={smsCountryCode || "+91"} 
-              aria-label="Contact country code"
-              style={{
-                background: "rgba(8, 13, 38, 0.04)",
-                color: "rgba(8, 13, 38, 0.5)",
-                cursor: "not-allowed",
-                borderBottomColor: "rgba(8, 13, 38, 0.08)",
-              }}
-            >
-              {countryCodes.map((country) => (
-                <option key={country.value} value={country.value}>{country.label}</option>
-              ))}
-            </select>
-            <input type="hidden" name="contactCountryCode" value={smsCountryCode || "+91"} />
+            {isPhoneVerified ? (
+              <>
+                <select 
+                  disabled 
+                  value={smsCountryCode || "+91"} 
+                  aria-label="Contact country code"
+                  style={{
+                    background: "rgba(8, 13, 38, 0.04)",
+                    color: "rgba(8, 13, 38, 0.5)",
+                    cursor: "not-allowed",
+                    borderBottomColor: "rgba(8, 13, 38, 0.08)",
+                  }}
+                >
+                  {countryCodes.map((country) => (
+                    <option key={country.value} value={country.value}>{country.label}</option>
+                  ))}
+                </select>
+                <input type="hidden" name="contactCountryCode" value={smsCountryCode || "+91"} />
+              </>
+            ) : (
+              <select 
+                name="contactCountryCode"
+                value={smsCountryCode || selectedCountryCode} 
+                onChange={(e) => {
+                  setSmsCountryCode(e.target.value);
+                  setSelectedCountryCode(e.target.value);
+                }}
+                aria-label="Contact country code"
+              >
+                {countryCodes.map((country) => (
+                  <option key={country.value} value={country.value}>{country.label}</option>
+                ))}
+              </select>
+            )}
           </div>
           <div style={{ position: "relative", display: "flex", alignItems: "center", flex: 1 }}>
             <input
@@ -631,29 +675,37 @@ export default function ApplicationForm() {
               id="application-contact-number"
               name="contactNumber"
               value={smsPhoneNumber || ""}
-              readOnly
+              onChange={(e) => {
+                if (!isPhoneVerified) {
+                  setSmsPhoneNumber(e.target.value.replace(/[^0-9]/g, ""));
+                }
+              }}
+              readOnly={isPhoneVerified}
               required
-              style={{
+              placeholder="9876543210"
+              style={isPhoneVerified ? {
                 background: "rgba(8, 13, 38, 0.04)",
                 color: "rgba(8, 13, 38, 0.5)",
                 cursor: "not-allowed",
                 borderBottomColor: "rgba(8, 13, 38, 0.08)",
                 paddingRight: 100,
-              }}
+              } : {}}
             />
-            <span style={{
-              position: "absolute",
-              right: 12,
-              fontSize: 10,
-              background: "rgba(34, 197, 94, 0.1)",
-              color: "#16a34a",
-              padding: "2px 8px",
-              borderRadius: 100,
-              fontWeight: 600,
-              pointerEvents: "none"
-            }}>
-              🔒 Verified
-            </span>
+            {isPhoneVerified && (
+              <span style={{
+                position: "absolute",
+                right: 12,
+                fontSize: 10,
+                background: "rgba(34, 197, 94, 0.1)",
+                color: "#16a34a",
+                padding: "2px 8px",
+                borderRadius: 100,
+                fontWeight: 600,
+                pointerEvents: "none"
+              }}>
+                🔒 Verified
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -688,29 +740,37 @@ export default function ApplicationForm() {
             name="email" 
             autoComplete="email" 
             value={googleEmail || ""}
-            readOnly
+            onChange={(e) => {
+              if (!isGoogleVerified) {
+                setGoogleEmail(e.target.value);
+              }
+            }}
+            readOnly={isGoogleVerified}
             required 
-            style={{
+            placeholder="email@example.com"
+            style={isGoogleVerified ? {
               background: "rgba(8, 13, 38, 0.04)",
               color: "rgba(8, 13, 38, 0.5)",
               cursor: "not-allowed",
               borderBottomColor: "rgba(8, 13, 38, 0.08)",
               paddingRight: 100,
-            }}
+            } : {}}
           />
-          <span style={{
-            position: "absolute",
-            right: 12,
-            fontSize: 10,
-            background: "rgba(34, 197, 94, 0.1)",
-            color: "#16a34a",
-            padding: "2px 8px",
-            borderRadius: 100,
-            fontWeight: 600,
-            pointerEvents: "none"
-          }}>
-            🔒 Verified
-          </span>
+          {isGoogleVerified && (
+            <span style={{
+              position: "absolute",
+              right: 12,
+              fontSize: 10,
+              background: "rgba(34, 197, 94, 0.1)",
+              color: "#16a34a",
+              padding: "2px 8px",
+              borderRadius: 100,
+              fontWeight: 600,
+              pointerEvents: "none"
+            }}>
+              🔒 Verified
+            </span>
+          )}
         </div>
       </div>
 
