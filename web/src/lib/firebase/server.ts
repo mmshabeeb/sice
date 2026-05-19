@@ -11,11 +11,18 @@ function getAdminApp(): App {
     return _app;
   }
 
+  // Hostinger may store the value with surrounding quotes or literal \n —
+  // strip both so the PEM key is always valid.
+  const rawKey = process.env.FIREBASE_PRIVATE_KEY ?? '';
+  const privateKey = rawKey
+    .replace(/^["']|["']$/g, '')   // strip any surrounding " or ' added by the panel
+    .replace(/\\n/g, '\n');         // convert literal \n to real newlines
+
   _app = initializeApp({
     credential: cert({
       projectId: process.env.FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      privateKey,
     }),
   });
 

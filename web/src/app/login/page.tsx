@@ -230,8 +230,8 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Demo accounts */}
-          <div style={{ marginTop: 32 }}>
+          {/* Demo accounts — development only */}
+          {process.env.NODE_ENV === 'development' && <div style={{ marginTop: 32 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
               <div style={{ flex: 1, height: 1, background: 'rgba(240,235,224,0.08)' }} />
               <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.25)' }}>
@@ -283,7 +283,7 @@ export default function LoginPage() {
                 </button>
               ))}
             </div>
-          </div>
+          </div>}
 
         </div>
       </main>
