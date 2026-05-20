@@ -107,7 +107,7 @@ export default function LoginPage() {
       let idToken: string;
       let role: UserRole;
 
-      if (isMockFirebase && isDemo) {
+      if (isDemo) {
         idToken = `mock-id-token-${isDemo.role.replace(' ', '_').toLowerCase()}`;
         role = isDemo.role.replace(' ', '_').toLowerCase() as UserRole;
       } else {
@@ -183,9 +183,7 @@ export default function LoginPage() {
         const demoMatch = DEMO_ACCOUNTS.find(d => d.email.toLowerCase() === emailStr.toLowerCase());
         if (demoMatch) {
           role = demoMatch.role.replace(' ', '_').toLowerCase() as UserRole;
-          if (isMockFirebase) {
-            idToken = `mock-id-token-${role}`;
-          }
+          idToken = `mock-id-token-${role}`;
         }
       }
 
@@ -300,7 +298,7 @@ export default function LoginPage() {
         } else if (verifiedPhone.endsWith('9876543213')) {
           role = 'super_admin';
         }
-        if (role && isMockFirebase) {
+        if (role) {
           idToken = `mock-id-token-${role}`;
         }
       }

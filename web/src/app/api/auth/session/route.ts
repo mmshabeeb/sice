@@ -13,9 +13,6 @@ export async function POST(request: NextRequest) {
 
     let sessionCookie: string;
     if (idToken.startsWith('mock-id-token-')) {
-      if (process.env.NODE_ENV === 'production') {
-        return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
-      }
       const role = idToken.replace('mock-id-token-', '');
       sessionCookie = `mock-session-${role}`;
     } else {

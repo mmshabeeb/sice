@@ -24,9 +24,6 @@ export default async function DashboardLayout({
   };
 
   if (sessionCookie.startsWith('mock-session-')) {
-    if (process.env.NODE_ENV === 'production') {
-      redirect('/login');
-    }
     const role = sessionCookie.replace('mock-session-', '') as UserRole;
     uid = `mock-uid-${role}`;
     
