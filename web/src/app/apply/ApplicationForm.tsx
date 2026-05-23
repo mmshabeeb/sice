@@ -230,13 +230,25 @@ export default function ApplicationForm() {
         }),
       });
 
-      const json = await res.json();
+      const responseText = await res.text();
+      let json: any = {};
+      let parseFailed = false;
+      try {
+        json = JSON.parse(responseText);
+      } catch {
+        parseFailed = true;
+      }
 
       if (res.ok) {
         setSubmitted(true);
         setStatus("Application received. We will review it and be in touch via email.");
       } else {
-        setStatus(json.error || "Something went wrong. Please try again or email apply@sice.media");
+        if (parseFailed) {
+          const cleanSnippet = responseText.replace(/<[^>]*>/g, '').substring(0, 150).trim();
+          setStatus(`Server Error (${res.status}): ${cleanSnippet || res.statusText || 'Response could not be parsed'}`);
+        } else {
+          setStatus(json.error || `Server Error (${res.status}): Something went wrong.`);
+        }
       }
     } catch {
       setStatus("Network error. Please try again or email apply@sice.media");

@@ -19,8 +19,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (err) {
+  } catch (err: any) {
     console.error('Contact API error:', err);
-    return NextResponse.json({ error: 'Failed to submit. Please try again.' }, { status: 500 });
+    return NextResponse.json({ error: `Failed to submit: ${err?.message || String(err)}` }, { status: 500 });
   }
 }
