@@ -1,0 +1,7 @@
+1:"$Sreact.fragment"
+2:I[4561,["/_next/static/chunks/16oq79q4m6et7.js","/_next/static/chunks/0b~zkb7ltl~1n.js","/_next/static/chunks/14qb9x~d.4pba.js","/_next/static/chunks/0d2u1l.2fxt13.js"],""]
+3:"$Sreact.suspense"
+4:I[73557,["/_next/static/chunks/16oq79q4m6et7.js","/_next/static/chunks/0b~zkb7ltl~1n.js","/_next/static/chunks/14qb9x~d.4pba.js","/_next/static/chunks/0d2u1l.2fxt13.js"],"default"]
+5:I[51858,["/_next/static/chunks/16oq79q4m6et7.js","/_next/static/chunks/0b~zkb7ltl~1n.js"],"OutletBoundary"]
+0:{"rsc":["$","$1","c",{"children":[["$","main",null,{"className":"apply-page","children":["$","section",null,{"className":"application apply-hero","children":["$","div",null,{"className":"container","children":[["$","$L2",null,{"href":"/","className":"apply-back","children":"Back to SICE"}],["$","div",null,{"className":"section-eyebrow light","children":"Apply"}],["$","$3",null,{"fallback":["$","div",null,{"style":{"color":"rgba(240, 235, 224, 0.75)","padding":"40px 0","textAlign":"center"},"children":"Loading application form..."}],"children":["$","$L4",null,{}]}]]}]}]}],[["$","script","script-0",{"src":"/_next/static/chunks/14qb9x~d.4pba.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/0d2u1l.2fxt13.js","async":true}]],["$","$L5",null,{"children":["$","$3",null,{"name":"Next.MetadataOutlet","children":"$@6"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"YKgPx-6N785fVWzIXEhco"}
+6:null
