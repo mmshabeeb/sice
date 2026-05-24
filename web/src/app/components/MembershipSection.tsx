@@ -16,13 +16,22 @@ const merchantBenefits = [
   "Brand profile listing on the platform",
 ];
 
+const chapterBenefits = [
+  "Host official local SICE meetups & panels",
+  "Moderate region-specific SICE network channels",
+  "Access to regional workshop sponsorship funds",
+  "Member badge & official regional SICE email alias",
+  "Represent local community in platform governance",
+  "Exclusive SICE merchandise and organizer toolkit",
+];
+
 export default function MembershipSection() {
   return (
     <section className="membership reveal" id="membership">
       <div className="container">
         <div className="section-eyebrow">06 · Membership</div>
         <h2>SICE Memberships. <em>Grow together.</em></h2>
-        <p className="lede">Membership is application-based. We invite working creators and verified brands to collaborate, grow, and secure transaction workflows through one clear network ecosystem.</p>
+        <p className="lede">Membership is application-based. We invite working creators, verified brands, and regional organizers to collaborate, grow, and secure transaction workflows through one clear network ecosystem.</p>
         <div className="membership-grid">
           <article className="tier primary-membership">
             <div className="tier-tag">Creator Plan</div>
@@ -42,6 +51,16 @@ export default function MembershipSection() {
               {merchantBenefits.map((b) => <li key={b}>{b}</li>)}
             </ul>
             <a href="/apply?type=merchant" className="btn-primary">Apply as Merchant</a>
+          </article>
+
+          <article className="tier chapter-membership">
+            <div className="tier-tag">Chapter Plan</div>
+            <h3>Chapter Representative</h3>
+            <div className="tier-price">By application · Volunteer leadership</div>
+            <ul className="tier-list">
+              {chapterBenefits.map((b) => <li key={b}>{b}</li>)}
+            </ul>
+            <a href="/apply?type=chapter" className="btn-primary">Apply to Lead Chapter</a>
           </article>
         </div>
       </div>
