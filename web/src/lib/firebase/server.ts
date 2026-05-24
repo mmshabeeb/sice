@@ -34,16 +34,21 @@ function getAdminApp(): App {
 
   // Format the private key cleanly into a standard PEM key (with 64-char lines)
   // to avoid issues with how Hostinger stores, strips, or escapes newlines in the panel.
-  const cleanKey = trimmedKey.replace(/^["']|["']$/g, '').replace(/\\n/g, '\n');
+  const cleanKey = trimmedKey
+    .replace(/^["']|["']$/g, '')
+    .replace(/\\n/g, ' ')
+    .replace(/\\r/g, ' ')
+    .replace(/\r/g, ' ')
+    .replace(/\n/g, ' ');
+
   const header = '-----BEGIN PRIVATE KEY-----';
   const footer = '-----END PRIVATE KEY-----';
   
-  // Strip any headers, footers, quotes, and whitespace to extract the pure base64 body
+  // Strip any headers, footers, quotes, and non-base64 characters to extract the pure base64 body
   const base64Body = cleanKey
     .replace(/-----BEGIN [^-]+-----/g, '')
     .replace(/-----END [^-]+-----/g, '')
-    .replace(/["']/g, '')
-    .replace(/\s+/g, '');
+    .replace(/[^A-Za-z0-9+/=]/g, '');
   
   if (base64Body.length < 100) {
     throw new Error(`FIREBASE_PRIVATE_KEY base64 body is too short (${base64Body.length} chars). Raw key length: ${rawKey.length}`);
