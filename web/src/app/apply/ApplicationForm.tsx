@@ -111,6 +111,44 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  // Social followers states
+  const [followers, setFollowers] = useState<Record<string, string>>({
+    facebook: "",
+    instagram: "",
+    youtube: "",
+    x: "",
+    linkedin: "",
+  });
+  const [fetchingFollowers, setFetchingFollowers] = useState<Record<string, boolean>>({
+    facebook: false,
+    instagram: false,
+    youtube: false,
+    x: false,
+    linkedin: false,
+  });
+
+  const handleSocialBlur = async (platform: string, url: string) => {
+    if (!url || !url.trim()) return;
+    setFetchingFollowers((prev) => ({ ...prev, [platform]: true }));
+    try {
+      const res = await fetch("/api/social/followers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ platform, url }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.count) {
+          setFollowers((prev) => ({ ...prev, [platform]: data.count }));
+        }
+      }
+    } catch (err) {
+      console.error(`Failed to fetch ${platform} followers:`, err);
+    } finally {
+      setFetchingFollowers((prev) => ({ ...prev, [platform]: false }));
+    }
+  };
+
   // Country, State, City dropdown states
   const [selectedCountry, setSelectedCountry] = useState("India");
   const [selectedState, setSelectedState] = useState("Kerala");
@@ -340,10 +378,15 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
 
       if (type === "creator") {
         payload.facebookUrl = formData.get("facebookUrl");
+        payload.facebookFollowers = formData.get("facebookFollowers");
         payload.instagramUrl = formData.get("instagramUrl");
+        payload.instagramFollowers = formData.get("instagramFollowers");
         payload.youtubeUrl = formData.get("youtubeUrl");
+        payload.youtubeFollowers = formData.get("youtubeFollowers");
         payload.xUrl = formData.get("xUrl");
+        payload.xFollowers = formData.get("xFollowers");
         payload.linkedinUrl = formData.get("linkedinUrl");
+        payload.linkedinFollowers = formData.get("linkedinFollowers");
       } else {
         payload.brandName = formData.get("brandName");
         payload.city = formData.get("city");
@@ -1002,25 +1045,130 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
           <legend>Social media handles</legend>
           <p>Submit at least one profile URL.</p>
           <div className="social-grid">
-            <div className="form-field">
+            <div className="form-field social-input-group">
               <label htmlFor="facebook-url">Facebook</label>
-              <input type="url" id="facebook-url" name="facebookUrl" placeholder="https://facebook.com/username" />
+              <div className="social-inputs-wrapper">
+                <input
+                  type="url"
+                  id="facebook-url"
+                  name="facebookUrl"
+                  placeholder="https://facebook.com/username"
+                  onBlur={(e) => handleSocialBlur("facebook", e.target.value)}
+                />
+                <div className="followers-input-container">
+                  <input
+                    type="text"
+                    name="facebookFollowers"
+                    placeholder="Likes/Followers"
+                    value={followers.facebook}
+                    onChange={(e) => setFollowers((prev) => ({ ...prev, facebook: e.target.value }))}
+                    className="social-followers-input"
+                  />
+                  {fetchingFollowers.facebook && (
+                    <span className="followers-spinner"></span>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="form-field">
+            <div className="form-field social-input-group">
               <label htmlFor="instagram-url">Instagram</label>
-              <input type="url" id="instagram-url" name="instagramUrl" placeholder="https://instagram.com/username" />
+              <div className="social-inputs-wrapper">
+                <input
+                  type="url"
+                  id="instagram-url"
+                  name="instagramUrl"
+                  placeholder="https://instagram.com/username"
+                  onBlur={(e) => handleSocialBlur("instagram", e.target.value)}
+                />
+                <div className="followers-input-container">
+                  <input
+                    type="text"
+                    name="instagramFollowers"
+                    placeholder="Followers"
+                    value={followers.instagram}
+                    onChange={(e) => setFollowers((prev) => ({ ...prev, instagram: e.target.value }))}
+                    className="social-followers-input"
+                  />
+                  {fetchingFollowers.instagram && (
+                    <span className="followers-spinner"></span>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="form-field">
+            <div className="form-field social-input-group">
               <label htmlFor="youtube-url">YouTube</label>
-              <input type="url" id="youtube-url" name="youtubeUrl" placeholder="https://youtube.com/@channel" />
+              <div className="social-inputs-wrapper">
+                <input
+                  type="url"
+                  id="youtube-url"
+                  name="youtubeUrl"
+                  placeholder="https://youtube.com/@channel"
+                  onBlur={(e) => handleSocialBlur("youtube", e.target.value)}
+                />
+                <div className="followers-input-container">
+                  <input
+                    type="text"
+                    name="youtubeFollowers"
+                    placeholder="Subscribers"
+                    value={followers.youtube}
+                    onChange={(e) => setFollowers((prev) => ({ ...prev, youtube: e.target.value }))}
+                    className="social-followers-input"
+                  />
+                  {fetchingFollowers.youtube && (
+                    <span className="followers-spinner"></span>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="form-field">
+            <div className="form-field social-input-group">
               <label htmlFor="x-url">X.com</label>
-              <input type="url" id="x-url" name="xUrl" placeholder="https://x.com/username" />
+              <div className="social-inputs-wrapper">
+                <input
+                  type="url"
+                  id="x-url"
+                  name="xUrl"
+                  placeholder="https://x.com/username"
+                  onBlur={(e) => handleSocialBlur("x", e.target.value)}
+                />
+                <div className="followers-input-container">
+                  <input
+                    type="text"
+                    name="xFollowers"
+                    placeholder="Followers"
+                    value={followers.x}
+                    onChange={(e) => setFollowers((prev) => ({ ...prev, x: e.target.value }))}
+                    className="social-followers-input"
+                  />
+                  {fetchingFollowers.x && (
+                    <span className="followers-spinner"></span>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="form-field">
+            <div className="form-field social-input-group">
               <label htmlFor="linkedin-url">LinkedIn</label>
-              <input type="url" id="linkedin-url" name="linkedinUrl" placeholder="https://linkedin.com/in/username" />
+              <div className="social-inputs-wrapper">
+                <input
+                  type="url"
+                  id="linkedin-url"
+                  name="linkedinUrl"
+                  placeholder="https://linkedin.com/in/username"
+                  onBlur={(e) => handleSocialBlur("linkedin", e.target.value)}
+                />
+                <div className="followers-input-container">
+                  <input
+                    type="text"
+                    name="linkedinFollowers"
+                    placeholder="Connections"
+                    value={followers.linkedin}
+                    onChange={(e) => setFollowers((prev) => ({ ...prev, linkedin: e.target.value }))}
+                    className="social-followers-input"
+                  />
+                  {fetchingFollowers.linkedin && (
+                    <span className="followers-spinner"></span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
           {socialError && <div className="form-error">{socialError}</div>}
