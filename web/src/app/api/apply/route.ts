@@ -38,6 +38,12 @@ export async function POST(request: NextRequest) {
       state,
       country,
       uid,
+      // Chapter application fields
+      chapterName,
+      customChapterName,
+      chapterRole,
+      chapterProfileUrl,
+      statementOfPurpose,
     } = data;
 
     if (applicationType === 'merchant') {
@@ -123,6 +129,27 @@ export async function POST(request: NextRequest) {
         email: String(email).trim(),
         contact_number: `${contactCountryCode ?? ''} ${contactNumber}`.trim(),
         whatsapp_number: `${whatsappCountryCode ?? ''} ${whatsappNumber}`.trim(),
+        status: 'pending',
+        google_verified: !!googleVerified,
+        phone_verified: !!phoneVerified,
+      });
+    } else if (applicationType === 'chapter') {
+      if (!fullName || !contactNumber || !whatsappNumber || !email || !chapterName || !chapterRole || !chapterProfileUrl || !statementOfPurpose) {
+        return NextResponse.json({ error: 'Missing required fields for chapter application.' }, { status: 400 });
+      }
+
+      await adminDb.collection('applications').add({
+        submitted_at: FieldValue.serverTimestamp(),
+        application_type: 'chapter',
+        full_name: String(fullName).trim(),
+        email: String(email).trim(),
+        contact_number: `${contactCountryCode ?? ''} ${contactNumber}`.trim(),
+        whatsapp_number: `${whatsappCountryCode ?? ''} ${whatsappNumber}`.trim(),
+        chapter_name: String(chapterName).trim(),
+        custom_chapter_name: customChapterName ? String(customChapterName).trim() : null,
+        chapter_role: String(chapterRole).trim(),
+        chapter_profile_url: String(chapterProfileUrl).trim(),
+        statement_of_purpose: String(statementOfPurpose).trim(),
         status: 'pending',
         google_verified: !!googleVerified,
         phone_verified: !!phoneVerified,
