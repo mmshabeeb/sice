@@ -36,6 +36,7 @@ type NavItem = { label: string; href: string; icon: React.ElementType };
 const NAV: Record<string, NavItem[]> = {
   creator: [
     { label: 'Overview', href: '/dashboard/creator', icon: BarChart2 },
+    { label: 'My Chapters', href: '/dashboard/creator/chapters', icon: Map },
     { label: 'Social Accounts', href: '/dashboard/creator/accounts', icon: Globe },
     { label: 'Follower Metrics', href: '/dashboard/creator/metrics', icon: BarChart2 },
     { label: 'Brand Marketplace', href: '/dashboard/creator/marketplace', icon: ShoppingBag },
