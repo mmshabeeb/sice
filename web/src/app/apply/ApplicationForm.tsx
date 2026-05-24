@@ -20,7 +20,7 @@ const countryCodes = [
   { label: "Singapore +65", value: "+65" },
 ];
 
-export default function ApplicationForm() {
+export default function ApplicationForm({ type = "creator" }: { type?: string }) {
   // Verification states
   const [googleEmail, setGoogleEmail] = useState<string | null>(null);
   const [googleName, setGoogleName] = useState<string | null>(null);
@@ -196,38 +196,52 @@ export default function ApplicationForm() {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const socialFields = ["facebookUrl", "instagramUrl", "youtubeUrl", "xUrl", "linkedinUrl"];
-    const hasSocialUrl = socialFields.some((field) => String(formData.get(field) || "").trim());
 
-    if (!hasSocialUrl) {
-      setSocialError("Add at least one social media URL.");
-      setStatus("");
-      return;
+    if (type === "creator") {
+      const socialFields = ["facebookUrl", "instagramUrl", "youtubeUrl", "xUrl", "linkedinUrl"];
+      const hasSocialUrl = socialFields.some((field) => String(formData.get(field) || "").trim());
+
+      if (!hasSocialUrl) {
+        setSocialError("Add at least one social media URL.");
+        setStatus("");
+        return;
+      }
+      setSocialError("");
     }
 
-    setSocialError("");
     setSubmitting(true);
     setStatus("");
 
     try {
+      const payload: any = {
+        applicationType: type,
+        fullName: formData.get("fullName"),
+        contactCountryCode: formData.get("contactCountryCode"),
+        contactNumber: formData.get("contactNumber"),
+        whatsappCountryCode: formData.get("whatsappCountryCode"),
+        whatsappNumber: formData.get("whatsappNumber"),
+        email: formData.get("email"),
+        googleVerified: isGoogleVerified,
+        phoneVerified: isPhoneVerified,
+      };
+
+      if (type === "creator") {
+        payload.facebookUrl = formData.get("facebookUrl");
+        payload.instagramUrl = formData.get("instagramUrl");
+        payload.youtubeUrl = formData.get("youtubeUrl");
+        payload.xUrl = formData.get("xUrl");
+        payload.linkedinUrl = formData.get("linkedinUrl");
+      } else {
+        payload.brandName = formData.get("brandName");
+        payload.city = formData.get("city");
+        payload.state = formData.get("state");
+        payload.country = formData.get("country");
+      }
+
       const res = await fetch("/api/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: formData.get("fullName"),
-          contactCountryCode: formData.get("contactCountryCode"),
-          contactNumber: formData.get("contactNumber"),
-          whatsappCountryCode: formData.get("whatsappCountryCode"),
-          whatsappNumber: formData.get("whatsappNumber"),
-          email: formData.get("email"),
-          facebookUrl: formData.get("facebookUrl"),
-          instagramUrl: formData.get("instagramUrl"),
-          youtubeUrl: formData.get("youtubeUrl"),
-          xUrl: formData.get("xUrl"),
-          linkedinUrl: formData.get("linkedinUrl"),
-          googleVerified: isGoogleVerified,
-          phoneVerified: isPhoneVerified,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const responseText = await res.text();
@@ -629,8 +643,34 @@ export default function ApplicationForm() {
   // Application Form Step
   return (
     <form className="form application-form" onSubmit={handleSubmit}>
+      {type === "merchant" && (
+        <>
+          <div className="form-field full">
+            <label htmlFor="application-brand-name">Brand Name / Legal Name</label>
+            <input type="text" id="application-brand-name" name="brandName" required />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="application-city">City</label>
+            <input type="text" id="application-city" name="city" required />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="application-state">State</label>
+            <input type="text" id="application-state" name="state" required />
+          </div>
+
+          <div className="form-field full">
+            <label htmlFor="application-country">Country</label>
+            <input type="text" id="application-country" name="country" required />
+          </div>
+        </>
+      )}
+
       <div className="form-field full">
-        <label htmlFor="application-full-name">Full name</label>
+        <label htmlFor="application-full-name">
+          {type === "merchant" ? "Contact person name" : "Full name"}
+        </label>
         <input 
           type="text" 
           id="application-full-name" 
@@ -643,7 +683,9 @@ export default function ApplicationForm() {
       </div>
 
       <div className="form-field phone-field">
-        <label htmlFor="application-contact-number">Contact number</label>
+        <label htmlFor="application-contact-number">
+          {type === "merchant" ? "Contact person mobile number" : "Contact number"}
+        </label>
         <div className="phone-row">
           <div style={{ position: "relative" }}>
             {isPhoneVerified ? (
@@ -653,10 +695,10 @@ export default function ApplicationForm() {
                   value={smsCountryCode || "+91"} 
                   aria-label="Contact country code"
                   style={{
-                    background: "rgba(8, 13, 38, 0.04)",
-                    color: "rgba(8, 13, 38, 0.5)",
-                    cursor: "not-allowed",
-                    borderBottomColor: "rgba(8, 13, 38, 0.08)",
+                     background: "rgba(8, 13, 38, 0.04)",
+                     color: "rgba(8, 13, 38, 0.5)",
+                     cursor: "not-allowed",
+                     borderBottomColor: "rgba(8, 13, 38, 0.08)",
                   }}
                 >
                   {countryCodes.map((country) => (
@@ -786,33 +828,35 @@ export default function ApplicationForm() {
         </div>
       </div>
 
-      <fieldset className="social-fieldset full">
-        <legend>Social media handles</legend>
-        <p>Submit at least one profile URL.</p>
-        <div className="social-grid">
-          <div className="form-field">
-            <label htmlFor="facebook-url">Facebook</label>
-            <input type="url" id="facebook-url" name="facebookUrl" placeholder="https://facebook.com/username" />
+      {type === "creator" && (
+        <fieldset className="social-fieldset full">
+          <legend>Social media handles</legend>
+          <p>Submit at least one profile URL.</p>
+          <div className="social-grid">
+            <div className="form-field">
+              <label htmlFor="facebook-url">Facebook</label>
+              <input type="url" id="facebook-url" name="facebookUrl" placeholder="https://facebook.com/username" />
+            </div>
+            <div className="form-field">
+              <label htmlFor="instagram-url">Instagram</label>
+              <input type="url" id="instagram-url" name="instagramUrl" placeholder="https://instagram.com/username" />
+            </div>
+            <div className="form-field">
+              <label htmlFor="youtube-url">YouTube</label>
+              <input type="url" id="youtube-url" name="youtubeUrl" placeholder="https://youtube.com/@channel" />
+            </div>
+            <div className="form-field">
+              <label htmlFor="x-url">X.com</label>
+              <input type="url" id="x-url" name="xUrl" placeholder="https://x.com/username" />
+            </div>
+            <div className="form-field">
+              <label htmlFor="linkedin-url">LinkedIn</label>
+              <input type="url" id="linkedin-url" name="linkedinUrl" placeholder="https://linkedin.com/in/username" />
+            </div>
           </div>
-          <div className="form-field">
-            <label htmlFor="instagram-url">Instagram</label>
-            <input type="url" id="instagram-url" name="instagramUrl" placeholder="https://instagram.com/username" />
-          </div>
-          <div className="form-field">
-            <label htmlFor="youtube-url">YouTube</label>
-            <input type="url" id="youtube-url" name="youtubeUrl" placeholder="https://youtube.com/@channel" />
-          </div>
-          <div className="form-field">
-            <label htmlFor="x-url">X.com</label>
-            <input type="url" id="x-url" name="xUrl" placeholder="https://x.com/username" />
-          </div>
-          <div className="form-field">
-            <label htmlFor="linkedin-url">LinkedIn</label>
-            <input type="url" id="linkedin-url" name="linkedinUrl" placeholder="https://linkedin.com/in/username" />
-          </div>
-        </div>
-        {socialError && <div className="form-error">{socialError}</div>}
-      </fieldset>
+          {socialError && <div className="form-error">{socialError}</div>}
+        </fieldset>
+      )}
 
       <div className="checkbox-group full">
         <label>

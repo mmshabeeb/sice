@@ -11,12 +11,24 @@ function getAdminApp(): App {
     return _app;
   }
 
-  // Hostinger may store the value with surrounding quotes or literal \n —
-  // strip both so the PEM key is always valid.
   const rawKey = process.env.FIREBASE_PRIVATE_KEY ?? '';
-  const privateKey = rawKey
-    .replace(/^["']|["']$/g, '')   // strip any surrounding " or ' added by the panel
-    .replace(/\\n/g, '\n');         // convert literal \n to real newlines
+  
+  // Format the private key cleanly into a standard PEM key (with 64-char lines)
+  // to avoid issues with how Hostinger stores, strips, or escapes newlines in the panel.
+  const cleanKey = rawKey.trim().replace(/^["']|["']$/g, '').replace(/\\n/g, '\n');
+  const header = '-----BEGIN PRIVATE KEY-----';
+  const footer = '-----END PRIVATE KEY-----';
+  
+  let base64Body = cleanKey;
+  if (base64Body.includes(header)) base64Body = base64Body.replace(header, '');
+  if (base64Body.includes(footer)) base64Body = base64Body.replace(footer, '');
+  base64Body = base64Body.replace(/\s+/g, ''); // strip all whitespace, spaces, and newlines
+  
+  const chunks: string[] = [];
+  for (let i = 0; i < base64Body.length; i += 64) {
+    chunks.push(base64Body.substring(i, i + 64));
+  }
+  const privateKey = `${header}\n${chunks.join('\n')}\n${footer}\n`;
 
   _app = initializeApp({
     credential: cert({
