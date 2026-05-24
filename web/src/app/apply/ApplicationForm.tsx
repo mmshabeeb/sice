@@ -77,14 +77,38 @@ const countriesData = [
   },
 ];
 
+const chaptersList = [
+  "Kozhikode",
+  "Kochi",
+  "Bangalore East",
+  "Chennai Central",
+  "Hyderabad Gachibowli",
+  "Mumbai Colaba",
+  "Propose a New Chapter..."
+];
+
+const chapterRoles = [
+  "Chapter Lead / Organizer",
+  "Core Volunteer"
+];
+
 export default function ApplicationForm({ type: propType }: { type?: string }) {
   const searchParams = useSearchParams();
-  const type = propType || (searchParams?.get("type") === "merchant" ? "merchant" : "creator");
+  const typeParam = searchParams?.get("type");
+  const type = propType || (typeParam === "merchant" ? "merchant" : typeParam === "chapter" ? "chapter" : "creator");
 
   useEffect(() => {
-    const titleType = type === "merchant" ? "Merchant" : "Creator";
+    const titleType = type === "merchant" ? "Merchant" : type === "chapter" ? "Chapter" : "Creator";
     document.title = `Apply for ${titleType} Membership | SICE`;
   }, [type]);
+
+  // Chapter application states
+  const [selectedChapter, setSelectedChapter] = useState("");
+  const [customChapterName, setCustomChapterName] = useState("");
+  const [chapterRole, setChapterRole] = useState("");
+  const [chapterProfileUrl, setChapterProfileUrl] = useState("");
+  const [statementOfPurpose, setStatementOfPurpose] = useState("");
+
   // Verification states
   const [googleEmail, setGoogleEmail] = useState<string | null>(null);
   const [googleName, setGoogleName] = useState<string | null>(null);
@@ -387,11 +411,17 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
         payload.xFollowers = formData.get("xFollowers");
         payload.linkedinUrl = formData.get("linkedinUrl");
         payload.linkedinFollowers = formData.get("linkedinFollowers");
-      } else {
+      } else if (type === "merchant") {
         payload.brandName = formData.get("brandName");
         payload.city = formData.get("city");
         payload.state = formData.get("state");
         payload.country = formData.get("country");
+      } else if (type === "chapter") {
+        payload.chapterName = formData.get("chapterSelect");
+        payload.customChapterName = formData.get("customChapterName") || null;
+        payload.chapterRole = formData.get("chapterRole");
+        payload.chapterProfileUrl = formData.get("chapterProfileUrl");
+        payload.statementOfPurpose = formData.get("statementOfPurpose");
       }
 
       const res = await fetch("/api/apply", {
@@ -440,10 +470,14 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
     return (
       <>
         <h1>
-          {type === "merchant" ? "Merchant Membership" : "Creator Membership"} <em>application.</em>
+          {type === "merchant" 
+            ? "Merchant Membership" 
+            : type === "chapter" 
+            ? "Chapter Organizer" 
+            : "Creator Membership"} <em>application.</em>
         </h1>
         <p className="lede light" style={{ marginBottom: 40 }}>
-          Complete the details below to apply for SICE {type === "merchant" ? "Merchant" : "Creator"} Membership.
+          Complete the details below to apply for SICE {type === "merchant" ? "Merchant" : type === "chapter" ? "Chapter Organizer" : "Creator"} Membership.
           We review all applications and respond via email.
         </p>
 
@@ -810,10 +844,14 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
   return (
     <>
       <h1>
-        {type === "merchant" ? "Merchant Membership" : "Creator Membership"} <em>application.</em>
+        {type === "merchant" 
+          ? "Merchant Membership" 
+          : type === "chapter" 
+          ? "Chapter Organizer" 
+          : "Creator Membership"} <em>application.</em>
       </h1>
       <p className="lede light" style={{ marginBottom: 40 }}>
-        Complete the details below to apply for SICE {type === "merchant" ? "Merchant" : "Creator"} Membership.
+        Complete the details below to apply for SICE {type === "merchant" ? "Merchant" : type === "chapter" ? "Chapter Organizer" : "Creator"} Membership.
         We review all applications and respond via email.
       </p>
 
@@ -1173,6 +1211,115 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
           </div>
           {socialError && <div className="form-error">{socialError}</div>}
         </fieldset>
+      )}
+
+      {type === "chapter" && (
+        <>
+          <div className="form-field full">
+            <label htmlFor="application-chapter-select">Select Chapter</label>
+            <select
+              id="application-chapter-select"
+              name="chapterSelect"
+              value={selectedChapter}
+              onChange={(e) => setSelectedChapter(e.target.value)}
+              required
+              style={{
+                width: "100%",
+                background: "white",
+                border: "1px solid rgba(8, 13, 38, 0.15)",
+                borderRadius: 4,
+                padding: "10px 14px",
+                fontSize: 14,
+                color: "var(--indigo)"
+              }}
+            >
+              <option value="" disabled>Select a Chapter...</option>
+              {chaptersList.map((ch) => (
+                <option key={ch} value={ch}>{ch}</option>
+              ))}
+            </select>
+          </div>
+
+          {selectedChapter === "Propose a New Chapter..." && (
+            <div className="form-field full">
+              <label htmlFor="application-custom-chapter">Proposed Chapter Name / Region</label>
+              <input
+                type="text"
+                id="application-custom-chapter"
+                name="customChapterName"
+                value={customChapterName}
+                onChange={(e) => setCustomChapterName(e.target.value)}
+                placeholder="e.g. Kozhikode North, Pune West"
+                required
+              />
+            </div>
+          )}
+
+          <div className="form-field full">
+            <label htmlFor="application-chapter-role">Role Applied For</label>
+            <select
+              id="application-chapter-role"
+              name="chapterRole"
+              value={chapterRole}
+              onChange={(e) => setChapterRole(e.target.value)}
+              required
+              style={{
+                width: "100%",
+                background: "white",
+                border: "1px solid rgba(8, 13, 38, 0.15)",
+                borderRadius: 4,
+                padding: "10px 14px",
+                fontSize: 14,
+                color: "var(--indigo)"
+              }}
+            >
+              <option value="" disabled>Select a Role...</option>
+              {chapterRoles.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-field full">
+            <label htmlFor="application-chapter-profile-url">LinkedIn or Instagram Profile URL</label>
+            <input
+              type="url"
+              id="application-chapter-profile-url"
+              name="chapterProfileUrl"
+              value={chapterProfileUrl}
+              onChange={(e) => setChapterProfileUrl(e.target.value)}
+              placeholder="https://linkedin.com/in/username or https://instagram.com/username"
+              required
+            />
+          </div>
+
+          <div className="form-field full">
+            <label htmlFor="application-statement-of-purpose">
+              Why do you want to organize SICE meetups and events in your region?
+            </label>
+            <textarea
+              id="application-statement-of-purpose"
+              name="statementOfPurpose"
+              value={statementOfPurpose}
+              onChange={(e) => setStatementOfPurpose(e.target.value)}
+              placeholder="Tell us about your experience in community building, event organizing, or why you want to represent SICE in your local area."
+              required
+              rows={4}
+              style={{
+                width: "100%",
+                background: "white",
+                border: "1px solid rgba(8, 13, 38, 0.15)",
+                borderRadius: 4,
+                padding: "10px 14px",
+                fontSize: 14,
+                fontFamily: "inherit",
+                color: "var(--indigo)",
+                resize: "vertical",
+                minHeight: 100
+              }}
+            />
+          </div>
+        </>
       )}
 
       <div className="checkbox-group full">
