@@ -1,6 +1,7 @@
 node_modules/
-.next/
 .env.local
 .env*.local
 .claude/
 *.log
+web/.next/cache/
+web/.next/dev/
