@@ -13,6 +13,7 @@
   "/dashboard/admin/roster/page": "app/dashboard/admin/roster/page.js",
   "/dashboard/creator/accounts/page": "app/dashboard/creator/accounts/page.js",
   "/dashboard/creator/automation/page": "app/dashboard/creator/automation/page.js",
+  "/dashboard/creator/chapters/page": "app/dashboard/creator/chapters/page.js",
   "/dashboard/creator/deals/page": "app/dashboard/creator/deals/page.js",
   "/dashboard/creator/legal/page": "app/dashboard/creator/legal/page.js",
   "/dashboard/creator/marketplace/page": "app/dashboard/creator/marketplace/page.js",
