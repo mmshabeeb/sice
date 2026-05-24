@@ -15,6 +15,7 @@ import {
   DollarSign,
   Star,
   Users,
+  Map,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -65,6 +66,12 @@ const QUICK_LINKS = [
     href: '/dashboard/creator/accounts',
     icon: Globe,
     desc: 'Manage connected platforms',
+  },
+  {
+    label: 'My Chapters',
+    href: '/dashboard/creator/chapters',
+    icon: Map,
+    desc: 'Join local regional chapters',
   },
   {
     label: 'Follower Metrics',
