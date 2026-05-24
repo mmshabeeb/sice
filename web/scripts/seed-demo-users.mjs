@@ -23,28 +23,28 @@ const db = getFirestore();
 // ── Demo accounts ─────────────────────────────────────────────────────────────
 const DEMO_USERS = [
   {
-    email: 'demo.creator@sice.media',
+    email: 'demo.creator@thesice.com',
     password: 'Demo@1234',
     displayName: 'Arjun Menon',
     role: 'creator',
     chapter_id: 'kozhikode',
   },
   {
-    email: 'demo.merchant@sice.media',
+    email: 'demo.merchant@thesice.com',
     password: 'Demo@1234',
     displayName: 'Malabar Gold Ads',
     role: 'merchant',
     chapter_id: null,
   },
   {
-    email: 'demo.admin@sice.media',
+    email: 'demo.admin@thesice.com',
     password: 'Demo@1234',
     displayName: 'Chapter Admin',
     role: 'admin',
     chapter_id: 'kozhikode',
   },
   {
-    email: 'demo.superadmin@sice.media',
+    email: 'demo.superadmin@thesice.com',
     password: 'Demo@1234',
     displayName: 'Global Super Admin',
     role: 'super_admin',

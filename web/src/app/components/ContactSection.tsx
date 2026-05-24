@@ -51,15 +51,15 @@ export default function ContactSection() {
           <div className="contact-info">
             <div className="contact-block">
               <div className="contact-label">For creators</div>
-              <div className="contact-value"><a href="mailto:apply@sice.media">apply@sice.media</a></div>
+              <div className="contact-value"><a href="mailto:apply@thesice.com">apply@thesice.com</a></div>
             </div>
             <div className="contact-block">
               <div className="contact-label">For brands</div>
-              <div className="contact-value"><a href="mailto:partners@sice.media">partners@sice.media</a></div>
+              <div className="contact-value"><a href="mailto:partners@thesice.com">partners@thesice.com</a></div>
             </div>
             <div className="contact-block">
               <div className="contact-label">Press &amp; editorial</div>
-              <div className="contact-value"><a href="mailto:editorial@sice.media">editorial@sice.media</a></div>
+              <div className="contact-value"><a href="mailto:editorial@thesice.com">editorial@thesice.com</a></div>
             </div>
             <div className="contact-block">
               <div className="contact-label">Headquarters</div>

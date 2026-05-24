@@ -23,7 +23,7 @@ const fraunces = Fraunces({
   variable: "--font-fraunces",
 });
 
-const siteUrl = "https://sice.media";
+const siteUrl = "https://thesice.com";
 const siteName = "SICE - The South Indian Creators Economy";
 const description =
   "SICE - The South Indian Creators Economy is a media platform for Malayalam, Tamil, Telugu, and Kannada creators across South India.";

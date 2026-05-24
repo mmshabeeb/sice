@@ -181,7 +181,7 @@ export default function ApplicationForm({ type = "creator" }: { type?: string })
   };
 
   const handleDemoBypass = () => {
-    setGoogleEmail("demo.creator@sice.media");
+    setGoogleEmail("demo.creator@thesice.com");
     setGoogleName("Demo Creator");
     setFullName("Demo Creator");
     setIsGoogleVerified(true);
@@ -265,7 +265,7 @@ export default function ApplicationForm({ type = "creator" }: { type?: string })
         }
       }
     } catch {
-      setStatus("Network error. Please try again or email apply@sice.media");
+      setStatus("Network error. Please try again or email apply@thesice.com");
     } finally {
       setSubmitting(false);
     }

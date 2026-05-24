@@ -14,7 +14,7 @@ import ContactSection from "./components/ContactSection";
 import Footer from "./components/Footer";
 import ScrollReveal from "./components/ScrollReveal";
 
-const siteUrl = "https://sice.media";
+const siteUrl = "https://thesice.com";
 const siteName = "SICE - The South Indian Creators Economy";
 
 const jsonLd = {
@@ -31,8 +31,8 @@ const jsonLd = {
       foundingDate: "2026",
       areaServed: ["Kerala", "Tamil Nadu", "Karnataka", "Telangana", "Andhra Pradesh"],
       contactPoint: [
-        { "@type": "ContactPoint", email: "apply@sice.media", contactType: "creator applications", areaServed: "IN" },
-        { "@type": "ContactPoint", email: "partners@sice.media", contactType: "brand partnerships", areaServed: "IN" },
+        { "@type": "ContactPoint", email: "apply@thesice.com", contactType: "creator applications", areaServed: "IN" },
+        { "@type": "ContactPoint", email: "partners@thesice.com", contactType: "brand partnerships", areaServed: "IN" },
       ],
     },
     {

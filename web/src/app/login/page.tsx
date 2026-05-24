@@ -16,10 +16,10 @@ import { auth, db } from '@/lib/firebase/client';
 import type { UserRole } from '@/types/database';
 
 const DEMO_ACCOUNTS = [
-  { role: 'Creator', email: 'demo.creator@sice.media', password: 'Demo@1234', description: 'Social accounts, metrics, brand deals' },
-  { role: 'Merchant', email: 'demo.merchant@sice.media', password: 'Demo@1234', description: 'Talent discovery, campaigns, wallet' },
-  { role: 'Admin', email: 'demo.admin@sice.media', password: 'Demo@1234', description: 'Chapter mgmt, applications, arbitration' },
-  { role: 'Super Admin', email: 'demo.superadmin@sice.media', password: 'Demo@1234', description: 'Manage chapters, creators, and merchants' },
+  { role: 'Creator', email: 'demo.creator@thesice.com', password: 'Demo@1234', description: 'Social accounts, metrics, brand deals' },
+  { role: 'Merchant', email: 'demo.merchant@thesice.com', password: 'Demo@1234', description: 'Talent discovery, campaigns, wallet' },
+  { role: 'Admin', email: 'demo.admin@thesice.com', password: 'Demo@1234', description: 'Chapter mgmt, applications, arbitration' },
+  { role: 'Super Admin', email: 'demo.superadmin@thesice.com', password: 'Demo@1234', description: 'Manage chapters, creators, and merchants' },
 ];
 
 const countryCodes = [
@@ -158,7 +158,7 @@ export default function LoginPage() {
       let role: UserRole | null = null;
 
       if (isMockFirebase) {
-        emailStr = 'demo.creator@sice.media';
+        emailStr = 'demo.creator@thesice.com';
         idToken = 'mock-id-token-creator';
         role = 'creator';
       } else {
