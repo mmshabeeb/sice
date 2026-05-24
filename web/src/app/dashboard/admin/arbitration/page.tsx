@@ -67,149 +67,7 @@ interface ArbitrationCase {
   fileHistory: { name: string; submittedBy: string; date: string; status: string }[];
 }
 
-const CASES: ArbitrationCase[] = [
-  {
-    id: 'ARB-001',
-    type: 'Missed Deadline',
-    campaign: 'Kerala Onam Campaign',
-    creator: 'Arjun Menon',
-    merchant: 'Malabar Gold',
-    daysOpen: 3,
-    severity: 'HIGH',
-    status: 'Open',
-    amount: '₹1,40,000',
-    deliverables: '3 Instagram Reels + 2 Stories within 7 days of contract execution',
-    commLog: [
-      {
-        sender: 'Malabar Gold',
-        time: 'May 15, 2026 — 10:22 AM',
-        message:
-          'The deadline for all 3 reels was May 14th. We have received only 1 reel so far. Please clarify the delay.',
-      },
-      {
-        sender: 'Arjun Menon',
-        time: 'May 15, 2026 — 2:48 PM',
-        message:
-          'Apologies for the delay. I had a family emergency. The remaining 2 reels will be submitted by May 18th.',
-      },
-      {
-        sender: 'Malabar Gold',
-        time: 'May 16, 2026 — 9:15 AM',
-        message:
-          'We understand, but per contract clause 4.2, a 15% penalty applies per missed day. We are raising this for arbitration.',
-      },
-    ],
-    fileHistory: [
-      { name: 'reel_draft_1.mp4', submittedBy: 'Arjun Menon', date: 'May 12, 2026', status: 'Approved' },
-      { name: 'reel_draft_2.mp4', submittedBy: 'Arjun Menon', date: 'May 16, 2026', status: 'Pending Review' },
-    ],
-  },
-  {
-    id: 'ARB-002',
-    type: 'Repeated Content Rejection',
-    campaign: 'South India Launch',
-    creator: 'Priya Nair',
-    merchant: 'KFC India',
-    daysOpen: 5,
-    severity: 'HIGH',
-    status: 'Under Review',
-    amount: '₹88,000',
-    deliverables: '5 Instagram Posts (product showcase) within 10 days',
-    commLog: [
-      {
-        sender: 'KFC India',
-        time: 'May 13, 2026 — 11:00 AM',
-        message: 'Draft 1 rejected — image quality does not meet brand standards. Please resubmit.',
-      },
-      {
-        sender: 'Priya Nair',
-        time: 'May 13, 2026 — 3:00 PM',
-        message: 'Resubmitting with professional lighting as requested.',
-      },
-      {
-        sender: 'KFC India',
-        time: 'May 14, 2026 — 10:30 AM',
-        message: 'Draft 2 also rejected — caption does not include required hashtags per brief.',
-      },
-      {
-        sender: 'Priya Nair',
-        time: 'May 14, 2026 — 5:00 PM',
-        message:
-          'I have reviewed the brief multiple times. The hashtags were included. This feels arbitrary. Requesting admin review.',
-      },
-    ],
-    fileHistory: [
-      { name: 'post_draft_1.jpg', submittedBy: 'Priya Nair', date: 'May 13, 2026', status: 'Rejected' },
-      { name: 'post_draft_2.jpg', submittedBy: 'Priya Nair', date: 'May 13, 2026', status: 'Rejected' },
-      { name: 'post_draft_3.jpg', submittedBy: 'Priya Nair', date: 'May 14, 2026', status: 'Under Review' },
-    ],
-  },
-  {
-    id: 'ARB-003',
-    type: 'Payment Dispute',
-    campaign: 'Beauty Edit',
-    creator: 'Meera Pillai',
-    merchant: 'Nykaa',
-    daysOpen: 1,
-    severity: 'MEDIUM',
-    status: 'Open',
-    amount: '₹62,000',
-    deliverables: '4 YouTube reviews (min. 8 min each) + affiliate link tracking for 30 days',
-    commLog: [
-      {
-        sender: 'Meera Pillai',
-        time: 'May 17, 2026 — 8:45 AM',
-        message:
-          'All 4 reviews have been published and verified. Affiliate link period ended on May 10th. Payment of ₹62,000 is overdue by 7 days.',
-      },
-      {
-        sender: 'Nykaa',
-        time: 'May 17, 2026 — 1:30 PM',
-        message:
-          'We are disputing the affiliate tracking numbers. Our internal dashboard shows different click counts than what was submitted.',
-      },
-    ],
-    fileHistory: [
-      { name: 'youtube_analytics_export.pdf', submittedBy: 'Meera Pillai', date: 'May 10, 2026', status: 'Submitted' },
-      { name: 'affiliate_clicks_report.xlsx', submittedBy: 'Meera Pillai', date: 'May 10, 2026', status: 'Disputed' },
-    ],
-  },
-  {
-    id: 'ARB-004',
-    type: 'Missed Deadline',
-    campaign: 'Education Program',
-    creator: 'Rahul Suresh',
-    merchant: "Byju's",
-    daysOpen: 7,
-    severity: 'LOW',
-    status: 'Monitoring',
-    amount: '₹45,000',
-    deliverables: '2 YouTube Videos + 3 Shorts within 14 days',
-    commLog: [
-      {
-        sender: "Byju's",
-        time: 'May 11, 2026 — 9:00 AM',
-        message: 'Deadline passed on May 10th. No content submitted yet. Please provide an update.',
-      },
-      {
-        sender: 'Rahul Suresh',
-        time: 'May 12, 2026 — 11:00 AM',
-        message:
-          'The scripts were approved on May 8th but re-editing was requested on May 9th by the brand team. Content will be ready by May 20th.',
-      },
-      {
-        sender: 'Admin',
-        time: 'May 13, 2026 — 10:00 AM',
-        message:
-          'Reviewing internal communications. Both parties agreed to extend deadline to May 20th verbally. Monitoring in progress.',
-      },
-    ],
-    fileHistory: [
-      { name: 'script_v1.docx', submittedBy: 'Rahul Suresh', date: 'May 6, 2026', status: 'Approved' },
-      { name: 'script_v2.docx', submittedBy: 'Rahul Suresh', date: 'May 9, 2026', status: 'Under Review' },
-    ],
-  },
-];
+const CASES: ArbitrationCase[] = [];
 
 /* ------------------------------------------------------------------ */
 /* Config maps                                                            */
@@ -719,15 +577,22 @@ export default function ArbitrationPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {CASES.map((c) => {
-                const TypeIcon = TYPE_ICONS[c.type];
-                const sev = SEVERITY_CONFIG[c.severity];
-                const sta = STATUS_CONFIG[c.status];
-                return (
-                  <TableRow
-                    key={c.id}
-                    className="border-white/5 hover:bg-white/[0.02] transition-colors"
-                  >
+              {CASES.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8 text-gray-400 text-sm">
+                    No arbitration cases found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                CASES.map((c) => {
+                  const TypeIcon = TYPE_ICONS[c.type];
+                  const sev = SEVERITY_CONFIG[c.severity];
+                  const sta = STATUS_CONFIG[c.status];
+                  return (
+                    <TableRow
+                      key={c.id}
+                      className="border-white/5 hover:bg-white/[0.02] transition-colors"
+                    >
                     <TableCell className="pl-6">
                       <span className="font-mono text-sm font-bold" style={{ color: GOLD }}>
                         {c.id}
@@ -780,16 +645,17 @@ export default function ArbitrationPage() {
                       {getActionButton(c)}
                     </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
+                    );
+                  })
+                )}
+              </TableBody>
           </Table>
 
           <div
             className="px-6 py-3 text-xs flex items-center justify-between text-gray-500"
             style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
           >
-            <span>{CASES.length} total cases · 2 require immediate resolution</span>
+            <span>{CASES.length} total cases · {urgentCases.length} require immediate resolution</span>
             <span>All actions are logged in the platform audit trail</span>
           </div>
         </CardContent>

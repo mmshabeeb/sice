@@ -47,99 +47,48 @@ const PIE_COLORS = ['#C9A84C', '#6366f1', '#22c55e', '#ec4899', '#f59e0b', '#3b8
 const KPI = [
   {
     label: 'Gross Platform Volume',
-    value: '₹2.45 Cr',
+    value: '₹0.00 Cr',
     icon: TrendingUp,
-    sub: '+24.6% vs last quarter',
+    sub: '0% vs last quarter',
     positive: true,
   },
   {
     label: 'Total Chapters',
-    value: '12',
+    value: '0',
     icon: Map,
-    sub: '8 Active, 4 Inception',
+    sub: '0 Active, 0 Inception',
     positive: true,
   },
   {
     label: 'Platform Creators',
-    value: '1,842',
+    value: '0',
     icon: Users,
-    sub: '+156 this month',
+    sub: '0 this month',
     positive: true,
   },
   {
     label: 'Registered Brands',
-    value: '215',
+    value: '0',
     icon: Store,
-    sub: '+18 this month',
+    sub: '0 this month',
     positive: true,
   },
 ];
 
-const GPV_TREND = [
-  { month: 'Jan', gpv: 4200000 },
-  { month: 'Feb', gpv: 6100000 },
-  { month: 'Mar', gpv: 8900000 },
-  { month: 'Apr', gpv: 13500000 },
-  { month: 'May', gpv: 24500000 },
-];
+const GPV_TREND: { month: string; gpv: number }[] = [];
 
-const CHAPTER_GPV = [
-  { name: 'Kozhikode', gpv: 8500000, creators: 420 },
-  { name: 'Kochi', gpv: 6800000, creators: 380 },
-  { name: 'Bangalore', gpv: 4500000, creators: 290 },
-  { name: 'Chennai', gpv: 3100000, creators: 180 },
-  { name: 'Mumbai', gpv: 1600000, creators: 120 },
-];
+const CHAPTER_GPV: { name: string; gpv: number; creators: number }[] = [];
 
-const PLATFORM_DIST = [
-  { name: 'Instagram', value: 920 },
-  { name: 'YouTube', value: 580 },
-  { name: 'X (Twitter)', value: 210 },
-  { name: 'LinkedIn', value: 132 },
-];
+const PLATFORM_DIST: { name: string; value: number }[] = [];
 
-const SYSTEM_LOGS = [
-  {
-    id: 1,
-    type: 'chapter',
-    text: 'New Chapter approved: Bangalore East (Admin: Suresh Kumar)',
-    time: '2 hrs ago',
-    icon: MapPin,
-    color: '#6366f1',
-  },
-  {
-    id: 2,
-    type: 'merchant',
-    text: 'Brand verified: OnePlus India (Secure deposit: ₹15,00,000)',
-    time: '4 hrs ago',
-    icon: ShieldCheck,
-    color: '#22c55e',
-  },
-  {
-    id: 3,
-    type: 'arbitration',
-    text: 'Super Admin intervention: Resolved dispute ARB-001 in favor of Merchant',
-    time: '1 day ago',
-    icon: ShieldAlert,
-    color: '#ef4444',
-  },
-  {
-    id: 4,
-    type: 'campaign',
-    text: 'Global Campaign Launched: "Nord Buds Festive Run" (Budget: ₹4,50,000)',
-    time: '2 days ago',
-    icon: Megaphone,
-    color: GOLD,
-  },
-  {
-    id: 5,
-    type: 'creator',
-    text: 'Arjun Menon verified & trust score updated to 94.2 (Kozhikode Chapter)',
-    time: '2 days ago',
-    icon: Award,
-    color: '#3b82f6',
-  },
-];
+const SYSTEM_LOGS: {
+  id: number;
+  type: string;
+  text: string;
+  time: string;
+  icon: any;
+  color: string;
+}[] = [];
 
 export default function SuperAdminOverview() {
   return (
@@ -319,7 +268,9 @@ export default function SuperAdminOverview() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-2xl font-bold text-white font-bricolage">1,842</span>
+                <span className="text-2xl font-bold text-white font-bricolage">
+                  {PLATFORM_DIST.reduce((sum, item) => sum + item.value, 0)}
+                </span>
                 <span className="text-[10px] uppercase tracking-wider text-gray-400">Total</span>
               </div>
             </div>
@@ -406,29 +357,36 @@ export default function SuperAdminOverview() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {SYSTEM_LOGS.map((log) => {
-                const Icon = log.icon;
-                return (
-                  <div key={log.id} className="flex gap-3 text-xs leading-normal">
-                    <div
-                      className="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center mt-0.5"
-                      style={{
-                        background: `${log.color}15`,
-                        border: `1px solid ${log.color}25`,
-                      }}
-                    >
-                      <Icon size={12} style={{ color: log.color }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-gray-300 font-medium leading-relaxed">{log.text}</p>
-                      <div className="flex items-center gap-1.5 mt-1 text-gray-500">
-                        <Clock size={10} />
-                        <span>{log.time}</span>
+              {SYSTEM_LOGS.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-500 text-center">
+                  <Clock size={24} className="mb-2 opacity-40" />
+                  <p className="text-xs">No activity logged yet.</p>
+                </div>
+              ) : (
+                SYSTEM_LOGS.map((log) => {
+                  const Icon = log.icon;
+                  return (
+                    <div key={log.id} className="flex gap-3 text-xs leading-normal">
+                      <div
+                        className="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center mt-0.5"
+                        style={{
+                          background: `${log.color}15`,
+                          border: `1px solid ${log.color}25`,
+                        }}
+                      >
+                        <Icon size={12} style={{ color: log.color }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-gray-300 font-medium leading-relaxed">{log.text}</p>
+                        <div className="flex items-center gap-1.5 mt-1 text-gray-500">
+                          <Clock size={10} />
+                          <span>{log.time}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </CardContent>
         </Card>

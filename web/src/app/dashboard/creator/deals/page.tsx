@@ -31,41 +31,7 @@ interface Deal {
   color: string;
 }
 
-const DEALS: Deal[] = [
-  {
-    id: 1,
-    brand: 'Malabar Gold',
-    campaign: 'Kerala Onam Campaign',
-    amount: '₹85,000',
-    currentStep: 'Content Approved',
-    deadline: 'June 15, 2026',
-    deliverables: 3,
-    logo: '🪙',
-    color: '#C9A84C',
-  },
-  {
-    id: 2,
-    brand: 'KFC India',
-    campaign: 'South India Launch',
-    amount: '₹1,20,000',
-    currentStep: 'In Secure Deposit',
-    deadline: 'June 30, 2026',
-    deliverables: 5,
-    logo: '🍗',
-    color: '#E4002B',
-  },
-  {
-    id: 3,
-    brand: "Byju's",
-    campaign: 'Education Creator Program',
-    amount: '₹60,000',
-    currentStep: 'Deposited',
-    deadline: 'July 10, 2026',
-    deliverables: 2,
-    logo: '📚',
-    color: '#7B2FF7',
-  },
-];
+const DEALS: Deal[] = [];
 
 /* ------------------------------------------------------------------ */
 /* Milestone stepper                                                     */
@@ -178,9 +144,9 @@ export default function DealsPage() {
       {/* Summary strip */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Active Deals', value: '3', color: 'white' },
-          { label: 'Total Securely Deposited', value: '₹2,65,000', color: GOLD },
-          { label: 'Deliverables Remaining', value: '8', color: '#9ca3af' },
+          { label: 'Active Deals', value: DEALS.length.toString(), color: 'white' },
+          { label: 'Total Securely Deposited', value: '₹0', color: GOLD },
+          { label: 'Deliverables Remaining', value: '0', color: '#9ca3af' },
         ].map(({ label, value, color }) => (
           <div
             key={label}
@@ -202,82 +168,88 @@ export default function DealsPage() {
 
       {/* Deal cards */}
       <div className="space-y-4">
-        {DEALS.map((deal) => (
-          <Card
-            key={deal.id}
-            className="border-0 shadow-sm"
-            style={{
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(240, 235, 224, 0.08)',
-              borderRadius: '16px',
-              overflow: 'hidden',
-            }}
-          >
-            <div style={{ height: '4px', background: deal.color }} />
-            <CardHeader className="pb-2 pt-4">
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex items-center justify-center w-11 h-11 rounded-xl text-xl border border-white/5"
-                    style={{ background: 'rgba(255, 255, 255, 0.02)' }}
-                  >
-                    {deal.logo}
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-gray-400">
-                      {deal.brand}
+        {DEALS.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-6">
+            No active deals found.
+          </p>
+        ) : (
+          DEALS.map((deal) => (
+            <Card
+              key={deal.id}
+              className="border-0 shadow-sm"
+              style={{
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(240, 235, 224, 0.08)',
+                borderRadius: '16px',
+                overflow: 'hidden',
+              }}
+            >
+              <div style={{ height: '4px', background: deal.color }} />
+              <CardHeader className="pb-2 pt-4">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="flex items-center justify-center w-11 h-11 rounded-xl text-xl border border-white/5"
+                      style={{ background: 'rgba(255, 255, 255, 0.02)' }}
+                    >
+                      {deal.logo}
                     </div>
-                    <CardTitle className="text-base font-semibold text-white font-bricolage">
-                      {deal.campaign}
-                    </CardTitle>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-lg font-bold" style={{ color: GOLD }}>
-                        {deal.amount}
-                      </span>
-                      <StepBadge step={deal.currentStep} />
+                    <div>
+                      <div className="text-xs font-medium text-gray-400">
+                        {deal.brand}
+                      </div>
+                      <CardTitle className="text-base font-semibold text-white font-bricolage">
+                        {deal.campaign}
+                      </CardTitle>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-lg font-bold" style={{ color: GOLD }}>
+                          {deal.amount}
+                        </span>
+                        <StepBadge step={deal.currentStep} />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </CardHeader>
+              </CardHeader>
 
-            <CardContent className="pt-0 pb-4 space-y-4">
-              {/* Milestone stepper */}
-              <div className="px-2 pt-2">
-                <MilestoneStepper currentStep={deal.currentStep} />
-              </div>
-
-              {/* Footer info */}
-              <div
-                className="flex items-center justify-between gap-4 pt-3 flex-wrap"
-                style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
-              >
-                <div className="flex items-center gap-4 text-xs text-gray-400">
-                  <div className="flex items-center gap-1.5">
-                    <Clock size={12} />
-                    <span>Deadline: {deal.deadline}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <FileText size={12} />
-                    <span>{deal.deliverables} deliverables</span>
-                  </div>
+              <CardContent className="pt-0 pb-4 space-y-4">
+                {/* Milestone stepper */}
+                <div className="px-2 pt-2">
+                  <MilestoneStepper currentStep={deal.currentStep} />
                 </div>
-                <Button
-                  variant="outline"
-                  className="text-xs font-semibold h-7 px-3 bg-transparent hover:text-white"
-                  style={{
-                    borderColor: deal.color,
-                    color: deal.color,
-                    borderRadius: '8px',
-                  }}
-                  onClick={() => alert(`Opening deal details for "${deal.campaign}"`)}
+
+                {/* Footer info */}
+                <div
+                  className="flex items-center justify-between gap-4 pt-3 flex-wrap"
+                  style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
                 >
-                  View Details
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  <div className="flex items-center gap-4 text-xs text-gray-400">
+                    <div className="flex items-center gap-1.5">
+                      <Clock size={12} />
+                      <span>Deadline: {deal.deadline}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <FileText size={12} />
+                      <span>{deal.deliverables} deliverables</span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="text-xs font-semibold h-7 px-3 bg-transparent hover:text-white"
+                    style={{
+                      borderColor: deal.color,
+                      color: deal.color,
+                      borderRadius: '8px',
+                    }}
+                    onClick={() => alert(`Opening deal details for "${deal.campaign}"`)}
+                  >
+                    View Details
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );

@@ -78,35 +78,7 @@ interface Invoice {
   date: string;
 }
 
-const INVOICES: Invoice[] = [
-  {
-    id: 'INV-2026-041',
-    brand: 'Malabar Gold',
-    amount: 85000,
-    gst: 15300,
-    total: 100300,
-    status: 'Paid',
-    date: '10 May 2026',
-  },
-  {
-    id: 'INV-2026-038',
-    brand: 'KFC India',
-    amount: 120000,
-    gst: 21600,
-    total: 141600,
-    status: 'Pending',
-    date: '2 May 2026',
-  },
-  {
-    id: 'INV-2026-031',
-    brand: "Byju's",
-    amount: 60000,
-    gst: 10800,
-    total: 70800,
-    status: 'Pending',
-    date: '22 April 2026',
-  },
-];
+const INVOICES: Invoice[] = [];
 
 const STATUS_STYLE: Record<InvoiceStatus, { bg: string; color: string }> = {
   Paid: { bg: 'rgba(52,211,153,0.15)', color: '#34d399' },
@@ -286,10 +258,17 @@ export default function LegalPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {INVOICES.map((inv) => {
-                    const s = STATUS_STYLE[inv.status];
-                    return (
-                      <TableRow key={inv.id} className="border-b border-white/5 hover:bg-white/[0.01]">
+                  {INVOICES.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-gray-400 text-sm">
+                        No invoices found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    INVOICES.map((inv) => {
+                      const s = STATUS_STYLE[inv.status];
+                      return (
+                        <TableRow key={inv.id} className="border-b border-white/5 hover:bg-white/[0.01]">
                         <TableCell>
                           <span className="font-mono text-xs font-medium text-white">
                             {inv.id}
@@ -340,7 +319,8 @@ export default function LegalPage() {
                         </TableCell>
                       </TableRow>
                     );
-                  })}
+                  })
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

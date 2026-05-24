@@ -51,81 +51,9 @@ interface Event {
   attendees?: string[];
 }
 
-const UPCOMING_EVENTS: Event[] = [
-  {
-    id: 1,
-    title: 'May Creator Meetup',
-    venue: 'HiLite Business Park',
-    address: 'Calicut, Kerala 673014',
-    date: 'May 28, 2026',
-    time: '6:30 PM',
-    registered: 45,
-    capacity: 60,
-    status: 'Upcoming',
-    attendees: [
-      'Arjun Menon', 'Meera Pillai', 'Rahul Suresh', 'Nisha Krishnan',
-      'Vishnu Ramachandran', 'Fathima Noor', 'Mohammed Irfan', 'Priya Nair',
-      'Suresh Kumar', 'Asha Mohan', 'Deepak Raj', 'Sunita Varma',
-    ],
-  },
-  {
-    id: 2,
-    title: 'Brand Partnership Workshop',
-    venue: 'The Marriott Calicut',
-    address: 'Beach Road, Calicut, Kerala 673020',
-    date: 'June 8, 2026',
-    time: '3:00 PM',
-    registered: 22,
-    capacity: 40,
-    status: 'Upcoming',
-    attendees: [
-      'Arjun Menon', 'Vishnu Ramachandran', 'Lakshmi Devi', 'Krishnan Pillai',
-      'Thomas Mathew', 'Sana Rashid', 'Anish Kumar',
-    ],
-  },
-  {
-    id: 3,
-    title: 'OBS Production Masterclass',
-    venue: 'SICE Studio Calicut',
-    address: 'Palayam, Kozhikode, Kerala 673002',
-    date: 'June 20, 2026',
-    time: '10:00 AM',
-    registered: 18,
-    capacity: 25,
-    status: 'Upcoming',
-    attendees: [
-      'Rahul Suresh', 'Mohammed Irfan', 'Arjun Menon', 'Nisha Krishnan',
-      'Deepak Raj', 'Sunita Varma',
-    ],
-  },
-];
+const UPCOMING_EVENTS: Event[] = [];
 
-const PAST_EVENTS: Event[] = [
-  {
-    id: 4,
-    title: 'April Kickoff Meetup',
-    venue: 'Calicut Beach Hotel',
-    address: 'Beach Road, Calicut',
-    date: 'Apr 20, 2026',
-    time: '5:00 PM',
-    registered: 58,
-    capacity: 60,
-    status: 'Completed',
-    attendees: [],
-  },
-  {
-    id: 5,
-    title: 'Instagram Reels Workshop',
-    venue: 'SICE Studio Calicut',
-    address: 'Palayam, Kozhikode',
-    date: 'Mar 15, 2026',
-    time: '11:00 AM',
-    registered: 24,
-    capacity: 25,
-    status: 'Completed',
-    attendees: [],
-  },
-];
+const PAST_EVENTS: Event[] = [];
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                                */
@@ -568,9 +496,15 @@ export default function EventsPage() {
           Upcoming Events
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {UPCOMING_EVENTS.map((event) => (
-            <EventCard key={event.id} event={event} onManage={handleManage} />
-          ))}
+          {UPCOMING_EVENTS.length === 0 ? (
+            <p className="text-sm text-gray-400 col-span-full py-4">
+              No upcoming events scheduled.
+            </p>
+          ) : (
+            UPCOMING_EVENTS.map((event) => (
+              <EventCard key={event.id} event={event} onManage={handleManage} />
+            ))
+          )}
         </div>
       </div>
 
@@ -582,9 +516,15 @@ export default function EventsPage() {
           Past Events
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {PAST_EVENTS.map((event) => (
-            <EventCard key={event.id} event={event} onManage={handleManage} />
-          ))}
+          {PAST_EVENTS.length === 0 ? (
+            <p className="text-sm text-gray-400 col-span-full py-4">
+              No past events found.
+            </p>
+          ) : (
+            PAST_EVENTS.map((event) => (
+              <EventCard key={event.id} event={event} onManage={handleManage} />
+            ))
+          )}
         </div>
       </div>
 
