@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase/server';
+import { adminAuth, adminDb } from '@/lib/firebase/server';
 import { FieldValue } from 'firebase-admin/firestore';
+
+function formatE164(countryCode: string, number: string): string {
+  const cleanCode = countryCode.replace(/[^0-9+]/g, '');
+  const cleanNumber = number.replace(/[^0-9]/g, '');
+  const raw = `${cleanCode}${cleanNumber}`;
+  return raw.startsWith('+') ? raw : `+${raw}`;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,6 +32,7 @@ export async function POST(request: NextRequest) {
       city,
       state,
       country,
+      uid,
     } = data;
 
     if (applicationType === 'merchant') {
@@ -32,6 +40,73 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Missing required fields for merchant application.' }, { status: 400 });
       }
 
+      // 1. Create or link Firebase Auth user
+      let authUser = null;
+      const emailStr = String(email).trim().toLowerCase();
+      const phoneStr = formatE164(contactCountryCode || '', contactNumber || '');
+
+      if (uid) {
+        try {
+          authUser = await adminAuth.getUser(uid);
+        } catch {
+          // ignore
+        }
+      }
+
+      if (!authUser) {
+        try {
+          authUser = await adminAuth.getUserByEmail(emailStr);
+        } catch {
+          try {
+            authUser = await adminAuth.getUserByPhoneNumber(phoneStr);
+          } catch {
+            // Neither exists, create a new user
+            try {
+              authUser = await adminAuth.createUser({
+                email: emailStr,
+                phoneNumber: phoneStr,
+                displayName: String(fullName).trim(),
+              });
+            } catch (createErr: any) {
+              console.error('Error creating auth user:', createErr);
+            }
+          }
+        }
+      }
+
+      // Sync attributes to the user auth record if possible
+      if (authUser) {
+        const updates: any = {};
+        if (!authUser.email) updates.email = emailStr;
+        if (!authUser.phoneNumber) updates.phoneNumber = phoneStr;
+        if (!authUser.displayName) updates.displayName = String(fullName).trim();
+
+        if (Object.keys(updates).length > 0) {
+          try {
+            authUser = await adminAuth.updateUser(authUser.uid, updates);
+          } catch (updateErr: any) {
+            console.error('Error updating auth user:', updateErr);
+          }
+        }
+      }
+
+      // 2. Set user record in Firestore 'users' collection to enable logins
+      const targetUid = authUser?.uid || uid || `user_${Date.now()}`;
+      await adminDb.collection('users').doc(targetUid).set({
+        uid: targetUid,
+        role: 'merchant',
+        full_name: String(fullName).trim(),
+        email: emailStr,
+        phone: phoneStr,
+        contact_number: `${contactCountryCode ?? ''} ${contactNumber}`.trim(),
+        brand_name: String(brandName).trim(),
+        city: String(city).trim(),
+        state: String(state).trim(),
+        country: String(country).trim(),
+        created_at: FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      // 3. Log the application in the queue
       await adminDb.collection('applications').add({
         submitted_at: FieldValue.serverTimestamp(),
         application_type: 'merchant',

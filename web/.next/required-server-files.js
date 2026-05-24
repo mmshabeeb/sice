@@ -104,7 +104,7 @@ self.__SERVER_FILES_MANIFEST={
         "transform": "lodash/{{member}}"
       }
     },
-    "outputFileTracingRoot": "C:\\Users\\mmsha\\.gemini\\antigravity\\worktrees\\SICE\\sync-latest-code-base",
+    "outputFileTracingRoot": "D:\\SICE",
     "cacheComponents": false,
     "cacheLife": {
       "default": {
@@ -304,11 +304,11 @@ self.__SERVER_FILES_MANIFEST={
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.ts",
     "turbopack": {
-      "root": "C:\\Users\\mmsha\\.gemini\\antigravity\\worktrees\\SICE\\sync-latest-code-base"
+      "root": "D:\\SICE"
     },
     "distDirRoot": ".next"
   },
-  "appDir": "C:\\Users\\mmsha\\.gemini\\antigravity\\worktrees\\SICE\\sync-latest-code-base\\web",
+  "appDir": "D:\\SICE\\web",
   "relativeAppDir": "web",
   "files": [
     ".next\\routes-manifest.json",

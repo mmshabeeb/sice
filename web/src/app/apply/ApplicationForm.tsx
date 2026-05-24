@@ -21,6 +21,62 @@ const countryCodes = [
   { label: "Singapore +65", value: "+65" },
 ];
 
+const countriesData = [
+  {
+    name: "India",
+    code: "+91",
+    states: [
+      { name: "Kerala", cities: ["Calicut", "Kochi", "Trivandrum"] },
+      { name: "Karnataka", cities: ["Bengaluru", "Mysore", "Mangalore"] },
+      { name: "Tamil Nadu", cities: ["Chennai", "Coimbatore", "Madurai"] },
+      { name: "Maharashtra", cities: ["Mumbai", "Pune", "Nagpur"] },
+    ],
+  },
+  {
+    name: "United States",
+    code: "+1",
+    states: [
+      { name: "California", cities: ["Los Angeles", "San Francisco", "San Diego"] },
+      { name: "New York", cities: ["New York City", "Buffalo", "Rochester"] },
+      { name: "Texas", cities: ["Houston", "Austin", "Dallas"] },
+    ],
+  },
+  {
+    name: "United Kingdom",
+    code: "+44",
+    states: [
+      { name: "England", cities: ["London", "Manchester", "Birmingham"] },
+      { name: "Scotland", cities: ["Edinburgh", "Glasgow", "Aberdeen"] },
+    ],
+  },
+  {
+    name: "UAE",
+    code: "+971",
+    states: [
+      { name: "Dubai", cities: ["Dubai City"] },
+      { name: "Abu Dhabi", cities: ["Abu Dhabi City", "Al Ain"] },
+      { name: "Sharjah", cities: ["Sharjah City"] },
+    ],
+  },
+  {
+    name: "Saudi Arabia",
+    code: "+966",
+    states: [
+      { name: "Riyadh", cities: ["Riyadh City"] },
+      { name: "Makkah", cities: ["Jeddah", "Mecca"] },
+      { name: "Eastern Province", cities: ["Dammam", "Khobar"] },
+    ],
+  },
+  {
+    name: "Singapore",
+    code: "+65",
+    states: [
+      { name: "Central Region", cities: ["Singapore City"] },
+      { name: "East Region", cities: ["Changi"] },
+    ],
+  },
+];
+
 export default function ApplicationForm({ type: propType }: { type?: string }) {
   const searchParams = useSearchParams();
   const type = propType || (searchParams?.get("type") === "merchant" ? "merchant" : "creator");
@@ -55,7 +111,55 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  // Country, State, City dropdown states
+  const [selectedCountry, setSelectedCountry] = useState("India");
+  const [selectedState, setSelectedState] = useState("Kerala");
+  const [selectedCity, setSelectedCity] = useState("Calicut");
+  const [whatsappCountryCode, setWhatsappCountryCode] = useState("+91");
+
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+
+  const handleCountryChange = (countryName: string) => {
+    setSelectedCountry(countryName);
+    const countryObj = countriesData.find((c) => c.name === countryName);
+    if (countryObj) {
+      setSelectedCountryCode(countryObj.code);
+      if (!isPhoneVerified) {
+        setSmsCountryCode(countryObj.code);
+      }
+      setWhatsappCountryCode(countryObj.code);
+
+      const firstState = countryObj.states[0];
+      if (firstState) {
+        setSelectedState(firstState.name);
+        const firstCity = firstState.cities[0];
+        if (firstCity) {
+          setSelectedCity(firstCity);
+        } else {
+          setSelectedCity("");
+        }
+      } else {
+        setSelectedState("");
+        setSelectedCity("");
+      }
+    }
+  };
+
+  const handleStateChange = (stateName: string) => {
+    setSelectedState(stateName);
+    const countryObj = countriesData.find((c) => c.name === selectedCountry);
+    const stateObj = countryObj?.states.find((s) => s.name === stateName);
+    if (stateObj) {
+      const firstCity = stateObj.cities[0];
+      if (firstCity) {
+        setSelectedCity(firstCity);
+      } else {
+        setSelectedCity("");
+      }
+    } else {
+      setSelectedCity("");
+    }
+  };
 
   // Check if Firebase is using mock key
   const isMockFirebase = 
@@ -231,6 +335,7 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
         email: formData.get("email"),
         googleVerified: isGoogleVerified,
         phoneVerified: isPhoneVerified,
+        uid: auth.currentUser?.uid || null,
       };
 
       if (type === "creator") {
@@ -677,19 +782,50 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
             <input type="text" id="application-brand-name" name="brandName" required />
           </div>
 
-          <div className="form-field">
-            <label htmlFor="application-city">City</label>
-            <input type="text" id="application-city" name="city" required />
+          <div className="form-field full">
+            <label htmlFor="application-country">Country</label>
+            <select
+              id="application-country"
+              name="country"
+              value={selectedCountry}
+              onChange={(e) => handleCountryChange(e.target.value)}
+              required
+            >
+              {countriesData.map((c) => (
+                <option key={c.name} value={c.name}>{c.name}</option>
+              ))}
+            </select>
           </div>
 
           <div className="form-field">
             <label htmlFor="application-state">State</label>
-            <input type="text" id="application-state" name="state" required />
+            <select
+              id="application-state"
+              name="state"
+              value={selectedState}
+              onChange={(e) => handleStateChange(e.target.value)}
+              required
+            >
+              {countriesData.find(c => c.name === selectedCountry)?.states.map((s) => (
+                <option key={s.name} value={s.name}>{s.name}</option>
+              ))}
+            </select>
           </div>
 
-          <div className="form-field full">
-            <label htmlFor="application-country">Country</label>
-            <input type="text" id="application-country" name="country" required />
+          <div className="form-field">
+            <label htmlFor="application-city">City</label>
+            <select
+              id="application-city"
+              name="city"
+              value={selectedCity}
+              onChange={(e) => setSelectedCity(e.target.value)}
+              required
+            >
+              {countriesData.find(c => c.name === selectedCountry)
+                ?.states.find(s => s.name === selectedState)?.cities.map((ci) => (
+                  <option key={ci} value={ci}>{ci}</option>
+                ))}
+            </select>
           </div>
         </>
       )}
@@ -794,7 +930,13 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
       <div className="form-field phone-field">
         <label htmlFor="application-whatsapp-number">WhatsApp number</label>
         <div className="phone-row">
-          <select name="whatsappCountryCode" aria-label="WhatsApp country code" defaultValue="+91" required>
+          <select
+            name="whatsappCountryCode"
+            aria-label="WhatsApp country code"
+            value={whatsappCountryCode}
+            onChange={(e) => setWhatsappCountryCode(e.target.value)}
+            required
+          >
             {countryCodes.map((country) => (
               <option key={country.value} value={country.value}>{country.label}</option>
             ))}

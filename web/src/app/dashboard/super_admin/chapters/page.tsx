@@ -40,14 +40,7 @@ interface ChapterItem {
   status: 'active' | 'inactive';
 }
 
-const INITIAL_CHAPTERS: ChapterItem[] = [
-  { id: 'kozhikode', name: 'Kozhikode', city: 'Calicut', state: 'Kerala', creatorsCount: 52, adminName: 'Fathima Noor', status: 'active' },
-  { id: 'kochi', name: 'Kochi', city: 'Kochi', state: 'Kerala', creatorsCount: 38, adminName: 'Arjun Menon', status: 'active' },
-  { id: 'bangalore', name: 'Bangalore East', city: 'Bengaluru', state: 'Karnataka', creatorsCount: 29, adminName: 'Suresh Kumar', status: 'active' },
-  { id: 'chennai', name: 'Chennai Central', city: 'Chennai', state: 'Tamil Nadu', creatorsCount: 18, adminName: 'Thomas Mathew', status: 'active' },
-  { id: 'hyderabad', name: 'Hyderabad Gachibowli', city: 'Hyderabad', state: 'Telangana', creatorsCount: 10, adminName: null, status: 'inactive' },
-  { id: 'mumbai', name: 'Mumbai Colaba', city: 'Mumbai', state: 'Maharashtra', creatorsCount: 6, adminName: 'Rahul Mehta', status: 'active' },
-];
+const INITIAL_CHAPTERS: ChapterItem[] = [];
 
 const AVAILABLE_ADMINS = [
   'Fathima Noor',
@@ -175,89 +168,97 @@ export default function SuperAdminChapters() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {chapters.map((ch) => (
-                  <TableRow
-                    key={ch.id}
-                    style={{ borderColor: 'rgba(240,235,224,0.04)' }}
-                    className="hover:bg-white/[0.01] transition-colors"
-                  >
-                    <TableCell className="pl-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                          style={{
-                            background: 'rgba(201,168,76,0.06)',
-                            border: '1px solid rgba(201,168,76,0.15)',
-                          }}
-                        >
-                          <Building size={14} style={{ color: GOLD }} />
-                        </div>
-                        <div>
-                          <span className="font-semibold text-sm text-[#F0EBE0] font-bricolage block">
-                            {ch.name}
-                          </span>
-                          <span className="text-[10px] uppercase tracking-wider text-gray-500 font-mono">
-                            ID: {ch.id}
-                          </span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-xs text-gray-300">
-                        {ch.city}, {ch.state}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-center font-semibold text-sm text-[#F0EBE0] font-mono">
-                      {ch.creatorsCount}
-                    </TableCell>
-                    <TableCell>
-                      {ch.adminName ? (
-                        <div className="flex items-center gap-2 text-xs text-gray-200">
-                          <User size={12} style={{ color: GOLD }} />
-                          <span>{ch.adminName}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-rose-400/80 italic flex items-center gap-1.5">
-                          <AlertCircle size={12} />
-                          Unassigned
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge
-                        variant="secondary"
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                          ch.status === 'active'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                            : 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
-                        }`}
-                      >
-                        {ch.status.toUpperCase()}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="pr-6 text-right py-4">
-                      <div className="flex items-center justify-end gap-3">
-                        <button
-                          onClick={() => openAssignAdmin(ch.id)}
-                          className="text-xs font-medium hover:underline text-gray-400 hover:text-[#C9A84C]"
-                        >
-                          Assign Admin
-                        </button>
-                        <button
-                          onClick={() => toggleStatus(ch.id)}
-                          className="flex items-center transition-opacity"
-                          title={ch.status === 'active' ? 'Suspend Chapter' : 'Activate Chapter'}
-                        >
-                          {ch.status === 'active' ? (
-                            <ToggleRight size={24} className="text-emerald-500 cursor-pointer" />
-                          ) : (
-                            <ToggleLeft size={24} className="text-gray-600 cursor-pointer" />
-                          )}
-                        </button>
-                      </div>
+                {chapters.length === 0 ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-sm">
+                      No chapters registered yet.
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  chapters.map((ch) => (
+                    <TableRow
+                      key={ch.id}
+                      style={{ borderColor: 'rgba(240,235,224,0.04)' }}
+                      className="hover:bg-white/[0.01] transition-colors"
+                    >
+                      <TableCell className="pl-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                            style={{
+                              background: 'rgba(201,168,76,0.06)',
+                              border: '1px solid rgba(201,168,76,0.15)',
+                            }}
+                          >
+                            <Building size={14} style={{ color: GOLD }} />
+                          </div>
+                          <div>
+                            <span className="font-semibold text-sm text-[#F0EBE0] font-bricolage block">
+                              {ch.name}
+                            </span>
+                            <span className="text-[10px] uppercase tracking-wider text-gray-500 font-mono">
+                              ID: {ch.id}
+                            </span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs text-gray-300">
+                          {ch.city}, {ch.state}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center font-semibold text-sm text-[#F0EBE0] font-mono">
+                        {ch.creatorsCount}
+                      </TableCell>
+                      <TableCell>
+                        {ch.adminName ? (
+                          <div className="flex items-center gap-2 text-xs text-gray-200">
+                            <User size={12} style={{ color: GOLD }} />
+                            <span>{ch.adminName}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-rose-400/80 italic flex items-center gap-1.5">
+                            <AlertCircle size={12} />
+                            Unassigned
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge
+                          variant="secondary"
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                            ch.status === 'active'
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              : 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
+                          }`}
+                        >
+                          {ch.status.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="pr-6 text-right py-4">
+                        <div className="flex items-center justify-end gap-3">
+                          <button
+                            onClick={() => openAssignAdmin(ch.id)}
+                            className="text-xs font-medium hover:underline text-gray-400 hover:text-[#C9A84C]"
+                          >
+                            Assign Admin
+                          </button>
+                          <button
+                            onClick={() => toggleStatus(ch.id)}
+                            className="flex items-center transition-opacity"
+                            title={ch.status === 'active' ? 'Suspend Chapter' : 'Activate Chapter'}
+                          >
+                            {ch.status === 'active' ? (
+                              <ToggleRight size={24} className="text-emerald-500 cursor-pointer" />
+                            ) : (
+                              <ToggleLeft size={24} className="text-gray-600 cursor-pointer" />
+                            )}
+                          </button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

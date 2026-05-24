@@ -33,9 +33,9 @@ export default async function DashboardLayout({
     } else if (role === 'admin') {
       fullName = 'Chapter Admin';
     } else if (role === 'merchant') {
-      fullName = 'Malabar Gold';
+      fullName = 'Demo Merchant';
     } else if (role === 'creator') {
-      fullName = 'Arjun Menon';
+      fullName = 'Demo Creator';
     }
 
     profile = {

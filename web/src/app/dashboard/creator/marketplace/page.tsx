@@ -24,80 +24,7 @@ const BG = '#F8F7F4';
 /* Campaign data                                                         */
 /* ------------------------------------------------------------------ */
 
-const CAMPAIGNS = [
-  {
-    id: 1,
-    brand: 'Malabar Gold',
-    title: 'Kerala Onam Campaign',
-    budget: '₹85,000',
-    budgetNum: 85000,
-    languages: ['Malayalam'],
-    category: 'Jewellery',
-    deadline: 'June 15, 2026',
-    logo: '🪙',
-    color: '#C9A84C',
-  },
-  {
-    id: 2,
-    brand: 'KFC India',
-    title: 'South India Launch',
-    budget: '₹1,20,000',
-    budgetNum: 120000,
-    languages: ['Tamil', 'Telugu', 'Kannada', 'Malayalam'],
-    category: 'Food & Beverage',
-    deadline: 'June 30, 2026',
-    logo: '🍗',
-    color: '#E4002B',
-  },
-  {
-    id: 3,
-    brand: "Byju's",
-    title: 'Education Creator Program',
-    budget: '₹60,000',
-    budgetNum: 60000,
-    languages: ['Malayalam', 'Tamil'],
-    category: 'EdTech',
-    deadline: 'July 10, 2026',
-    logo: '📚',
-    color: '#7B2FF7',
-  },
-  {
-    id: 4,
-    brand: 'Ather Energy',
-    title: 'EV Awareness',
-    budget: '₹95,000',
-    budgetNum: 95000,
-    languages: ['Tamil', 'Kannada'],
-    category: 'Automotive',
-    deadline: 'June 20, 2026',
-    logo: '⚡',
-    color: '#1DB954',
-  },
-  {
-    id: 5,
-    brand: 'Nykaa',
-    title: 'South Beauty Edit',
-    budget: '₹75,000',
-    budgetNum: 75000,
-    languages: ['Tamil', 'Telugu', 'Kannada', 'Malayalam'],
-    category: 'Beauty',
-    deadline: 'July 5, 2026',
-    logo: '💄',
-    color: '#FC2779',
-  },
-  {
-    id: 6,
-    brand: 'Flipkart',
-    title: 'Regional Creator Drive',
-    budget: '₹1,10,000',
-    budgetNum: 110000,
-    languages: ['Tamil', 'Telugu', 'Kannada', 'Malayalam'],
-    category: 'E-commerce',
-    deadline: 'July 15, 2026',
-    logo: '🛒',
-    color: '#2874F0',
-  },
-];
+const CAMPAIGNS: any[] = [];
 
 const ALL_LANGUAGES = ['All', 'Malayalam', 'Tamil', 'Telugu', 'Kannada'];
 const ALL_CATEGORIES = ['All', 'Jewellery', 'Food & Beverage', 'EdTech', 'Automotive', 'Beauty', 'E-commerce'];
@@ -206,83 +133,87 @@ export default function MarketplacePage() {
       </p>
 
       {/* Campaign grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filtered.map((c) => (
-          <Card
-            key={c.id}
-            className="border-0 shadow-sm flex flex-col"
-            style={{
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(240, 235, 224, 0.08)',
-              borderRadius: '16px',
-              overflow: 'hidden',
-            }}
-          >
-            <div style={{ height: '4px', background: c.color }} />
-            <CardHeader className="pb-0 pt-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex items-center justify-center w-10 h-10 rounded-xl text-xl border border-white/5"
-                  style={{ background: 'rgba(255, 255, 255, 0.02)' }}
-                >
-                  {c.logo}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold text-gray-400">
-                    {c.brand}
-                  </div>
-                  <CardTitle className="text-sm font-semibold mt-0.5 leading-snug text-white font-bricolage">
-                    {c.title}
-                  </CardTitle>
-                </div>
-              </div>
-            </CardHeader>
-
-            <CardContent className="pt-3 pb-4 flex-1 flex flex-col gap-3">
-              {/* Budget */}
-              <div
-                className="flex items-center justify-between rounded-xl px-3 py-2.5 border border-[#C9A84C]/25"
-                style={{ background: 'rgba(201,168,76,0.1)' }}
-              >
-                <span className="text-xs text-[#C9A84C]">Campaign Budget</span>
-                <span className="text-base font-bold text-[#C9A84C] font-bricolage">
-                  {c.budget}
-                </span>
-              </div>
-
-              {/* Languages */}
-              <div className="flex flex-wrap gap-1.5">
-                {c.languages.map((l) => (
-                  <Badge
-                    key={l}
-                    className="text-xs bg-white/5 text-gray-300 border border-white/5"
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
+          <p className="text-sm">No campaigns found matching your filters.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filtered.map((c) => (
+            <Card
+              key={c.id}
+              className="border-0 shadow-sm flex flex-col"
+              style={{
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(240, 235, 224, 0.08)',
+                borderRadius: '16px',
+                overflow: 'hidden',
+              }}
+            >
+              <div style={{ height: '4px', background: c.color }} />
+              <CardHeader className="pb-0 pt-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex items-center justify-center w-10 h-10 rounded-xl text-xl border border-white/5"
+                    style={{ background: 'rgba(255, 255, 255, 0.02)' }}
                   >
-                    {l}
-                  </Badge>
-                ))}
-              </div>
+                    {c.logo}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold text-gray-400">
+                      {c.brand}
+                    </div>
+                    <CardTitle className="text-sm font-semibold mt-0.5 leading-snug text-white font-bricolage">
+                      {c.title}
+                    </CardTitle>
+                  </div>
+                </div>
+              </CardHeader>
 
-              {/* Deadline */}
-              <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                <Calendar size={12} />
-                <span>Deadline: {c.deadline}</span>
-              </div>
+              <CardContent className="pt-3 pb-4 flex-1 flex flex-col gap-3">
+                {/* Budget */}
+                <div
+                  className="flex items-center justify-between rounded-xl px-3 py-2.5 border border-[#C9A84C]/25"
+                  style={{ background: 'rgba(201,168,76,0.1)' }}
+                >
+                  <span className="text-xs text-[#C9A84C]">Campaign Budget</span>
+                  <span className="text-base font-bold text-[#C9A84C] font-bricolage">
+                    {c.budget}
+                  </span>
+                </div>
 
-              {/* Apply button */}
-              <Button
-                className="w-full mt-auto font-bold bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950"
-                style={{
-                  border: 'none',
-                  borderRadius: '10px',
-                }}
-                onClick={() => setApplyTarget(c)}
-              >
-                Apply Now
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                {/* Info pills */}
+                <div className="flex flex-wrap gap-1">
+                  <Badge className="text-[10px] bg-white/5 text-gray-300 border-0">{c.category}</Badge>
+                  {c.languages.map((l: string) => (
+                    <Badge key={l} className="text-[10px] bg-white/5 text-gray-300 border-0">
+                      {l}
+                    </Badge>
+                  ))}
+                </div>
+
+                {/* Deadline */}
+                <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                  <Calendar size={12} />
+                  <span>Deadline: {c.deadline}</span>
+                </div>
+
+                {/* Apply button */}
+                <Button
+                  className="w-full mt-auto font-bold bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950"
+                  style={{
+                    border: 'none',
+                    borderRadius: '10px',
+                  }}
+                  onClick={() => setApplyTarget(c)}
+                >
+                  Apply Now
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Apply Dialog */}
       <Dialog open={!!applyTarget} onOpenChange={(open) => { if (!open) setApplyTarget(null); }}>

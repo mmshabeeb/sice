@@ -37,63 +37,7 @@ const BG = '#F8F7F4';
 /* Mock data                                                             */
 /* ------------------------------------------------------------------ */
 
-const CHAPTERS = [
-  {
-    rank: 1,
-    chapter: 'Kozhikode',
-    city: 'Calicut, Kerala',
-    creators: 52,
-    campaigns: 8,
-    deals: 28,
-    gpv: '₹18,40,000',
-    engagement: '5.2%',
-    score: 94,
-  },
-  {
-    rank: 2,
-    chapter: 'Kochi',
-    city: 'Ernakulam, Kerala',
-    creators: 38,
-    campaigns: 6,
-    deals: 19,
-    gpv: '₹12,10,000',
-    engagement: '4.8%',
-    score: 87,
-  },
-  {
-    rank: 3,
-    chapter: 'Bangalore',
-    city: 'Bengaluru, Karnataka',
-    creators: 29,
-    campaigns: 5,
-    deals: 12,
-    gpv: '₹8,20,000',
-    engagement: '4.1%',
-    score: 79,
-  },
-  {
-    rank: 4,
-    chapter: 'Chennai',
-    city: 'Chennai, Tamil Nadu',
-    creators: 18,
-    campaigns: 3,
-    deals: 8,
-    gpv: '₹3,10,000',
-    engagement: '3.9%',
-    score: 71,
-  },
-  {
-    rank: 5,
-    chapter: 'Hyderabad',
-    city: 'Hyderabad, Telangana',
-    creators: 10,
-    campaigns: 1,
-    deals: 0,
-    gpv: '₹0',
-    engagement: '0%',
-    score: 45,
-  },
-];
+const CHAPTERS: any[] = [];
 
 const ENGAGEMENT_TREND = [
   { month: 'Jan', Kozhikode: 3.8, Kochi: 3.2, Bangalore: 2.9, Chennai: 2.6, Hyderabad: 0 },
@@ -246,9 +190,16 @@ export default function ChapterPerformancePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {CHAPTERS.map((ch) => (
-                    <TableRow
-                      key={ch.rank}
+                  {CHAPTERS.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-8 text-gray-400 text-sm">
+                        No chapters found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    CHAPTERS.map((ch) => (
+                      <TableRow
+                        key={ch.rank}
                       className="border-white/5 hover:bg-white/[0.02] transition-colors"
                     >
                       <TableCell className="pl-6">
@@ -302,7 +253,8 @@ export default function ChapterPerformancePage() {
                         <ScoreBar score={ch.score} />
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

@@ -13,6 +13,7 @@
   "/dashboard/admin/roster/page": "/dashboard/admin/roster",
   "/dashboard/creator/accounts/page": "/dashboard/creator/accounts",
   "/dashboard/creator/automation/page": "/dashboard/creator/automation",
+  "/dashboard/creator/chapters/page": "/dashboard/creator/chapters",
   "/dashboard/creator/deals/page": "/dashboard/creator/deals",
   "/dashboard/creator/legal/page": "/dashboard/creator/legal",
   "/dashboard/creator/marketplace/page": "/dashboard/creator/marketplace",

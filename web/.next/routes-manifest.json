@@ -120,6 +120,12 @@
       "namedRegex": "^/dashboard/creator/automation(?:/)?$"
     },
     {
+      "page": "/dashboard/creator/chapters",
+      "regex": "^/dashboard/creator/chapters(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/creator/chapters(?:/)?$"
+    },
+    {
       "page": "/dashboard/creator/deals",
       "regex": "^/dashboard/creator/deals(?:/)?$",
       "routeKeys": {},

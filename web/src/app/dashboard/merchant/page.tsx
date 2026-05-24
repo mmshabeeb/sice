@@ -40,80 +40,39 @@ const BG = '#F8F7F4';
 const STATS = [
   {
     label: 'Active Campaigns',
-    value: '3',
+    value: '0',
     icon: Megaphone,
-    sub: '2 accepting applications',
+    sub: 'No active campaigns',
     color: '#6366f1',
     bg: 'rgba(99,102,241,0.08)',
   },
   {
     label: 'Total Creators Engaged',
-    value: '18',
+    value: '0',
     icon: Users,
-    sub: '+4 this month',
+    sub: '0 this month',
     color: '#0ea5e9',
     bg: 'rgba(14,165,233,0.08)',
   },
   {
     label: 'Securely Deposited',
-    value: '₹3,45,000',
+    value: '₹0',
     icon: Lock,
-    sub: 'Across 4 active deals',
+    sub: 'No active deals',
     color: GOLD,
     bg: 'rgba(201,168,76,0.08)',
   },
   {
     label: 'Deals Completed',
-    value: '12',
+    value: '0',
     icon: CheckCircle2,
-    sub: '₹8,20,000 released',
+    sub: '₹0 released',
     color: '#22c55e',
     bg: 'rgba(34,197,94,0.08)',
   },
 ];
 
-const ACTIVITY = [
-  {
-    campaign: 'Kerala Onam Campaign',
-    creator: 'Arjun Menon',
-    status: 'Content Approved',
-    statusType: 'approved',
-    amount: '₹85,000',
-    time: '2 hours ago',
-  },
-  {
-    campaign: 'South India Launch Series',
-    creator: 'Priya Nair',
-    status: 'In Review',
-    statusType: 'review',
-    amount: '₹1,20,000',
-    time: '5 hours ago',
-  },
-  {
-    campaign: 'Festive Creator Program',
-    creator: 'Rahul Suresh',
-    status: 'Revision Requested',
-    statusType: 'revision',
-    amount: '₹95,000',
-    time: 'Yesterday',
-  },
-  {
-    campaign: 'Kerala Onam Campaign',
-    creator: 'Meera Pillai',
-    status: 'Submitted',
-    statusType: 'submitted',
-    amount: '₹45,000',
-    time: 'Yesterday',
-  },
-  {
-    campaign: 'South India Launch Series',
-    creator: 'Divya Krishnan',
-    status: 'Active',
-    statusType: 'active',
-    amount: '₹60,000',
-    time: '2 days ago',
-  },
-];
+const ACTIVITY: any[] = [];
 
 const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }> = {
   approved: { bg: 'rgba(34,197,94,0.15)', color: '#4ade80', label: 'Content Approved' },
@@ -161,7 +120,7 @@ export default function MerchantOverviewPage() {
           <h1
             className="text-2xl font-bold tracking-tight text-white font-bricolage"
           >
-            {greeting}, Malabar Gold &amp; Diamonds
+            {greeting} 👋
           </h1>
           <p className="text-sm mt-1 text-gray-400">
             Here&apos;s your campaign overview for today.
@@ -175,7 +134,7 @@ export default function MerchantOverviewPage() {
             borderColor: 'rgba(201,168,76,0.28)',
           }}
         >
-          Merchant · Brand Account
+          Merchant Account
         </Badge>
       </div>
 
@@ -301,10 +260,17 @@ export default function MerchantOverviewPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {ACTIVITY.map((row, i) => {
-                  const s = STATUS_STYLES[row.statusType];
-                  return (
-                    <TableRow key={i} className="border-b border-white/5 hover:bg-white/5">
+                {ACTIVITY.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-gray-400 text-sm">
+                      No campaign activity found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  ACTIVITY.map((row, i) => {
+                    const s = STATUS_STYLES[row.statusType];
+                    return (
+                      <TableRow key={i} className="border-b border-white/5 hover:bg-white/5">
                       <TableCell className="pl-5">
                         <span className="font-semibold text-sm text-white font-bricolage">
                           {row.campaign}
@@ -317,7 +283,7 @@ export default function MerchantOverviewPage() {
                           >
                             {row.creator
                               .split(' ')
-                              .map((n) => n[0])
+                              .map((n: string) => n[0])
                               .join('')}
                           </div>
                           <span className="text-sm text-gray-300">{row.creator}</span>
@@ -344,7 +310,8 @@ export default function MerchantOverviewPage() {
                       </TableCell>
                     </TableRow>
                   );
-                })}
+                })
+                )}
               </TableBody>
             </Table>
           </CardContent>

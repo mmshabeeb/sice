@@ -55,75 +55,7 @@ interface Deliverable {
   note?: string;
 }
 
-const ALL_DELIVERABLES: Deliverable[] = [
-  // Pending
-  {
-    id: 'd1',
-    creator: 'Arjun Menon',
-    title: 'YouTube Integration',
-    campaign: 'Kerala Onam Campaign',
-    status: 'pending',
-    dueDate: 'Jun 10, 2025',
-  },
-  {
-    id: 'd2',
-    creator: 'Meera Pillai',
-    title: 'Instagram Reel',
-    campaign: 'Kerala Onam Campaign',
-    status: 'pending',
-    dueDate: 'Jun 12, 2025',
-  },
-  // Submitted
-  {
-    id: 'd3',
-    creator: 'Priya Nair',
-    title: 'Instagram Story Set',
-    campaign: 'South India Launch Series',
-    status: 'submitted',
-    submittedDate: 'May 20, 2025',
-    note: 'Awaiting Review',
-  },
-  {
-    id: 'd4',
-    creator: 'Rahul Suresh',
-    title: 'YouTube Shorts (3-pack)',
-    campaign: 'South India Launch Series',
-    status: 'submitted',
-    submittedDate: 'May 22, 2025',
-  },
-  // Revision requested
-  {
-    id: 'd5',
-    creator: 'Divya Krishnan',
-    title: 'Reels Series',
-    campaign: 'Festive Creator Program',
-    status: 'revision',
-    submittedDate: 'May 19, 2025',
-    feedback: [
-      {
-        author: 'Malabar Gold',
-        role: 'merchant',
-        message: 'Please add a product close-up shot in the second reel. The brand logo should be visible for at least 3 seconds.',
-        timestamp: 'May 21, 14:32',
-      },
-      {
-        author: 'Divya Krishnan',
-        role: 'creator',
-        message: 'Understood! I will re-edit and resubmit by May 24.',
-        timestamp: 'May 21, 16:45',
-      },
-    ],
-  },
-  // Approved
-  {
-    id: 'd6',
-    creator: 'Arun Vijay',
-    title: 'Brand Integration Video',
-    campaign: 'Kerala Onam Campaign',
-    status: 'approved',
-    approvedDate: 'May 19, 2025',
-  },
-];
+const ALL_DELIVERABLES: Deliverable[] = [];
 
 const CAMPAIGNS = [
   'All Campaigns',

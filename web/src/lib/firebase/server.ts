@@ -38,10 +38,12 @@ function getAdminApp(): App {
   const header = '-----BEGIN PRIVATE KEY-----';
   const footer = '-----END PRIVATE KEY-----';
   
-  let base64Body = cleanKey;
-  if (base64Body.includes(header)) base64Body = base64Body.replace(header, '');
-  if (base64Body.includes(footer)) base64Body = base64Body.replace(footer, '');
-  base64Body = base64Body.replace(/\s+/g, ''); // strip all whitespace, spaces, and newlines
+  // Strip any headers, footers, quotes, and whitespace to extract the pure base64 body
+  const base64Body = cleanKey
+    .replace(/-----BEGIN [^-]+-----/g, '')
+    .replace(/-----END [^-]+-----/g, '')
+    .replace(/["']/g, '')
+    .replace(/\s+/g, '');
   
   if (base64Body.length < 100) {
     throw new Error(`FIREBASE_PRIVATE_KEY base64 body is too short (${base64Body.length} chars). Raw key length: ${rawKey.length}`);
