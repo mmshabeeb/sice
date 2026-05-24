@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useState, useRef } from "react";
+import { FormEvent, useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { 
   GoogleAuthProvider, 
   signInWithPopup, 
@@ -20,7 +21,14 @@ const countryCodes = [
   { label: "Singapore +65", value: "+65" },
 ];
 
-export default function ApplicationForm({ type = "creator" }: { type?: string }) {
+export default function ApplicationForm({ type: propType }: { type?: string }) {
+  const searchParams = useSearchParams();
+  const type = propType || (searchParams?.get("type") === "merchant" ? "merchant" : "creator");
+
+  useEffect(() => {
+    const titleType = type === "merchant" ? "Merchant" : "Primary";
+    document.title = `Apply for ${titleType} Membership | SICE`;
+  }, [type]);
   // Verification states
   const [googleEmail, setGoogleEmail] = useState<string | null>(null);
   const [googleName, setGoogleName] = useState<string | null>(null);
@@ -282,20 +290,29 @@ export default function ApplicationForm({ type = "creator" }: { type?: string })
   // Identity Verification Step
   if (step === "verify") {
     return (
-      <div 
-        className="form application-form" 
-        style={{ 
-          display: "block", 
-          maxWidth: 600, 
-          margin: "0 auto", 
-          padding: 32, 
-          borderRadius: 8,
-          boxSizing: "border-box"
-        }}
-      >
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--indigo)", marginBottom: 8, letterSpacing: "-0.02em" }}>
-          Identity Verification
-        </h2>
+      <>
+        <h1>
+          {type === "merchant" ? "Merchant Membership" : "Primary Membership"} <em>application.</em>
+        </h1>
+        <p className="lede light" style={{ marginBottom: 40 }}>
+          Complete the details below to apply for SICE {type === "merchant" ? "Merchant" : "Primary"} Membership.
+          We review all applications and respond via email.
+        </p>
+
+        <div 
+          className="form application-form" 
+          style={{ 
+            display: "block", 
+            maxWidth: 600, 
+            margin: "0 auto", 
+            padding: 32, 
+            borderRadius: 8,
+            boxSizing: "border-box"
+          }}
+        >
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--indigo)", marginBottom: 8, letterSpacing: "-0.02em" }}>
+            Identity Verification
+          </h2>
         <p style={{ fontSize: 13, color: "rgba(8, 13, 38, 0.6)", marginBottom: 24, lineHeight: 1.5 }}>
           Before proceeding with the membership application, please verify your identity using either Google or SMS OTP.
         </p>
@@ -637,12 +654,22 @@ export default function ApplicationForm({ type = "creator" }: { type?: string })
           </div>
         )}
       </div>
+      </>
     );
   }
 
   // Application Form Step
   return (
-    <form className="form application-form" onSubmit={handleSubmit}>
+    <>
+      <h1>
+        {type === "merchant" ? "Merchant Membership" : "Primary Membership"} <em>application.</em>
+      </h1>
+      <p className="lede light" style={{ marginBottom: 40 }}>
+        Complete the details below to apply for SICE {type === "merchant" ? "Merchant" : "Primary"} Membership.
+        We review all applications and respond via email.
+      </p>
+
+      <form className="form application-form" onSubmit={handleSubmit}>
       {type === "merchant" && (
         <>
           <div className="form-field full">
@@ -874,5 +901,6 @@ export default function ApplicationForm({ type = "creator" }: { type?: string })
       </button>
       {status && <div className="form-status">{status}</div>}
     </form>
+    </>
   );
 }
