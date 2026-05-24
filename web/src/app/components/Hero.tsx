@@ -86,7 +86,7 @@ export default function Hero() {
           <div>
             <div className="stat-num">100</div>
             <div className="stat-label">Membership Plan</div>
-            <div className="stat-note">Primary Membership</div>
+            <div className="stat-note">Creator Membership</div>
           </div>
         </div>
       </div>

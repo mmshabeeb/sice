@@ -26,7 +26,7 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
   const type = propType || (searchParams?.get("type") === "merchant" ? "merchant" : "creator");
 
   useEffect(() => {
-    const titleType = type === "merchant" ? "Merchant" : "Primary";
+    const titleType = type === "merchant" ? "Merchant" : "Creator";
     document.title = `Apply for ${titleType} Membership | SICE`;
   }, [type]);
   // Verification states
@@ -292,10 +292,10 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
     return (
       <>
         <h1>
-          {type === "merchant" ? "Merchant Membership" : "Primary Membership"} <em>application.</em>
+          {type === "merchant" ? "Merchant Membership" : "Creator Membership"} <em>application.</em>
         </h1>
         <p className="lede light" style={{ marginBottom: 40 }}>
-          Complete the details below to apply for SICE {type === "merchant" ? "Merchant" : "Primary"} Membership.
+          Complete the details below to apply for SICE {type === "merchant" ? "Merchant" : "Creator"} Membership.
           We review all applications and respond via email.
         </p>
 
@@ -662,10 +662,10 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
   return (
     <>
       <h1>
-        {type === "merchant" ? "Merchant Membership" : "Primary Membership"} <em>application.</em>
+        {type === "merchant" ? "Merchant Membership" : "Creator Membership"} <em>application.</em>
       </h1>
       <p className="lede light" style={{ marginBottom: 40 }}>
-        Complete the details below to apply for SICE {type === "merchant" ? "Merchant" : "Primary"} Membership.
+        Complete the details below to apply for SICE {type === "merchant" ? "Merchant" : "Creator"} Membership.
         We review all applications and respond via email.
       </p>
 

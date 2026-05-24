@@ -26,7 +26,7 @@ export default function MembershipSection() {
         <div className="membership-grid">
           <article className="tier primary-membership">
             <div className="tier-tag">Creator Plan</div>
-            <h3>Primary Membership</h3>
+            <h3>Creator Membership</h3>
             <div className="tier-price">By application · Annual contribution</div>
             <ul className="tier-list">
               {creatorBenefits.map((b) => <li key={b}>{b}</li>)}
