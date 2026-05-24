@@ -45,120 +45,67 @@ const BG = '#F8F7F4';
 const KPI = [
   {
     label: 'Gross Platform Volume',
-    value: '₹42,80,000',
+    value: '₹0',
     icon: TrendingUp,
-    sub: '+18.4% vs last month',
+    sub: '0% vs last month',
     positive: true,
   },
   {
     label: 'Active Creators',
-    value: '147',
+    value: '0',
     icon: Users,
-    sub: '+12 this month',
+    sub: '0 this month',
     positive: true,
   },
   {
     label: 'Active Merchants',
-    value: '38',
+    value: '0',
     icon: Store,
-    sub: '+3 this month',
+    sub: '0 this month',
     positive: true,
   },
   {
     label: 'Live Campaigns',
-    value: '23',
+    value: '0',
     icon: Megaphone,
-    sub: '5 ending this week',
+    sub: '0 ending this week',
     positive: false,
   },
   {
     label: 'Deals Completed (MTD)',
-    value: '67',
+    value: '0',
     icon: Handshake,
-    sub: 'Target: 80',
+    sub: 'Target: 0',
     positive: true,
   },
   {
     label: 'Avg Trust Index',
-    value: '83.4',
+    value: '0.0',
     icon: Star,
-    sub: '+2.1 pts vs last month',
+    sub: '0 pts vs last month',
     positive: true,
   },
 ];
 
-const GPV_DATA = [
-  { month: 'Jan', gpv: 2240000 },
-  { month: 'Feb', gpv: 2810000 },
-  { month: 'Mar', gpv: 3150000 },
-  { month: 'Apr', gpv: 3740000 },
-  { month: 'May', gpv: 4280000 },
-];
+const GPV_DATA: any[] = [];
 
-const LANGUAGE_DATA = [
-  { name: 'Malayalam', value: 42 },
-  { name: 'Tamil', value: 28 },
-  { name: 'Kannada', value: 18 },
-  { name: 'Telugu', value: 12 },
-];
+const LANGUAGE_DATA: any[] = [];
 const PIE_COLORS = ['#C9A84C', '#6366f1', '#22c55e', '#ec4899'];
 
-const ACTIVITY = [
-  {
-    icon: UserPlus,
-    color: '#6366f1',
-    text: 'Fathima Noor joined as a new creator — Kozhikode chapter',
-    time: '12 min ago',
-  },
-  {
-    icon: Rocket,
-    color: GOLD,
-    text: 'Campaign launched — "Ather EV Awareness South India" by Ather Energy',
-    time: '45 min ago',
-  },
-  {
-    icon: CheckCircle2,
-    color: '#22c55e',
-    text: 'Deal completed — Arjun Menon × Malabar Gold "Kerala Onam Campaign" ₹1,40,000',
-    time: '2 hrs ago',
-  },
-  {
-    icon: DollarSign,
-    color: '#22c55e',
-    text: 'Secure deposit released — KFC India campaign payment ₹88,000 to Priya Nair',
-    time: '3 hrs ago',
-  },
-  {
-    icon: UserPlus,
-    color: '#6366f1',
-    text: 'Thomas Mathew completed onboarding — Chennai chapter',
-    time: '5 hrs ago',
-  },
-  {
-    icon: Megaphone,
-    color: GOLD,
-    text: 'New campaign posted — "Beauty Festive Edit" by Nykaa India (₹6,00,000 budget)',
-    time: '7 hrs ago',
-  },
-  {
-    icon: AlertCircle,
-    color: '#ef4444',
-    text: 'Arbitration opened — ARB-001 Missed Deadline: Arjun Menon vs Malabar Gold',
-    time: '9 hrs ago',
-  },
-  {
-    icon: Globe,
-    color: '#3b82f6',
-    text: 'Chapter activated — Hyderabad chapter now live with 10 creators onboarded',
-    time: '1 day ago',
-  },
-];
+const ACTIVITY: any[] = [];
 
 /* ------------------------------------------------------------------ */
 /* Sub-components                                                         */
 /* ------------------------------------------------------------------ */
 
 function GpvChart() {
+  if (GPV_DATA.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[220px] text-gray-500 text-xs">
+        No platform volume data available.
+      </div>
+    );
+  }
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={GPV_DATA} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
@@ -178,52 +125,65 @@ function GpvChart() {
         />
         <Tooltip
           formatter={(value) =>
-            [`₹${(Number(value) / 100000).toFixed(2)}L`, 'Gross Platform Volume']
+            typeof value === 'number'
+              ? `₹${value.toLocaleString('en-IN')}`
+              : value
           }
           contentStyle={{
-            background: '#080D26',
-            borderColor: 'rgba(240,235,224,0.15)',
-            borderRadius: 12,
+            background: 'rgba(15, 23, 42, 0.95)',
+            borderColor: 'rgba(240, 235, 224, 0.08)',
+            borderRadius: '10px',
+            color: '#fff',
+            fontSize: '12px',
           }}
-          labelStyle={{ color: 'rgba(240,235,224,0.6)' }}
-          itemStyle={{ color: '#F0EBE0' }}
+          labelStyle={{ fontWeight: 'bold', color: GOLD }}
         />
-        <Bar dataKey="gpv" fill={GOLD} radius={[6, 6, 0, 0]} />
+        <Bar dataKey="gpv" fill={GOLD} radius={[4, 4, 0, 0]} maxBarSize={48} />
       </BarChart>
     </ResponsiveContainer>
   );
 }
 
 function LanguagePieChart() {
+  if (LANGUAGE_DATA.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[220px] text-gray-500 text-xs">
+        No language distribution data available.
+      </div>
+    );
+  }
   return (
     <ResponsiveContainer width="100%" height={220}>
       <PieChart>
         <Pie
           data={LANGUAGE_DATA}
           cx="50%"
-          cy="45%"
-          innerRadius={55}
+          cy="50%"
+          innerRadius={60}
           outerRadius={80}
-          paddingAngle={3}
+          paddingAngle={4}
           dataKey="value"
         >
-          {LANGUAGE_DATA.map((_, i) => (
-            <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+          {LANGUAGE_DATA.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
           ))}
         </Pie>
         <Tooltip
-          formatter={(value) => [`${value}%`, 'Share']}
+          formatter={(value) => `${value}%`}
           contentStyle={{
-            background: '#080D26',
-            borderColor: 'rgba(240,235,224,0.15)',
-            borderRadius: 12,
+            background: 'rgba(15, 23, 42, 0.95)',
+            borderColor: 'rgba(240, 235, 224, 0.08)',
+            borderRadius: '10px',
+            color: '#fff',
+            fontSize: '12px',
           }}
-          itemStyle={{ color: '#F0EBE0' }}
         />
         <Legend
+          verticalAlign="bottom"
+          height={36}
           iconType="circle"
           iconSize={8}
-          wrapperStyle={{ fontSize: 12, color: 'rgba(240,235,224,0.6)' }}
+          wrapperStyle={{ fontSize: '11px', color: 'rgba(240,235,224,0.45)' }}
         />
       </PieChart>
     </ResponsiveContainer>
@@ -370,27 +330,33 @@ export default function AdminCommandCenterPage() {
           }}
         >
           <CardContent className="py-2 divide-y divide-white/5">
-            {ACTIVITY.map(({ icon: Icon, color, text, time }, i) => (
-              <div key={i} className="flex items-start gap-3 py-3">
-                <div
-                  className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 mt-0.5"
-                  style={{
-                    background: `${color}18`,
-                    border: `1px solid ${color}25`,
-                  }}
-                >
-                  <Icon size={14} style={{ color }} />
+            {ACTIVITY.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-6">
+                No recent activity found.
+              </p>
+            ) : (
+              ACTIVITY.map(({ icon: Icon, color, text, time }, i) => (
+                <div key={i} className="flex items-start gap-3 py-3">
+                  <div
+                    className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 mt-0.5"
+                    style={{
+                      background: `${color}18`,
+                      border: `1px solid ${color}25`,
+                    }}
+                  >
+                    <Icon size={14} style={{ color }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm leading-snug text-gray-200">
+                      {text}
+                    </p>
+                    <p className="text-xs mt-0.5 text-gray-400">
+                      {time}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm leading-snug text-gray-200">
-                    {text}
-                  </p>
-                  <p className="text-xs mt-0.5 text-gray-400">
-                    {time}
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
       </div>

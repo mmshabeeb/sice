@@ -72,111 +72,9 @@ interface Transaction {
   status: TxStatus;
 }
 
-const ESCROW_ROWS: EscrowRow[] = [
-  {
-    id: 1,
-    campaign: 'Kerala Onam Campaign',
-    creator: 'Arjun Menon',
-    amount: '₹85,000',
-    amountRaw: 85000,
-    status: 'content_approved',
-    contractId: 'CTR-2025-0041',
-  },
-  {
-    id: 2,
-    campaign: 'South India Launch',
-    creator: 'Priya Nair',
-    amount: '₹1,20,000',
-    amountRaw: 120000,
-    status: 'in_escrow',
-    contractId: 'CTR-2025-0038',
-  },
-  {
-    id: 3,
-    campaign: 'Festive Creator Program',
-    creator: 'Rahul Suresh',
-    amount: '₹95,000',
-    amountRaw: 95000,
-    status: 'deposited',
-    contractId: 'CTR-2025-0035',
-  },
-  {
-    id: 4,
-    campaign: 'Beauty Edit',
-    creator: 'Meera Pillai',
-    amount: '₹45,000',
-    amountRaw: 45000,
-    status: 'content_approved',
-    contractId: 'CTR-2025-0033',
-  },
-];
+const ESCROW_ROWS: EscrowRow[] = [];
 
-const TRANSACTIONS: Transaction[] = [
-  {
-    id: 1,
-    date: 'May 19, 2025',
-    description: 'Payment released — Arun Vijay · Kerala Onam',
-    amount: '₹1,20,000',
-    type: 'debit',
-    status: 'completed',
-  },
-  {
-    id: 2,
-    date: 'May 15, 2025',
-    description: 'Secure deposit — South India Launch Series',
-    amount: '₹1,20,000',
-    type: 'debit',
-    status: 'completed',
-  },
-  {
-    id: 3,
-    date: 'May 10, 2025',
-    description: 'Funds added via Razorpay',
-    amount: '₹2,00,000',
-    type: 'credit',
-    status: 'completed',
-  },
-  {
-    id: 4,
-    date: 'May 8, 2025',
-    description: 'Payment released — Karthik Raja · Festive Program',
-    amount: '₹70,000',
-    type: 'debit',
-    status: 'completed',
-  },
-  {
-    id: 5,
-    date: 'May 5, 2025',
-    description: 'Secure deposit — Kerala Onam Campaign',
-    amount: '₹85,000',
-    type: 'debit',
-    status: 'completed',
-  },
-  {
-    id: 6,
-    date: 'Apr 30, 2025',
-    description: 'Funds added via Razorpay',
-    amount: '₹5,00,000',
-    type: 'credit',
-    status: 'completed',
-  },
-  {
-    id: 7,
-    date: 'Apr 25, 2025',
-    description: 'GST Platform Fee',
-    amount: '₹4,500',
-    type: 'debit',
-    status: 'completed',
-  },
-  {
-    id: 8,
-    date: 'Apr 20, 2025',
-    description: 'Payment released — Anjali Menon · Brand Edit',
-    amount: '₹55,000',
-    type: 'debit',
-    status: 'completed',
-  },
-];
+const TRANSACTIONS: Transaction[] = [];
 
 const ESCROW_STATUS_LABELS: Record<EscrowStatus, { label: string; bg: string; color: string }> = {
   deposited: { label: 'Deposited', bg: 'rgba(14,165,233,0.15)', color: '#38bdf8' },
@@ -221,7 +119,13 @@ export default function WalletPage() {
     return sum + (row?.amountRaw ?? 0);
   }, 0);
 
-  const displayReleased = 820000 + totalReleased;
+  const displayReleased = totalReleased;
+
+  const displaySecurelyDeposited = escrowRows
+    .filter((r) => r.status !== 'deposited')
+    .reduce((sum, r) => sum + r.amountRaw, 0);
+
+  const activeContractsCount = escrowRows.filter((r) => r.status !== 'deposited').length;
 
   return (
     <div className="space-y-7">
@@ -324,7 +228,7 @@ export default function WalletPage() {
             <div>
               <div className="text-xs text-gray-450 font-medium">Available Balance</div>
               <div className="text-2xl font-bold mt-0.5 font-bricolage text-green-400">
-                ₹1,25,000
+                ₹0
               </div>
               <div className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1">
                 <TrendingUp size={9} /> Ready to deploy
@@ -351,10 +255,10 @@ export default function WalletPage() {
             <div>
               <div className="text-xs text-gray-450 font-medium">Securely Deposited</div>
               <div className="text-2xl font-bold mt-0.5 font-bricolage text-[#C9A84C]">
-                ₹3,45,000
+                ₹{displaySecurelyDeposited.toLocaleString('en-IN')}
               </div>
               <div className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1">
-                <Clock size={9} /> 4 active contracts
+                <Clock size={9} /> {activeContractsCount} active contract{activeContractsCount !== 1 ? 's' : ''}
               </div>
             </div>
           </CardContent>
@@ -381,7 +285,7 @@ export default function WalletPage() {
                 ₹{displayReleased.toLocaleString('en-IN')}
               </div>
               <div className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1">
-                <CheckCircle2 size={9} /> 12 payments completed
+                <CheckCircle2 size={9} /> {releasedIds.length} payment{releasedIds.length !== 1 ? 's' : ''} completed
               </div>
             </div>
           </CardContent>
@@ -426,81 +330,89 @@ export default function WalletPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {escrowRows.map((row) => {
-                  const s = ESCROW_STATUS_LABELS[row.status];
-                  const released = releasedIds.includes(row.id);
-                  return (
-                    <TableRow key={row.id} className="border-b border-white/5 hover:bg-white/5">
-                      {/* Campaign */}
-                      <TableCell className="pl-5">
-                        <span className="font-semibold text-sm text-white font-bricolage">
-                          {row.campaign}
-                        </span>
-                      </TableCell>
-
-                      {/* Creator */}
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold text-white shrink-0 border border-white/10 bg-white/10"
-                          >
-                            {getInitials(row.creator)}
-                          </div>
-                          <span className="text-sm text-gray-300">{row.creator}</span>
-                        </div>
-                      </TableCell>
-
-                      {/* Amount */}
-                      <TableCell>
-                        <span className="text-sm font-bold text-white font-bricolage">
-                          {row.amount}
-                        </span>
-                      </TableCell>
-
-                      {/* Status */}
-                      <TableCell>
-                        <span
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-white/5"
-                          style={{ background: released ? 'rgba(34,197,94,0.15)' : s.bg, color: released ? '#4ade80' : s.color }}
-                        >
-                          {released ? 'Payment Released' : s.label}
-                        </span>
-                      </TableCell>
-
-                      {/* Contract ID */}
-                      <TableCell>
-                        <div className="flex items-center gap-1 text-xs text-gray-405 font-mono">
-                          <FileText size={11} className="text-gray-500" />
-                          {row.contractId}
-                        </div>
-                      </TableCell>
-
-                      {/* Action */}
-                      <TableCell className="pr-5">
-                        {!released && row.status === 'content_approved' ? (
-                          <Button
-                            className="h-8 px-3 text-xs font-bold gap-1 bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950"
-                            style={{ border: 'none' }}
-                            onClick={() => handleReleasePayment(row.id)}
-                          >
-                            <ArrowUpRight size={12} /> Release Payment
-                          </Button>
-                        ) : released ? (
-                          <span className="text-xs text-green-400 font-semibold flex items-center gap-1">
-                            <CheckCircle2 size={12} /> Released
+                {escrowRows.length === 0 ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-sm">
+                      No secure deposits found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  escrowRows.map((row) => {
+                    const s = ESCROW_STATUS_LABELS[row.status];
+                    const released = releasedIds.includes(row.id);
+                    return (
+                      <TableRow key={row.id} className="border-b border-white/5 hover:bg-white/5">
+                        {/* Campaign */}
+                        <TableCell className="pl-5">
+                          <span className="font-semibold text-sm text-white font-bricolage">
+                            {row.campaign}
                           </span>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            className="h-8 px-3 text-xs gap-1 border-white/10 text-gray-300 hover:bg-white/5 hover:text-white bg-transparent"
+                        </TableCell>
+
+                        {/* Creator */}
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold text-white shrink-0 border border-white/10 bg-white/10"
+                            >
+                              {getInitials(row.creator)}
+                            </div>
+                            <span className="text-sm text-gray-300">{row.creator}</span>
+                          </div>
+                        </TableCell>
+
+                        {/* Amount */}
+                        <TableCell>
+                          <span className="text-sm font-bold text-white font-bricolage">
+                            {row.amount}
+                          </span>
+                        </TableCell>
+
+                        {/* Status */}
+                        <TableCell>
+                          <span
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-white/5"
+                            style={{ background: released ? 'rgba(34,197,94,0.15)' : s.bg, color: released ? '#4ade80' : s.color }}
                           >
-                            <ExternalLink size={12} /> View Contract
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                            {released ? 'Payment Released' : s.label}
+                          </span>
+                        </TableCell>
+
+                        {/* Contract ID */}
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-xs text-gray-405 font-mono">
+                            <FileText size={11} className="text-gray-500" />
+                            {row.contractId}
+                          </div>
+                        </TableCell>
+
+                        {/* Action */}
+                        <TableCell className="pr-5">
+                          {!released && row.status === 'content_approved' ? (
+                            <Button
+                              className="h-8 px-3 text-xs font-bold gap-1 bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950"
+                              style={{ border: 'none' }}
+                              onClick={() => handleReleasePayment(row.id)}
+                            >
+                              <ArrowUpRight size={12} /> Release Payment
+                            </Button>
+                          ) : released ? (
+                            <span className="text-xs text-green-400 font-semibold flex items-center gap-1">
+                              <CheckCircle2 size={12} /> Released
+                            </span>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              className="h-8 px-3 text-xs gap-1 border-white/10 text-gray-300 hover:bg-white/5 hover:text-white bg-transparent"
+                            >
+                              <ExternalLink size={12} /> View Contract
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -547,70 +459,78 @@ export default function WalletPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {TRANSACTIONS.map((tx) => (
-                  <TableRow key={tx.id} className="border-b border-white/5 hover:bg-white/5">
-                    {/* Date */}
-                    <TableCell className="pl-5">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                        <Clock size={11} className="text-gray-500" />
-                        {tx.date}
-                      </div>
-                    </TableCell>
-
-                    {/* Description */}
-                    <TableCell>
-                      <span className="text-sm text-gray-300">{tx.description}</span>
-                    </TableCell>
-
-                    {/* Amount */}
-                    <TableCell>
-                      <div
-                        className="flex items-center gap-1 text-sm font-bold font-bricolage"
-                        style={{ color: tx.type === 'credit' ? '#4ade80' : '#ffffff' }}
-                      >
-                        {tx.type === 'credit' ? (
-                          <ArrowDownLeft size={13} className="text-green-400" />
-                        ) : (
-                          <ArrowUpRight size={13} className="text-red-400" />
-                        )}
-                        {tx.amount}
-                      </div>
-                    </TableCell>
-
-                    {/* Type */}
-                    <TableCell>
-                      <span
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold capitalize border border-white/5"
-                        style={
-                          tx.type === 'credit'
-                            ? { background: 'rgba(34,197,94,0.15)', color: '#4ade80' }
-                            : { background: 'rgba(239,68,68,0.15)', color: '#f87171' }
-                        }
-                      >
-                        {tx.type === 'credit' ? 'Credit' : 'Debit'}
-                      </span>
-                    </TableCell>
-
-                    {/* Status */}
-                    <TableCell className="pr-5">
-                      <span
-                        className="inline-flex items-center gap-1 text-xs font-medium"
-                        style={{
-                          color:
-                            tx.status === 'completed'
-                              ? '#4ade80'
-                              : tx.status === 'pending'
-                              ? '#fbbf24'
-                              : '#f87171',
-                        }}
-                      >
-                        {tx.status === 'completed' && <CheckCircle2 size={11} />}
-                        {tx.status === 'pending' && <Clock size={11} />}
-                        <span className="capitalize">{tx.status}</span>
-                      </span>
+                {TRANSACTIONS.length === 0 ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={5} className="text-center py-12 text-gray-500 text-sm">
+                      No transactions found.
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  TRANSACTIONS.map((tx) => (
+                    <TableRow key={tx.id} className="border-b border-white/5 hover:bg-white/5">
+                      {/* Date */}
+                      <TableCell className="pl-5">
+                        <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                          <Clock size={11} className="text-gray-500" />
+                          {tx.date}
+                        </div>
+                      </TableCell>
+
+                      {/* Description */}
+                      <TableCell>
+                        <span className="text-sm text-gray-300">{tx.description}</span>
+                      </TableCell>
+
+                      {/* Amount */}
+                      <TableCell>
+                        <div
+                          className="flex items-center gap-1 text-sm font-bold font-bricolage"
+                          style={{ color: tx.type === 'credit' ? '#4ade80' : '#ffffff' }}
+                        >
+                          {tx.type === 'credit' ? (
+                            <ArrowDownLeft size={13} className="text-green-400" />
+                          ) : (
+                            <ArrowUpRight size={13} className="text-red-400" />
+                          )}
+                          {tx.amount}
+                        </div>
+                      </TableCell>
+
+                      {/* Type */}
+                      <TableCell>
+                        <span
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold capitalize border border-white/5"
+                          style={
+                            tx.type === 'credit'
+                              ? { background: 'rgba(34,197,94,0.15)', color: '#4ade80' }
+                              : { background: 'rgba(239,68,68,0.15)', color: '#f87171' }
+                          }
+                        >
+                          {tx.type === 'credit' ? 'Credit' : 'Debit'}
+                        </span>
+                      </TableCell>
+
+                      {/* Status */}
+                      <TableCell className="pr-5">
+                        <span
+                          className="inline-flex items-center gap-1 text-xs font-medium"
+                          style={{
+                            color:
+                              tx.status === 'completed'
+                                ? '#4ade80'
+                                : tx.status === 'pending'
+                                ? '#fbbf24'
+                                : '#f87171',
+                          }}
+                        >
+                          {tx.status === 'completed' && <CheckCircle2 size={11} />}
+                          {tx.status === 'pending' && <Clock size={11} />}
+                          <span className="capitalize">{tx.status}</span>
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </CardContent>

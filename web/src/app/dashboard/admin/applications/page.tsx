@@ -60,86 +60,7 @@ interface Application {
   niches: string[];
 }
 
-const APPLICATIONS: Application[] = [
-  {
-    id: 1,
-    name: 'Fathima Noor',
-    email: 'fathima@gmail.com',
-    handles: 'IG: @fathima.creates',
-    followers: '32,100 (IG)',
-    bio: 'Lifestyle & food content creator based in Calicut. 4 years of creating authentic Kerala cuisine content.',
-    appliedDate: 'May 15, 2026',
-    status: 'Pending',
-    location: 'Kozhikode, Kerala',
-    languages: ['Malayalam', 'English'],
-    niches: ['Food', 'Lifestyle'],
-  },
-  {
-    id: 2,
-    name: 'Krishnan Pillai',
-    email: 'krishnan@gmail.com',
-    handles: 'YT: 45K subs',
-    followers: '45,000 (YT)',
-    bio: 'Tech reviewer focusing on budget smartphones and gadgets for the South Indian market.',
-    appliedDate: 'May 14, 2026',
-    status: 'Under Review',
-    location: 'Kozhikode, Kerala',
-    languages: ['Malayalam'],
-    niches: ['Tech', 'Reviews'],
-  },
-  {
-    id: 3,
-    name: 'Sana Rashid',
-    email: 'sana@gmail.com',
-    handles: 'IG: 28K followers',
-    followers: '28,000 (IG)',
-    bio: 'Fashion & modest wear creator with strong engagement among Kerala Muslim community.',
-    appliedDate: 'May 13, 2026',
-    status: 'Identity Check',
-    location: 'Malappuram, Kerala',
-    languages: ['Malayalam', 'Urdu'],
-    niches: ['Fashion', 'Modest Wear'],
-  },
-  {
-    id: 4,
-    name: 'Thomas Mathew',
-    email: 'thomas@gmail.com',
-    handles: 'YT: 12K, IG: 8K',
-    followers: '12,000 (YT) · 8,000 (IG)',
-    bio: 'Travel vlogger covering hidden gems in Kerala and Coorg. Authentic storytelling approach.',
-    appliedDate: 'May 12, 2026',
-    status: 'Pending',
-    location: 'Thrissur, Kerala',
-    languages: ['Malayalam', 'English'],
-    niches: ['Travel', 'Vlogging'],
-  },
-  {
-    id: 5,
-    name: 'Lakshmi Devi',
-    email: 'lakshmi@gmail.com',
-    handles: 'IG: 92K followers',
-    followers: '92,000 (IG)',
-    bio: 'Yoga instructor and wellness influencer. Certified nutritionist with 6 years of content creation.',
-    appliedDate: 'May 11, 2026',
-    status: 'Under Review',
-    location: 'Kochi, Kerala',
-    languages: ['Malayalam', 'Tamil', 'English'],
-    niches: ['Wellness', 'Fitness', 'Yoga'],
-  },
-  {
-    id: 6,
-    name: 'Anish Kumar',
-    email: 'anish@gmail.com',
-    handles: 'X: 15K followers',
-    followers: '15,000 (X)',
-    bio: 'Finance educator breaking down complex investment topics for Kerala millennials.',
-    appliedDate: 'May 10, 2026',
-    status: 'Pending',
-    location: 'Kozhikode, Kerala',
-    languages: ['Malayalam', 'English'],
-    niches: ['Finance', 'Education'],
-  },
-];
+const APPLICATIONS: Application[] = [];
 
 const STATUS_CONFIG: Record<AppStatus, { bg: string; color: string; label: string }> = {
   Pending: { bg: 'rgba(255,255,255,0.05)', color: '#9ca3af', label: 'Pending' },
@@ -455,13 +376,20 @@ export default function ApplicationsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {APPLICATIONS.map((app) => {
-                const sc = STATUS_CONFIG[app.status];
-                return (
-                  <TableRow
-                    key={app.id}
-                    className="border-white/5 hover:bg-white/[0.02] transition-colors"
-                  >
+              {APPLICATIONS.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-gray-400 text-sm">
+                    No applications found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                APPLICATIONS.map((app) => {
+                  const sc = STATUS_CONFIG[app.status];
+                  return (
+                    <TableRow
+                      key={app.id}
+                      className="border-white/5 hover:bg-white/[0.02] transition-colors"
+                    >
                     <TableCell className="pl-6">
                       <div className="flex items-center gap-2.5">
                         <div
@@ -545,7 +473,8 @@ export default function ApplicationsPage() {
                     </TableCell>
                   </TableRow>
                 );
-              })}
+              })
+              )}
             </TableBody>
           </Table>
 

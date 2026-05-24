@@ -31,30 +31,30 @@ const BG = '#F8F7F4';
 const STATS = [
   {
     label: 'Total Followers',
-    value: '2,84,500',
+    value: '0',
     icon: Users,
-    delta: '+3.2% this month',
+    delta: '0% this month',
     positive: true,
   },
   {
     label: 'Active Deals',
-    value: '3',
+    value: '0',
     icon: Briefcase,
-    delta: '2 pending deliverables',
+    delta: 'No pending deliverables',
     positive: true,
   },
   {
     label: 'Pending Earnings',
-    value: '₹45,200',
+    value: '₹0',
     icon: DollarSign,
-    delta: 'Release in 7 days',
+    delta: 'No pending release',
     positive: false,
   },
   {
     label: 'Trust Index',
-    value: '87/100',
+    value: '0/100',
     icon: Star,
-    delta: '+5 pts last 30 days',
+    delta: 'No changes',
     positive: true,
   },
 ];
@@ -104,38 +104,7 @@ const QUICK_LINKS = [
   },
 ];
 
-const ACTIVITY = [
-  {
-    icon: CheckCircle2,
-    color: '#22c55e',
-    text: 'Deal approved — Malabar Gold "Kerala Onam Campaign"',
-    time: '2 hours ago',
-  },
-  {
-    icon: Users,
-    color: GOLD,
-    text: 'Milestone reached — 1,42,000 followers on Instagram',
-    time: '1 day ago',
-  },
-  {
-    icon: DollarSign,
-    color: '#22c55e',
-    text: 'Payment released — KFC India campaign ₹1,20,000',
-    time: '3 days ago',
-  },
-  {
-    icon: Bell,
-    color: '#3b82f6',
-    text: 'New campaign match — Ather Energy "EV Awareness"',
-    time: '4 days ago',
-  },
-  {
-    icon: TrendingUp,
-    color: GOLD,
-    text: 'Trust Index updated — scored 87/100 after peer reviews',
-    time: '6 days ago',
-  },
-];
+const ACTIVITY: any[] = [];
 
 /* ------------------------------------------------------------------ */
 /* Page                                                                  */
@@ -150,7 +119,7 @@ export default function CreatorOverviewPage() {
           <h1
             className="text-2xl font-bold tracking-tight text-white font-bricolage"
           >
-            Welcome back, Arjun 👋
+            Welcome back 👋
           </h1>
           <p className="text-sm mt-1 text-gray-400">
             Here&apos;s a snapshot of your creator activity today.
@@ -159,7 +128,7 @@ export default function CreatorOverviewPage() {
         <Badge
           className="text-xs px-3 py-1 font-semibold bg-[#C9A84C]/12 text-[#C9A84C] border border-[#C9A84C]/30"
         >
-          Creator · Arjun Menon
+          Creator Account
         </Badge>
       </div>
 
@@ -249,27 +218,33 @@ export default function CreatorOverviewPage() {
           }}
         >
           <CardContent className="py-2 divide-y divide-white/5">
-            {ACTIVITY.map(({ icon: Icon, color, text, time }, i) => (
-              <div key={i} className="flex items-start gap-3 py-3">
-                <div
-                  className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 mt-0.5 border"
-                  style={{
-                    background: `${color}18`,
-                    borderColor: `${color}35`,
-                  }}
-                >
-                  <Icon size={14} style={{ color }} />
+            {ACTIVITY.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-6">
+                No recent activity found.
+              </p>
+            ) : (
+              ACTIVITY.map(({ icon: Icon, color, text, time }, i) => (
+                <div key={i} className="flex items-start gap-3 py-3">
+                  <div
+                    className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 mt-0.5 border"
+                    style={{
+                      background: `${color}18`,
+                      borderColor: `${color}35`,
+                    }}
+                  >
+                    <Icon size={14} style={{ color }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white">
+                      {text}
+                    </p>
+                    <p className="text-xs mt-0.5 text-gray-500">
+                      {time}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white">
-                    {text}
-                  </p>
-                  <p className="text-xs mt-0.5 text-gray-500">
-                    {time}
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
       </div>

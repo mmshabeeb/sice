@@ -46,14 +46,7 @@ interface CreatorItem {
   status: 'verified' | 'pending' | 'suspended';
 }
 
-const INITIAL_CREATORS: CreatorItem[] = [
-  { uid: 'cr-1', name: 'Arjun Menon', niche: 'Tech & Lifestyle', platform: 'YouTube', followers: '145K', engagement: '4.8%', trustScore: 92, chapter: 'Kochi', status: 'verified' },
-  { uid: 'cr-2', name: 'Fathima Noor', niche: 'Travel & Food', platform: 'Instagram', followers: '88K', engagement: '5.6%', trustScore: 89, chapter: 'Kozhikode', status: 'verified' },
-  { uid: 'cr-3', name: 'Rohan Sharma', niche: 'Finance & Career', platform: 'LinkedIn', followers: '34K', engagement: '3.9%', trustScore: 78, chapter: 'Bangalore East', status: 'pending' },
-  { uid: 'cr-4', name: 'Meera Pillai', niche: 'Fashion & Beauty', platform: 'Instagram', followers: '220K', engagement: '6.1%', trustScore: 95, chapter: 'Kozhikode', status: 'verified' },
-  { uid: 'cr-5', name: 'Vikram Seth', niche: 'Photography', platform: 'Instagram', followers: '12K', engagement: '8.4%', trustScore: 64, chapter: 'Chennai Central', status: 'pending' },
-  { uid: 'cr-6', name: 'Devika Nair', niche: 'Automotive & EVs', platform: 'YouTube', followers: '75K', engagement: '4.2%', trustScore: 82, chapter: 'Kochi', status: 'suspended' },
-];
+const INITIAL_CREATORS: CreatorItem[] = [];
 
 const CHAPTERS_LIST = [
   'All Chapters',
@@ -189,129 +182,137 @@ export default function SuperAdminCreators() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCreators.map((cr) => {
-                  const scoreColor = cr.trustScore >= 85 ? 'text-emerald-400' : cr.trustScore >= 70 ? 'text-amber-400' : 'text-rose-400';
-                  return (
-                    <TableRow
-                      key={cr.uid}
-                      style={{ borderColor: 'rgba(240,235,224,0.04)' }}
-                      className="hover:bg-white/[0.01] transition-colors"
-                    >
-                      {/* Avatar & Name */}
-                      <TableCell className="pl-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-bold text-xs"
-                            style={{
-                              background: 'rgba(201,168,76,0.12)',
-                              border: '1px solid rgba(201,168,76,0.25)',
-                              color: GOLD,
-                            }}
-                          >
-                            {cr.name.split(' ').map((n) => n[0]).join('')}
+                {filteredCreators.length === 0 ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-sm">
+                      No creators found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredCreators.map((cr) => {
+                    const scoreColor = cr.trustScore >= 85 ? 'text-emerald-400' : cr.trustScore >= 70 ? 'text-amber-400' : 'text-rose-400';
+                    return (
+                      <TableRow
+                        key={cr.uid}
+                        style={{ borderColor: 'rgba(240,235,224,0.04)' }}
+                        className="hover:bg-white/[0.01] transition-colors"
+                      >
+                        {/* Avatar & Name */}
+                        <TableCell className="pl-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-bold text-xs"
+                              style={{
+                                background: 'rgba(201,168,76,0.12)',
+                                border: '1px solid rgba(201,168,76,0.25)',
+                                color: GOLD,
+                              }}
+                            >
+                              {cr.name.split(' ').map((n) => n[0]).join('')}
+                            </div>
+                            <div>
+                              <span className="font-semibold text-sm text-[#F0EBE0] font-bricolage block">
+                                {cr.name}
+                              </span>
+                              <span className="text-[10px] text-gray-400">
+                                {cr.niche}
+                              </span>
+                            </div>
                           </div>
-                          <div>
-                            <span className="font-semibold text-sm text-[#F0EBE0] font-bricolage block">
-                              {cr.name}
+                        </TableCell>
+
+                        {/* Reach & Platform */}
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="text-xs text-gray-200 font-bold font-mono">
+                              {cr.followers} Followers
                             </span>
-                            <span className="text-[10px] text-gray-400">
-                              {cr.niche}
+                            <span className="text-[10px] text-gray-500 flex items-center gap-1.5 mt-0.5">
+                              <Globe size={10} />
+                              {cr.platform} (Eng. Rate: {cr.engagement})
                             </span>
                           </div>
-                        </div>
-                      </TableCell>
+                        </TableCell>
 
-                      {/* Reach & Platform */}
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-gray-200 font-bold font-mono">
-                            {cr.followers} Followers
-                          </span>
-                          <span className="text-[10px] text-gray-500 flex items-center gap-1.5 mt-0.5">
-                            <Globe size={10} />
-                            {cr.platform} (Eng. Rate: {cr.engagement})
-                          </span>
-                        </div>
-                      </TableCell>
-
-                      {/* Trust index score */}
-                      <TableCell className="text-center">
-                        <div className="inline-flex flex-col items-center">
-                          <span className={`text-sm font-bold font-mono ${scoreColor}`}>
-                            {cr.trustScore}%
-                          </span>
-                          <div className="flex gap-0.5 mt-0.5">
-                            {[1, 2, 3].map((s) => (
-                              <Star key={s} size={8} className="fill-amber-400 text-amber-400 shrink-0" />
-                            ))}
+                        {/* Trust index score */}
+                        <TableCell className="text-center">
+                          <div className="inline-flex flex-col items-center">
+                            <span className={`text-sm font-bold font-mono ${scoreColor}`}>
+                              {cr.trustScore}%
+                            </span>
+                            <div className="flex gap-0.5 mt-0.5">
+                              {[1, 2, 3].map((s) => (
+                                <Star key={s} size={8} className="fill-amber-400 text-amber-400 shrink-0" />
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      </TableCell>
+                        </TableCell>
 
-                      {/* Chapter */}
-                      <TableCell>
-                        <div className="flex items-center gap-1.5 text-xs text-gray-300">
-                          <MapPin size={11} style={{ color: GOLD }} />
-                          <span>{cr.chapter}</span>
-                        </div>
-                      </TableCell>
+                        {/* Chapter */}
+                        <TableCell>
+                          <div className="flex items-center gap-1.5 text-xs text-gray-300">
+                            <MapPin size={11} style={{ color: GOLD }} />
+                            <span>{cr.chapter}</span>
+                          </div>
+                        </TableCell>
 
-                      {/* Compliance Status badge */}
-                      <TableCell className="text-center">
-                        <Badge
-                          variant="secondary"
-                          className={`text-[9px] font-bold px-2 py-0.5 rounded ${
-                            cr.status === 'verified'
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                              : cr.status === 'pending'
-                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                              : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                          }`}
-                        >
-                          {cr.status.toUpperCase()}
-                        </Badge>
-                      </TableCell>
-
-                      {/* Actions */}
-                      <TableCell className="pr-6 text-right py-4">
-                        <div className="flex items-center justify-end gap-3 text-xs">
-                          <button
-                            onClick={() => openChapterTransfer(cr.uid)}
-                            className="text-gray-400 hover:text-[#C9A84C] hover:underline"
-                          >
-                            Transfer Chapter
-                          </button>
-                          
-                          {/* Toggle Suspend */}
-                          <button
-                            onClick={() => toggleSuspend(cr.uid)}
-                            className={`p-1.5 rounded-lg border transition-all ${
-                              cr.status === 'suspended'
-                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
-                                : 'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/20'
-                            }`}
-                            title={cr.status === 'suspended' ? 'Re-activate Account' : 'Suspend Account'}
-                          >
-                            {cr.status === 'suspended' ? <UserCheck size={14} /> : <Ban size={14} />}
-                          </button>
-
-                          {/* Verify Toggle */}
-                          <button
-                            onClick={() => toggleVerification(cr.uid)}
-                            className={`p-1.5 rounded-lg border transition-all ${
+                        {/* Compliance Status badge */}
+                        <TableCell className="text-center">
+                          <Badge
+                            variant="secondary"
+                            className={`text-[9px] font-bold px-2 py-0.5 rounded ${
                               cr.status === 'verified'
-                                ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
-                                : 'bg-[#C9A84C]/10 border-[#C9A84C]/20 text-[#C9A84C] hover:bg-[#C9A84C]/20'
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : cr.status === 'pending'
+                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                             }`}
-                            title={cr.status === 'verified' ? 'Revoke Verification' : 'Verify Creator'}
                           >
-                            <Award size={14} />
-                          </button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                            {cr.status.toUpperCase()}
+                          </Badge>
+                        </TableCell>
+
+                        {/* Actions */}
+                        <TableCell className="pr-6 text-right py-4">
+                          <div className="flex items-center justify-end gap-3 text-xs">
+                            <button
+                              onClick={() => openChapterTransfer(cr.uid)}
+                              className="text-gray-400 hover:text-[#C9A84C] hover:underline"
+                            >
+                              Transfer Chapter
+                            </button>
+                            
+                            {/* Toggle Suspend */}
+                            <button
+                              onClick={() => toggleSuspend(cr.uid)}
+                              className={`p-1.5 rounded-lg border transition-all ${
+                                cr.status === 'suspended'
+                                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
+                                  : 'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/20'
+                              }`}
+                              title={cr.status === 'suspended' ? 'Re-activate Account' : 'Suspend Account'}
+                            >
+                              {cr.status === 'suspended' ? <UserCheck size={14} /> : <Ban size={14} />}
+                            </button>
+
+                            {/* Verify Toggle */}
+                            <button
+                              onClick={() => toggleVerification(cr.uid)}
+                              className={`p-1.5 rounded-lg border transition-all ${
+                                cr.status === 'verified'
+                                  ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
+                                  : 'bg-[#C9A84C]/10 border-[#C9A84C]/20 text-[#C9A84C] hover:bg-[#C9A84C]/20'
+                              }`}
+                              title={cr.status === 'verified' ? 'Revoke Verification' : 'Verify Creator'}
+                            >
+                              <Award size={14} />
+                            </button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
               </TableBody>
             </Table>
           </div>

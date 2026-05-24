@@ -58,32 +58,7 @@ interface Campaign {
   deadline: string;
 }
 
-const INITIAL_CAMPAIGNS: Campaign[] = [
-  {
-    id: 1,
-    title: 'Kerala Onam Campaign',
-    status: 'Active',
-    budget: '₹85,000',
-    applications: 12,
-    deadline: 'Jun 15, 2025',
-  },
-  {
-    id: 2,
-    title: 'South India Launch Series',
-    status: 'Active',
-    budget: '₹1,20,000',
-    applications: 8,
-    deadline: 'Jun 30, 2025',
-  },
-  {
-    id: 3,
-    title: 'Festive Creator Program',
-    status: 'Draft',
-    budget: '₹95,000',
-    applications: 0,
-    deadline: 'Jul 10, 2025',
-  },
-];
+const INITIAL_CAMPAIGNS: Campaign[] = [];
 
 const STATUS_STYLES: Record<CampaignStatus, { bg: string; color: string }> = {
   Active: { bg: 'rgba(34,197,94,0.15)', color: '#4ade80' },
