@@ -464,11 +464,11 @@
   },
   {
     "route": "/login",
-    "firstLoadUncompressedJsBytes": 995742,
+    "firstLoadUncompressedJsBytes": 996286,
     "firstLoadChunkPaths": [
       ".next\\static\\chunks\\16oq79q4m6et7.js",
       ".next\\static\\chunks\\04pq2d-9jfn_h.js",
-      ".next\\static\\chunks\\13x.1_k4b_n12.js",
+      ".next\\static\\chunks\\08qk7z-61p.0m.js",
       ".next\\static\\chunks\\174vzhv462kfu.js",
       ".next\\static\\chunks\\0k-77mo_xi6yz.js",
       ".next\\static\\chunks\\0d4pvw.cxktw3.js",
