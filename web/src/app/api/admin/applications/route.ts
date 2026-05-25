@@ -255,6 +255,30 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { action, id, status, chapter, name, city, state, adminName } = body;
 
+    if (action === 'create_creator') {
+      const { email, full_name, platform, followers, niche, chapter: creatorChapter, instagram_url, instagram_followers } = body;
+      if (!email || !full_name) {
+        return NextResponse.json({ error: 'Missing email or full_name' }, { status: 400 });
+      }
+      // Create in the 'applications' collection as an approved creator (same collection the super_admin query reads from)
+      const docId = `manual-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      await adminDb.collection('applications').doc(docId).set({
+        application_type: 'creator',
+        full_name,
+        email,
+        instagram_url: instagram_url || '',
+        instagram_followers: instagram_followers || followers || '0',
+        niches: niche ? [niche] : ['General'],
+        chapter: creatorChapter || 'Kozhikode',
+        status: 'Approved',
+        trust_index: 88,
+        engagement_rate: '4.2%',
+        submitted_at: new Date(),
+        created_manually: true,
+      });
+      return NextResponse.json({ success: true });
+    }
+
     if (action === 'create_chapter') {
       const chapterId = name.toLowerCase().trim().replace(/\s+/g, '-');
       await adminDb.collection('chapters').doc(chapterId).set({

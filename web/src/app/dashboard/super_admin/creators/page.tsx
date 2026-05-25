@@ -16,6 +16,8 @@ import {
   AlertCircle,
   X,
   Check,
+  Plus,
+  UserPlus,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -64,6 +66,42 @@ export default function SuperAdminCreators() {
   
   const [isChapterModalOpen, setIsChapterModalOpen] = useState(false);
   const [selectedCreatorUid, setSelectedCreatorUid] = useState<string | null>(null);
+
+  // Create Creator modal state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    full_name: '',
+    email: '',
+    instagram_url: '',
+    instagram_followers: '',
+    niche: '',
+    chapter: 'Kozhikode',
+  });
+  const [createLoading, setCreateLoading] = useState(false);
+
+  const handleCreateCreator = async () => {
+    if (!createForm.full_name || !createForm.email) return;
+    setCreateLoading(true);
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create_creator',
+          ...createForm,
+        }),
+      });
+      if (res.ok) {
+        setIsCreateModalOpen(false);
+        setCreateForm({ full_name: '', email: '', instagram_url: '', instagram_followers: '', niche: '', chapter: 'Kozhikode' });
+        fetchCreators();
+      }
+    } catch (err) {
+      console.error('Failed to create creator:', err);
+    } finally {
+      setCreateLoading(false);
+    }
+  };
 
   const fetchCreators = async () => {
     try {
@@ -153,13 +191,27 @@ export default function SuperAdminCreators() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-white font-bricolage">
-          Creator Directory & Compliance
-        </h1>
-        <p className="text-sm text-gray-400">
-          Verify digital credentials, audit engagement trust indices, and adjust regional assignments.
-        </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-white font-bricolage">
+            Creator Directory & Compliance
+          </h1>
+          <p className="text-sm text-gray-400">
+            Verify digital credentials, audit engagement trust indices, and adjust regional assignments.
+          </p>
+        </div>
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all"
+          style={{
+            background: 'linear-gradient(135deg, #C9A84C 0%, #a88a3a 100%)',
+            color: '#080D26',
+            boxShadow: '0 2px 12px rgba(201, 168, 76, 0.25)',
+          }}
+        >
+          <UserPlus size={14} />
+          Create Creator
+        </button>
       </div>
 
       {/* Roster Controls */}
@@ -403,6 +455,154 @@ export default function SuperAdminCreators() {
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CREATE CREATOR MODAL */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div
+            className="w-full max-w-md rounded-2xl border-0 p-6 space-y-5"
+            style={{
+              background: '#080D26',
+              border: '1px solid rgba(240, 235, 224, 0.15)',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+            }}
+          >
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div
+                  className="p-2 rounded-xl"
+                  style={{
+                    background: 'rgba(201, 168, 76, 0.10)',
+                    border: '1px solid rgba(201, 168, 76, 0.20)',
+                  }}
+                >
+                  <UserPlus size={16} style={{ color: GOLD }} />
+                </div>
+                <h3 className="text-base font-bold text-white font-bricolage">
+                  Create New Creator
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-400">
+              Manually onboard a creator to the platform. They will be added as a verified creator immediately.
+            </p>
+
+            <div className="space-y-3">
+              {/* Full Name */}
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Full Name *</label>
+                <input
+                  type="text"
+                  value={createForm.full_name}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, full_name: e.target.value }))}
+                  placeholder="e.g. Shabeeb Muhammed"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-gray-600"
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Email Address *</label>
+                <input
+                  type="email"
+                  value={createForm.email}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="e.g. creator@example.com"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-gray-600"
+                />
+              </div>
+
+              {/* Instagram URL */}
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Instagram URL</label>
+                <input
+                  type="url"
+                  value={createForm.instagram_url}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, instagram_url: e.target.value }))}
+                  placeholder="e.g. https://instagram.com/username"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-gray-600"
+                />
+              </div>
+
+              {/* Followers + Niche row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Followers</label>
+                  <input
+                    type="text"
+                    value={createForm.instagram_followers}
+                    onChange={(e) => setCreateForm(prev => ({ ...prev, instagram_followers: e.target.value }))}
+                    placeholder="e.g. 10K"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-gray-600"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Niche</label>
+                  <input
+                    type="text"
+                    value={createForm.niche}
+                    onChange={(e) => setCreateForm(prev => ({ ...prev, niche: e.target.value }))}
+                    placeholder="e.g. Food, Travel"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-gray-600"
+                  />
+                </div>
+              </div>
+
+              {/* Chapter */}
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Assign Chapter</label>
+                <select
+                  value={createForm.chapter}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, chapter: e.target.value }))}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500/50 transition-colors cursor-pointer"
+                  style={{ colorScheme: 'dark' }}
+                >
+                  {CHAPTERS_LIST.filter((ch) => ch !== 'All Chapters').map((ch) => (
+                    <option key={ch} value={ch} style={{ background: '#080D26' }}>
+                      {ch}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="flex-1 py-2.5 rounded-xl text-xs font-medium text-gray-400 border border-white/10 hover:bg-white/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateCreator}
+                disabled={createLoading || !createForm.full_name || !createForm.email}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                style={{
+                  background: 'linear-gradient(135deg, #C9A84C 0%, #a88a3a 100%)',
+                  color: '#080D26',
+                }}
+              >
+                {createLoading ? (
+                  <span className="animate-pulse">Creating...</span>
+                ) : (
+                  <>
+                    <Plus size={14} />
+                    Create Creator
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
