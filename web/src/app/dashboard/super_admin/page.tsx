@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   BarChart,
   Bar,
@@ -28,6 +28,8 @@ import {
   Clock,
   CheckCircle2,
   Award,
+  UserPlus,
+  Building,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -77,20 +79,170 @@ const KPI = [
 
 const GPV_TREND: { month: string; gpv: number }[] = [];
 
-const CHAPTER_GPV: { name: string; gpv: number; creators: number }[] = [];
-
-const PLATFORM_DIST: { name: string; value: number }[] = [];
-
-const SYSTEM_LOGS: {
-  id: number;
-  type: string;
-  text: string;
-  time: string;
-  icon: any;
-  color: string;
-}[] = [];
-
 export default function SuperAdminOverview() {
+  const [creatorsCount, setCreatorsCount] = useState(0);
+  const [pendingCreatorsCount, setPendingCreatorsCount] = useState(0);
+  const [chaptersCount, setChaptersCount] = useState(0);
+  const [pendingChaptersCount, setPendingChaptersCount] = useState(0);
+  const [merchantsCount, setMerchantsCount] = useState(0);
+  const [platformDist, setPlatformDist] = useState<{ name: string; value: number }[]>([]);
+  const [chapterGpv, setChapterGpv] = useState<{ name: string; gpv: number; creators: number }[]>([]);
+  const [systemLogs, setSystemLogs] = useState<{ id: number; type: string; text: string; time: string; color: string }[]>([]);
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        // 1. Fetch Creator applications for stats and platform distribution
+        const cRes = await fetch('/api/admin/applications?type=super_admin');
+        let rawCreators: any[] = [];
+        if (cRes.ok) {
+          const cData = await cRes.json();
+          if (cData.success) {
+            rawCreators = cData.creators || [];
+            const verified = rawCreators.filter((c: any) => c.status === 'verified').length;
+            const pending = rawCreators.filter((c: any) => c.status === 'pending').length;
+            setCreatorsCount(verified);
+            setPendingCreatorsCount(pending);
+
+            // Compute platform distribution
+            const platCounts: Record<string, number> = {};
+            rawCreators.forEach((c: any) => {
+              const p = c.platform || 'Instagram';
+              platCounts[p] = (platCounts[p] || 0) + 1;
+            });
+            const dist = Object.keys(platCounts).map(name => ({
+              name,
+              value: platCounts[name]
+            })).filter(d => d.value > 0);
+            setPlatformDist(dist);
+          }
+        }
+
+        // 2. Fetch Chapter applications count
+        const chAppRes = await fetch('/api/admin/applications?type=chapter_applications');
+        let rawChapterApps: any[] = [];
+        if (chAppRes.ok) {
+          const chAppData = await chAppRes.json();
+          if (chAppData.success) {
+            rawChapterApps = chAppData.applications || [];
+            const pendingCh = rawChapterApps.filter((a: any) => a.status === 'Pending').length;
+            setPendingChaptersCount(pendingCh);
+          }
+        }
+
+        // 3. Fetch active Chapters
+        const chRes = await fetch('/api/admin/applications?type=chapters');
+        if (chRes.ok) {
+          const chData = await chRes.json();
+          if (chData.success) {
+            const list = chData.chapters || [];
+            setChaptersCount(list.length);
+            
+            // Map chapters to performance chart (using creators count as proxy for activity)
+            const gpvData = list.map((ch: any) => ({
+              name: ch.name,
+              gpv: (ch.creatorsCount || 0) * 150000, 
+              creators: ch.creatorsCount || 0
+            }));
+            setChapterGpv(gpvData);
+          }
+        }
+
+        // 4. Fetch Merchants
+        const mRes = await fetch('/api/admin/applications?type=merchants');
+        if (mRes.ok) {
+          const mData = await mRes.json();
+          if (mData.success) {
+            setMerchantsCount((mData.merchants || []).length);
+          }
+        }
+
+        // 5. Fetch Creator applications detailed queue for Global Activity Stream
+        const cAppRes = await fetch('/api/admin/applications?type=applications');
+        let rawCreatorApps: any[] = [];
+        if (cAppRes.ok) {
+          const cAppData = await cAppRes.json();
+          if (cAppData.success) {
+            rawCreatorApps = cAppData.applications || [];
+          }
+        }
+
+        // 6. Build activity stream from pending applications
+        const logs: any[] = [];
+        let logId = 1;
+
+        // Add pending creator applications to logs
+        rawCreatorApps.filter((a: any) => a.status === 'Pending' || a.status === 'Under Review').forEach((a: any) => {
+          logs.push({
+            id: logId++,
+            type: 'creator_app',
+            text: `New creator application: ${a.name} (${a.handles})`,
+            time: a.appliedDate || 'Recent',
+            color: GOLD,
+          });
+        });
+
+        // Add pending chapter applications to logs
+        rawChapterApps.filter((a: any) => a.status === 'Pending').forEach((a: any) => {
+          logs.push({
+            id: logId++,
+            type: 'chapter_app',
+            text: `Proposed chapter organizer: ${a.name} requested role ${a.chapterRole} for "${a.chapterName}"`,
+            time: a.appliedDate || 'Recent',
+            color: '#818cf8',
+          });
+        });
+
+        // Add approved ones as recent achievements
+        rawCreatorApps.filter((a: any) => a.status === 'Approved').slice(0, 3).forEach((a: any) => {
+          logs.push({
+            id: logId++,
+            type: 'creator_approved',
+            text: `Creator onboarding completed: ${a.name} is now active`,
+            time: a.appliedDate || 'Approved',
+            color: '#34d399',
+          });
+        });
+
+        setSystemLogs(logs.slice(0, 10)); 
+      } catch (err) {
+        console.error('Failed to load super admin stats:', err);
+      }
+    }
+    loadStats();
+  }, []);
+
+  const dynamicKPI = [
+    {
+      label: 'Gross Platform Volume',
+      value: '₹0.00 Cr',
+      icon: TrendingUp,
+      sub: '0% vs last quarter',
+      positive: true,
+    },
+    {
+      label: 'Total Chapters',
+      value: String(chaptersCount),
+      icon: Map,
+      sub: `${chaptersCount} Active (${pendingChaptersCount} pending)`,
+      positive: true,
+    },
+    {
+      label: 'Platform Creators',
+      value: String(creatorsCount),
+      icon: Users,
+      sub: `${creatorsCount} Onboarded (${pendingCreatorsCount} pending)`,
+      positive: true,
+    },
+    {
+      label: 'Registered Brands',
+      value: String(merchantsCount),
+      icon: Store,
+      sub: `${merchantsCount} Active brands`,
+      positive: true,
+    },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -108,14 +260,14 @@ export default function SuperAdminOverview() {
             variant="outline"
             className="border-amber-500/30 text-amber-400 bg-amber-500/5 px-3 py-1 text-xs"
           >
-            Offline Demo Mode
+            Live Monitor Mode
           </Badge>
         </div>
       </div>
 
       {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {KPI.map((kpi) => {
+        {dynamicKPI.map((kpi) => {
           const Icon = kpi.icon;
           return (
             <Card
@@ -245,7 +397,7 @@ export default function SuperAdminOverview() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={PLATFORM_DIST}
+                    data={platformDist}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -253,7 +405,7 @@ export default function SuperAdminOverview() {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {PLATFORM_DIST.map((entry, index) => (
+                    {platformDist.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                     ))}
                   </Pie>
@@ -269,7 +421,7 @@ export default function SuperAdminOverview() {
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-2xl font-bold text-white font-bricolage">
-                  {PLATFORM_DIST.reduce((sum, item) => sum + item.value, 0)}
+                  {platformDist.reduce((sum, item) => sum + item.value, 0)}
                 </span>
                 <span className="text-[10px] uppercase tracking-wider text-gray-400">Total</span>
               </div>
@@ -277,7 +429,7 @@ export default function SuperAdminOverview() {
 
             {/* Legend breakdown */}
             <div className="grid grid-cols-2 gap-2 mt-4 text-xs">
-              {PLATFORM_DIST.map((item, idx) => (
+              {platformDist.map((item, idx) => (
                 <div key={item.name} className="flex items-center gap-2">
                   <div
                     className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -309,7 +461,7 @@ export default function SuperAdminOverview() {
           <CardContent>
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={CHAPTER_GPV}>
+                <BarChart data={chapterGpv}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(240,235,224,0.05)" vertical={false} />
                   <XAxis
                     dataKey="name"
@@ -357,14 +509,14 @@ export default function SuperAdminOverview() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {SYSTEM_LOGS.length === 0 ? (
+              {systemLogs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-gray-500 text-center">
                   <Clock size={24} className="mb-2 opacity-40" />
                   <p className="text-xs">No activity logged yet.</p>
                 </div>
               ) : (
-                SYSTEM_LOGS.map((log) => {
-                  const Icon = log.icon;
+                systemLogs.map((log) => {
+                  const Icon = log.type === 'creator_app' ? UserPlus : log.type === 'chapter_app' ? Building : CheckCircle2;
                   return (
                     <div key={log.id} className="flex gap-3 text-xs leading-normal">
                       <div

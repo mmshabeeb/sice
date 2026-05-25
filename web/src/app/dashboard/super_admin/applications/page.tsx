@@ -11,6 +11,9 @@ import {
   UserCheck,
   UserX,
   Info,
+  Building,
+  MapPin,
+  Map,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -32,17 +35,11 @@ import {
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 
-/* ------------------------------------------------------------------ */
-/* Constants / Helpers                                                    */
-/* ------------------------------------------------------------------ */
-
 const GOLD = '#C9A84C';
-const INDIGO = '#080D26';
-const BG = '#F8F7F4';
 
 type AppStatus = 'Pending' | 'Under Review' | 'Identity Check' | 'Approved' | 'Rejected';
 
-interface Application {
+interface CreatorApplication {
   id: string;
   name: string;
   email: string;
@@ -55,7 +52,6 @@ interface Application {
   languages: string[];
   niches: string[];
   
-  // Raw values for editing
   raw_full_name?: string;
   raw_email?: string;
   raw_location?: string;
@@ -70,6 +66,21 @@ interface Application {
   raw_facebook_followers?: string;
   raw_linkedin_url?: string;
   raw_linkedin_followers?: string;
+}
+
+interface ChapterApplication {
+  id: string;
+  name: string;
+  email: string;
+  contactNumber: string;
+  whatsappNumber: string;
+  chapterName: string;
+  customChapterName: string | null;
+  chapterRole: string;
+  chapterProfileUrl: string;
+  bio: string;
+  status: AppStatus;
+  appliedDate: string;
 }
 
 const STATUS_CONFIG: Record<AppStatus, { bg: string; color: string; label: string }> = {
@@ -89,10 +100,6 @@ function extractHandle(url: string): string {
     return url;
   }
 }
-
-/* ------------------------------------------------------------------ */
-/* Stat card                                                              */
-/* ------------------------------------------------------------------ */
 
 function StatCard({
   icon: Icon,
@@ -123,14 +130,8 @@ function StatCard({
           <Icon size={18} style={{ color: iconColor }} />
         </div>
         <div>
-          <div
-            className="text-xl font-bold text-[#F0EBE0] font-bricolage"
-          >
-            {value}
-          </div>
-          <div className="text-xs text-gray-400">
-            {label}
-          </div>
+          <div className="text-xl font-bold text-[#F0EBE0] font-bricolage">{value}</div>
+          <div className="text-xs text-gray-400">{label}</div>
         </div>
       </CardContent>
     </Card>
@@ -138,10 +139,9 @@ function StatCard({
 }
 
 /* ------------------------------------------------------------------ */
-/* Review Dialog                                                          */
+/* Review Dialog for Creator Applications                             */
 /* ------------------------------------------------------------------ */
-
-function ReviewDialog({
+function CreatorReviewDialog({
   app,
   open,
   onOpenChange,
@@ -149,7 +149,7 @@ function ReviewDialog({
   onReject,
   onSaveDetails,
 }: {
-  app: Application;
+  app: CreatorApplication;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onApprove: (id: string) => void;
@@ -160,7 +160,6 @@ function ReviewDialog({
   const [idCheckResult, setIdCheckResult] = useState<string | null>(null);
   const [isRunningCheck, setIsRunningCheck] = useState(false);
 
-  // Form states for edit mode
   const [name, setName] = useState(app.raw_full_name || app.name);
   const [email, setEmail] = useState(app.raw_email || app.email);
   const [location, setLocation] = useState(app.raw_location || app.location);
@@ -177,7 +176,6 @@ function ReviewDialog({
   const [linkedinUrl, setLinkedinUrl] = useState(app.raw_linkedin_url || '');
   const [linkedinFollowers, setLinkedinFollowers] = useState(app.raw_linkedin_followers || '');
 
-  // Reset form states when app changes
   useEffect(() => {
     setName(app.raw_full_name || app.name);
     setEmail(app.raw_email || app.email);
@@ -228,15 +226,10 @@ function ReviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-lg text-white border-white/10 bg-slate-950"
-        style={{
-          borderRadius: '16px',
-        }}
-      >
+      <DialogContent className="sm:max-w-lg text-white border-white/10 bg-slate-950 rounded-2xl">
         <DialogHeader className="flex flex-row items-center justify-between pr-8">
           <DialogTitle className="text-white font-bricolage">
-            Application — {isEditing ? 'Edit Details' : app.name}
+            Creator Application — {isEditing ? 'Edit Details' : app.name}
           </DialogTitle>
           <Button
             size="sm"
@@ -251,7 +244,6 @@ function ReviewDialog({
         <div className="space-y-4 text-sm mt-4 max-h-[60vh] overflow-y-auto pr-1">
           {isEditing ? (
             <div className="space-y-3.5">
-              {/* Name & Email */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs text-gray-400">Full Name</label>
@@ -273,7 +265,6 @@ function ReviewDialog({
                 </div>
               </div>
 
-              {/* Location */}
               <div className="flex flex-col gap-1">
                 <label className="text-xs text-gray-400">Location</label>
                 <input
@@ -284,7 +275,6 @@ function ReviewDialog({
                 />
               </div>
 
-              {/* Statement of Purpose / Bio */}
               <div className="flex flex-col gap-1">
                 <label className="text-xs text-gray-400">Creator Bio / SOP</label>
                 <textarea
@@ -298,7 +288,6 @@ function ReviewDialog({
               <Separator className="bg-white/10" />
               <p className="text-xs font-semibold text-amber-400">Social Handles & Followers Count</p>
 
-              {/* Instagram URL & Followers */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs text-gray-400">Instagram URL</label>
@@ -306,7 +295,6 @@ function ReviewDialog({
                     type="text"
                     value={instagramUrl}
                     onChange={(e) => setInstagramUrl(e.target.value)}
-                    placeholder="https://instagram.com/username"
                     className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500/50"
                   />
                 </div>
@@ -316,13 +304,11 @@ function ReviewDialog({
                     type="text"
                     value={instagramFollowers}
                     onChange={(e) => setInstagramFollowers(e.target.value)}
-                    placeholder="Followers count"
                     className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500/50"
                   />
                 </div>
               </div>
 
-              {/* X URL & Followers */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs text-gray-400">X (Twitter) URL</label>
@@ -330,7 +316,6 @@ function ReviewDialog({
                     type="text"
                     value={xUrl}
                     onChange={(e) => setXUrl(e.target.value)}
-                    placeholder="https://x.com/username"
                     className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500/50"
                   />
                 </div>
@@ -340,13 +325,11 @@ function ReviewDialog({
                     type="text"
                     value={xFollowers}
                     onChange={(e) => setXFollowers(e.target.value)}
-                    placeholder="Followers count"
                     className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500/50"
                   />
                 </div>
               </div>
 
-              {/* YouTube URL & Followers */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs text-gray-400">YouTube URL</label>
@@ -354,7 +337,6 @@ function ReviewDialog({
                     type="text"
                     value={youtubeUrl}
                     onChange={(e) => setYoutubeUrl(e.target.value)}
-                    placeholder="https://youtube.com/@channel"
                     className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500/50"
                   />
                 </div>
@@ -364,13 +346,11 @@ function ReviewDialog({
                     type="text"
                     value={youtubeFollowers}
                     onChange={(e) => setYoutubeFollowers(e.target.value)}
-                    placeholder="Subscribers count"
                     className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500/50"
                   />
                 </div>
               </div>
 
-              {/* Facebook URL & Followers */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs text-gray-400">Facebook URL</label>
@@ -378,7 +358,6 @@ function ReviewDialog({
                     type="text"
                     value={facebookUrl}
                     onChange={(e) => setFacebookUrl(e.target.value)}
-                    placeholder="https://facebook.com/username"
                     className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500/50"
                   />
                 </div>
@@ -388,13 +367,11 @@ function ReviewDialog({
                     type="text"
                     value={facebookFollowers}
                     onChange={(e) => setFacebookFollowers(e.target.value)}
-                    placeholder="Followers/Likes count"
                     className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500/50"
                   />
                 </div>
               </div>
 
-              {/* LinkedIn URL & Followers */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs text-gray-400">LinkedIn URL</label>
@@ -402,7 +379,6 @@ function ReviewDialog({
                     type="text"
                     value={linkedinUrl}
                     onChange={(e) => setLinkedinUrl(e.target.value)}
-                    placeholder="https://linkedin.com/in/username"
                     className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500/50"
                   />
                 </div>
@@ -412,7 +388,6 @@ function ReviewDialog({
                     type="text"
                     value={linkedinFollowers}
                     onChange={(e) => setLinkedinFollowers(e.target.value)}
-                    placeholder="Connections count"
                     className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500/50"
                   />
                 </div>
@@ -420,71 +395,41 @@ function ReviewDialog({
             </div>
           ) : (
             <>
-              {/* Basic info */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-xs uppercase tracking-wider text-gray-400">
-                    Email
-                  </span>
-                  <p className="font-medium mt-0.5 text-gray-200">
-                    {app.email}
-                  </p>
+                  <span className="text-xs uppercase tracking-wider text-gray-400">Email</span>
+                  <p className="font-medium mt-0.5 text-gray-200">{app.email}</p>
                 </div>
                 <div>
-                  <span className="text-xs uppercase tracking-wider text-gray-400">
-                    Applied
-                  </span>
-                  <p className="font-medium mt-0.5 text-gray-200">
-                    {app.appliedDate}
-                  </p>
+                  <span className="text-xs uppercase tracking-wider text-gray-400">Applied</span>
+                  <p className="font-medium mt-0.5 text-gray-200">{app.appliedDate}</p>
                 </div>
                 <div>
-                  <span className="text-xs uppercase tracking-wider text-gray-400">
-                    Location
-                  </span>
-                  <p className="font-medium mt-0.5 text-gray-200">
-                    {app.location}
-                  </p>
+                  <span className="text-xs uppercase tracking-wider text-gray-400">Location</span>
+                  <p className="font-medium mt-0.5 text-gray-200">{app.location}</p>
                 </div>
                 <div>
-                  <span className="text-xs uppercase tracking-wider text-gray-400">
-                    Social Handles
-                  </span>
-                  <p className="font-medium mt-0.5 text-gray-200">
-                    {app.handles}
-                  </p>
+                  <span className="text-xs uppercase tracking-wider text-gray-400">Social Handles</span>
+                  <p className="font-medium mt-0.5 text-gray-200">{app.handles}</p>
                 </div>
                 <div>
-                  <span className="text-xs uppercase tracking-wider text-gray-400">
-                    Followers
-                  </span>
-                  <p className="font-medium mt-0.5 text-gray-200">
-                    {app.followers}
-                  </p>
+                  <span className="text-xs uppercase tracking-wider text-gray-400">Followers</span>
+                  <p className="font-medium mt-0.5 text-gray-200">{app.followers}</p>
                 </div>
                 <div>
-                  <span className="text-xs uppercase tracking-wider text-gray-400">
-                    Languages
-                  </span>
-                  <p className="font-medium mt-0.5 text-gray-200">
-                    {app.languages.join(', ')}
-                  </p>
+                  <span className="text-xs uppercase tracking-wider text-gray-400">Languages</span>
+                  <p className="font-medium mt-0.5 text-gray-200">{app.languages.join(', ')}</p>
                 </div>
               </div>
 
-              {/* Content niches */}
               <div>
-                <span className="text-xs uppercase tracking-wider text-gray-400">
-                  Content Niches
-                </span>
+                <span className="text-xs uppercase tracking-wider text-gray-400">Content Niches</span>
                 <div className="flex flex-wrap gap-1.5 mt-1.5">
                   {app.niches.map((n) => (
                     <Badge
                       key={n}
                       className="text-xs bg-white/5 text-gray-300 border border-white/5"
-                      style={{
-                        color: GOLD,
-                      }}
+                      style={{ color: GOLD }}
                     >
                       {n}
                     </Badge>
@@ -492,19 +437,13 @@ function ReviewDialog({
                 </div>
               </div>
 
-              {/* Bio */}
               <div>
-                <span className="text-xs uppercase tracking-wider text-gray-400">
-                  Creator Bio
-                </span>
-                <p className="mt-1.5 text-sm leading-relaxed text-gray-300">
-                  {app.bio}
-                </p>
+                <span className="text-xs uppercase tracking-wider text-gray-400">Creator Bio</span>
+                <p className="mt-1.5 text-sm leading-relaxed text-gray-300">{app.bio}</p>
               </div>
 
               <Separator className="bg-white/10" />
 
-              {/* Identity check */}
               <div>
                 <Button
                   variant="outline"
@@ -517,9 +456,7 @@ function ReviewDialog({
                   {isRunningCheck ? 'Running Verification…' : 'Run Identity Check'}
                 </Button>
                 {idCheckResult && (
-                  <div
-                    className="mt-2 p-3 rounded-lg flex gap-2.5 text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-300"
-                  >
+                  <div className="mt-2 p-3 rounded-lg flex gap-2.5 text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
                     <Info size={13} className="shrink-0 mt-0.5 text-emerald-400" />
                     <p>{idCheckResult}</p>
                   </div>
@@ -537,15 +474,13 @@ function ReviewDialog({
                 onClick={() => setIsEditing(false)}
                 variant="outline"
                 className="text-gray-300 border-white/10 hover:bg-white/5 hover:text-white bg-transparent"
-                style={{ borderRadius: '8px' }}
               >
                 Cancel
               </Button>
               <Button
                 size="sm"
                 onClick={handleSave}
-                className="bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950 font-bold"
-                style={{ borderRadius: '8px', border: 'none' }}
+                className="bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950 font-bold border-none"
               >
                 Save Details
               </Button>
@@ -556,7 +491,6 @@ function ReviewDialog({
                 size="sm"
                 onClick={() => onReject(app.id)}
                 className="gap-1.5 bg-red-500/80 hover:bg-red-500 text-white font-bold"
-                style={{ borderRadius: '8px' }}
               >
                 <UserX size={13} />
                 Reject
@@ -564,8 +498,7 @@ function ReviewDialog({
               <Button
                 size="sm"
                 onClick={() => onApprove(app.id)}
-                className="gap-1.5 bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950 font-bold"
-                style={{ borderRadius: '8px', border: 'none' }}
+                className="gap-1.5 bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950 font-bold border-none"
               >
                 <UserCheck size={13} />
                 Approve &amp; Onboard
@@ -579,22 +512,139 @@ function ReviewDialog({
 }
 
 /* ------------------------------------------------------------------ */
-/* Page                                                                  */
+/* Review Dialog for Chapter Applications                             */
 /* ------------------------------------------------------------------ */
+function ChapterReviewDialog({
+  app,
+  open,
+  onOpenChange,
+  onApprove,
+  onReject,
+}: {
+  app: ChapterApplication;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md text-white border-white/10 bg-slate-950 rounded-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-white font-bricolage">
+            Chapter Application — {app.chapterName}
+          </DialogTitle>
+        </DialogHeader>
 
-export default function ApplicationsPage() {
-  const [applications, setApplications] = useState<Application[]>([]);
+        <div className="space-y-4 text-sm mt-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <span className="text-xs uppercase tracking-wider text-gray-400">Applicant</span>
+              <p className="font-medium mt-0.5 text-gray-200">{app.name}</p>
+            </div>
+            <div>
+              <span className="text-xs uppercase tracking-wider text-gray-400">Email</span>
+              <p className="font-medium mt-0.5 text-gray-200">{app.email}</p>
+            </div>
+            <div>
+              <span className="text-xs uppercase tracking-wider text-gray-400">Phone</span>
+              <p className="font-medium mt-0.5 text-gray-200">{app.contactNumber}</p>
+            </div>
+            <div>
+              <span className="text-xs uppercase tracking-wider text-gray-400">WhatsApp</span>
+              <p className="font-medium mt-0.5 text-gray-200">{app.whatsappNumber}</p>
+            </div>
+            <div>
+              <span className="text-xs uppercase tracking-wider text-gray-400">Role Requested</span>
+              <p className="font-medium mt-0.5 text-gray-200">{app.chapterRole}</p>
+            </div>
+            <div>
+              <span className="text-xs uppercase tracking-wider text-gray-400">Applied Date</span>
+              <p className="font-medium mt-0.5 text-gray-200">{app.appliedDate}</p>
+            </div>
+          </div>
+
+          <div>
+            <span className="text-xs uppercase tracking-wider text-gray-400">Profile URL</span>
+            <p className="font-medium mt-0.5 text-gray-200 truncate">
+              <a href={app.chapterProfileUrl} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline">
+                {app.chapterProfileUrl}
+              </a>
+            </p>
+          </div>
+
+          {app.customChapterName && (
+            <div>
+              <span className="text-xs uppercase tracking-wider text-gray-400">Proposed Name</span>
+              <p className="font-medium mt-0.5 text-amber-300">{app.customChapterName}</p>
+            </div>
+          )}
+
+          <div>
+            <span className="text-xs uppercase tracking-wider text-gray-400">Statement of Purpose</span>
+            <p className="mt-1.5 text-sm leading-relaxed text-gray-300 bg-white/5 p-3 rounded-lg border border-white/5">
+              {app.bio}
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter className="-mx-6 -mb-6 gap-2 rounded-b-lg px-6 py-4 flex-row justify-end border-t border-white/10 bg-white/[0.02] mt-6">
+          <Button
+            size="sm"
+            onClick={() => onReject(app.id)}
+            className="gap-1.5 bg-red-500/80 hover:bg-red-500 text-white font-bold"
+          >
+            <UserX size={13} />
+            Reject
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => onApprove(app.id)}
+            className="gap-1.5 bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950 font-bold border-none"
+          >
+            <Building size={13} />
+            Approve &amp; Register Chapter
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Page Main Component                                                   */
+/* ------------------------------------------------------------------ */
+export default function SuperAdminApplications() {
+  const [activeTab, setActiveTab] = useState<'creator' | 'chapter'>('creator');
+  
+  const [creatorApps, setCreatorApps] = useState<CreatorApplication[]>([]);
+  const [chapterApps, setChapterApps] = useState<ChapterApplication[]>([]);
+  
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<Application | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedCreator, setSelectedCreator] = useState<CreatorApplication | null>(null);
+  const [selectedChapter, setSelectedChapter] = useState<ChapterApplication | null>(null);
+  
+  const [creatorDialogOpen, setCreatorDialogOpen] = useState(false);
+  const [chapterDialogOpen, setChapterDialogOpen] = useState(false);
 
   const fetchApplications = async () => {
+    setLoading(true);
     try {
-      const res = await fetch('/api/admin/applications?type=applications');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          setApplications(data.applications || []);
+      // 1. Fetch Creator Applications
+      const cRes = await fetch('/api/admin/applications?type=applications');
+      if (cRes.ok) {
+        const cData = await cRes.json();
+        if (cData.success) {
+          setCreatorApps(cData.applications || []);
+        }
+      }
+
+      // 2. Fetch Chapter Applications
+      const chRes = await fetch('/api/admin/applications?type=chapter_applications');
+      if (chRes.ok) {
+        const chData = await chRes.json();
+        if (chData.success) {
+          setChapterApps(chData.applications || []);
         }
       }
     } catch (err) {
@@ -608,7 +658,7 @@ export default function ApplicationsPage() {
     fetchApplications();
   }, []);
 
-  const handleUpdateStatus = async (id: string, status: string) => {
+  const handleUpdateStatus = async (id: string, status: string, type: 'creator' | 'chapter') => {
     try {
       const res = await fetch('/api/admin/applications', {
         method: 'POST',
@@ -616,15 +666,16 @@ export default function ApplicationsPage() {
         body: JSON.stringify({ action: 'update_status', id, status }),
       });
       if (res.ok) {
-        fetchApplications();
-        setDialogOpen(false);
+        await fetchApplications();
+        setCreatorDialogOpen(false);
+        setChapterDialogOpen(false);
       }
     } catch (err) {
       console.error('Failed to update status:', err);
     }
   };
 
-  const handleSaveDetails = async (id: string, details: any) => {
+  const handleSaveCreatorDetails = async (id: string, details: any) => {
     try {
       const res = await fetch('/api/admin/applications', {
         method: 'POST',
@@ -634,7 +685,6 @@ export default function ApplicationsPage() {
       if (res.ok) {
         await fetchApplications();
         
-        // Dynamic re-mapping of handles and followers count
         const handlesList = [];
         if (details.instagramUrl) handlesList.push(`Instagram: @${extractHandle(details.instagramUrl)}`);
         if (details.xUrl) handlesList.push(`X: @${extractHandle(details.xUrl)}`);
@@ -649,9 +699,8 @@ export default function ApplicationsPage() {
         if (details.facebookFollowers) followersList.push(`FB: ${details.facebookFollowers}`);
         if (details.linkedinFollowers) followersList.push(`LI: ${details.linkedinFollowers}`);
 
-        // Keep the modal open but update the displayed details in real time
         const updatedApp = {
-          ...selected,
+          ...selectedCreator,
           ...details,
           name: details.name,
           email: details.email,
@@ -659,8 +708,6 @@ export default function ApplicationsPage() {
           bio: details.bio,
           handles: handlesList.join(', ') || 'None',
           followers: followersList.join(' | ') || 'None',
-          
-          // Re-update raw fields as well
           raw_full_name: details.name,
           raw_email: details.email,
           raw_location: details.location,
@@ -676,71 +723,85 @@ export default function ApplicationsPage() {
           raw_linkedin_url: details.linkedinUrl,
           raw_linkedin_followers: details.linkedinFollowers,
         };
-        setSelected(updatedApp as Application);
+        setSelectedCreator(updatedApp as CreatorApplication);
       }
     } catch (err) {
       console.error('Failed to save details:', err);
     }
   };
 
-  function openReview(app: Application) {
-    setSelected(app);
-    setDialogOpen(true);
+  function openCreatorReview(app: CreatorApplication) {
+    setSelectedCreator(app);
+    setCreatorDialogOpen(true);
   }
 
-  // Count filters
-  const pendingCount = applications.filter((a) => a.status === 'Pending').length;
-  const underReviewCount = applications.filter((a) => a.status === 'Under Review').length;
-  const approvedCount = applications.filter((a) => a.status === 'Approved').length;
-  const rejectedCount = applications.filter((a) => a.status === 'Rejected').length;
+  function openChapterReview(app: ChapterApplication) {
+    setSelectedChapter(app);
+    setChapterDialogOpen(true);
+  }
+
+  // Count stats
+  const pendingCreatorsCount = creatorApps.filter((a) => a.status === 'Pending').length;
+  const pendingChaptersCount = chapterApps.filter((a) => a.status === 'Pending').length;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1
-          className="text-2xl font-bold tracking-tight text-white font-bricolage"
-        >
-          Application Queue
+        <h1 className="text-2xl font-bold tracking-tight text-white font-bricolage">
+          Applications Queue
         </h1>
         <p className="text-sm mt-1 text-gray-400">
-          Local Roster Onboarding Queue — Kozhikode Chapter
+          Global Governance Review — Process creator and new chapter application requests.
         </p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           icon={ClipboardList}
           iconBg="rgba(255,255,255,0.05)"
           iconColor="#F0EBE0"
-          label="Pending"
-          value={pendingCount}
+          label="Pending Creators"
+          value={pendingCreatorsCount}
         />
         <StatCard
-          icon={Clock}
+          icon={Building}
           iconBg="rgba(99,102,241,0.10)"
           iconColor="#818cf8"
-          label="Under Review"
-          value={underReviewCount}
+          label="Pending Chapters"
+          value={pendingChaptersCount}
         />
         <StatCard
           icon={CheckCircle2}
           iconBg="rgba(34,197,94,0.10)"
           iconColor="#34d399"
-          label="Approved"
-          value={approvedCount}
-        />
-        <StatCard
-          icon={XCircle}
-          iconBg="rgba(239,68,68,0.08)"
-          iconColor="#f87171"
-          label="Rejected"
-          value={rejectedCount}
+          label="Total Handled (Roster)"
+          value={creatorApps.filter(a => a.status === 'Approved').length + chapterApps.filter(a => a.status === 'Approved').length}
         />
       </div>
 
-      {/* Applications table */}
+      {/* Tabs Selector */}
+      <div className="flex border-b border-white/10">
+        <button
+          onClick={() => setActiveTab('creator')}
+          className={`px-6 py-3 font-semibold text-xs uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+            activeTab === 'creator' ? 'border-[#C9A84C] text-[#F0EBE0]' : 'border-transparent text-gray-400 hover:text-white'
+          }`}
+        >
+          Creator Applications ({creatorApps.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('chapter')}
+          className={`px-6 py-3 font-semibold text-xs uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+            activeTab === 'chapter' ? 'border-[#C9A84C] text-[#F0EBE0]' : 'border-transparent text-gray-400 hover:text-white'
+          }`}
+        >
+          Chapter Applications ({chapterApps.length})
+        </button>
+      </div>
+
+      {/* Applications Table */}
       <Card
         className="border-0 shadow-sm"
         style={{
@@ -748,155 +809,213 @@ export default function ApplicationsPage() {
           border: '1px solid rgba(240, 235, 224, 0.08)',
         }}
       >
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold text-white font-bricolage">
-            Pending Applications
-          </CardTitle>
-          <p className="text-xs text-gray-400">
-            Review and process creator applications for the Kozhikode chapter
-          </p>
-        </CardHeader>
-        <CardContent className="px-0 pb-0">
-          <Table>
-            <TableHeader className="border-white/5">
-              <TableRow className="border-white/5 hover:bg-transparent">
-                <TableHead className="pl-6 text-xs text-gray-400">Applicant</TableHead>
-                <TableHead className="text-xs text-gray-400">Email</TableHead>
-                <TableHead className="text-xs text-gray-400">Social Handles</TableHead>
-                <TableHead className="text-xs text-gray-400">Applied Date</TableHead>
-                <TableHead className="text-xs text-gray-400">Status</TableHead>
-                <TableHead className="text-xs pr-6 text-gray-400">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-400 text-sm">
-                    Loading applications...
-                  </TableCell>
+        <CardContent className="px-0 pb-0 pt-2">
+          {activeTab === 'creator' ? (
+            <Table>
+              <TableHeader className="border-white/5">
+                <TableRow className="border-white/5 hover:bg-transparent">
+                  <TableHead className="pl-6 text-xs text-gray-400">Applicant</TableHead>
+                  <TableHead className="text-xs text-gray-400">Email</TableHead>
+                  <TableHead className="text-xs text-gray-400">Social Handles</TableHead>
+                  <TableHead className="text-xs text-gray-400">Applied Date</TableHead>
+                  <TableHead className="text-xs text-gray-400">Status</TableHead>
+                  <TableHead className="pr-6 text-xs text-gray-400 text-right">Actions</TableHead>
                 </TableRow>
-              ) : applications.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-400 text-sm">
-                    No applications found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                applications.map((app) => {
-                  const sc = STATUS_CONFIG[app.status] || STATUS_CONFIG.Pending;
-                  return (
-                    <TableRow
-                      key={app.id}
-                      className="border-white/5 hover:bg-white/[0.02] transition-colors"
-                    >
-                    <TableCell className="pl-6">
-                      <div className="flex items-center gap-2.5">
-                        <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                          style={{
-                            background: 'rgba(201,168,76,0.15)',
-                            color: GOLD,
-                            border: '1px solid rgba(201,168,76,0.25)',
-                          }}
-                        >
-                          {app.name
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')
-                            .slice(0, 2)}
-                        </div>
-                        <span className="text-sm font-semibold text-white">
-                          {app.name}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-xs text-gray-400">
-                        {app.email}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-xs font-medium text-gray-200">
-                        {app.handles}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-xs text-gray-400">
-                        {app.appliedDate}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className="text-xs font-semibold"
-                        style={{ background: sc.bg, color: sc.color, border: 'none' }}
-                      >
-                        {sc.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="pr-6">
-                      <div className="flex items-center gap-1.5">
-                        <Button
-                          size="sm"
-                          className="h-7 px-2.5 text-xs gap-1 font-semibold text-[#080D26] hover:bg-[#b0923d]"
-                          onClick={() => openReview(app)}
-                          style={{
-                            background: GOLD,
-                            borderRadius: 7,
-                            border: 'none',
-                          }}
-                        >
-                          <Eye size={12} />
-                          Review
-                        </Button>
-                        {app.status === 'Pending' && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleUpdateStatus(app.id, 'Approved')}
-                              className="h-7 px-2 text-xs gap-1 border-emerald-500/30 text-emerald-400 bg-transparent hover:bg-emerald-500/10 hover:text-emerald-300"
-                            >
-                              <UserCheck size={12} />
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleUpdateStatus(app.id, 'Rejected')}
-                              className="h-7 px-2 text-xs gap-1 border-red-500/30 text-red-400 bg-transparent hover:bg-red-500/10 hover:text-red-300"
-                            >
-                              <UserX size={12} />
-                              Reject
-                            </Button>
-                          </>
-                        )}
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-400 text-sm">
+                      Loading creator applications...
                     </TableCell>
                   </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+                ) : creatorApps.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-400 text-sm">
+                      No creator applications found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  creatorApps.map((app) => {
+                    const sc = STATUS_CONFIG[app.status] || STATUS_CONFIG.Pending;
+                    return (
+                      <TableRow key={app.id} className="border-white/5 hover:bg-white/[0.02] transition-colors">
+                        <TableCell className="pl-6 py-3.5">
+                          <div className="flex items-center gap-2.5">
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                              style={{
+                                background: 'rgba(201,168,76,0.15)',
+                                color: GOLD,
+                                border: '1px solid rgba(201,168,76,0.25)',
+                              }}
+                            >
+                              {app.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                            </div>
+                            <span className="text-sm font-semibold text-white">{app.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs text-gray-400">{app.email}</TableCell>
+                        <TableCell className="text-xs font-medium text-gray-200">{app.handles}</TableCell>
+                        <TableCell className="text-xs text-gray-400">{app.appliedDate}</TableCell>
+                        <TableCell>
+                          <Badge className="text-xs font-semibold" style={{ background: sc.bg, color: sc.color, border: 'none' }}>
+                            {sc.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="pr-6 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button
+                              size="sm"
+                              className="h-7 px-2.5 text-xs gap-1 font-semibold text-[#080D26] hover:bg-[#b0923d] border-none"
+                              onClick={() => openCreatorReview(app)}
+                              style={{ background: GOLD }}
+                            >
+                              <Eye size={12} />
+                              Review
+                            </Button>
+                            {app.status === 'Pending' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleUpdateStatus(app.id, 'Approved', 'creator')}
+                                  className="h-7 px-2 text-xs gap-1 border-emerald-500/30 text-emerald-400 bg-transparent hover:bg-emerald-500/10 hover:text-emerald-300"
+                                >
+                                  <UserCheck size={12} />
+                                  Approve
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          ) : (
+            <Table>
+              <TableHeader className="border-white/5">
+                <TableRow className="border-white/5 hover:bg-transparent">
+                  <TableHead className="pl-6 text-xs text-gray-400">Proposed Chapter</TableHead>
+                  <TableHead className="text-xs text-gray-400">Applicant</TableHead>
+                  <TableHead className="text-xs text-gray-400">Email & Phone</TableHead>
+                  <TableHead className="text-xs text-gray-400">Applied Date</TableHead>
+                  <TableHead className="text-xs text-gray-400">Status</TableHead>
+                  <TableHead className="pr-6 text-xs text-gray-400 text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-400 text-sm">
+                      Loading chapter applications...
+                    </TableCell>
+                  </TableRow>
+                ) : chapterApps.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-400 text-sm">
+                      No chapter applications found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  chapterApps.map((app) => {
+                    const sc = STATUS_CONFIG[app.status] || STATUS_CONFIG.Pending;
 
-          <div
-            className="px-6 py-3 text-xs text-gray-500"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
-          >
-            Showing {applications.length} applications · Chapter admin can approve, reject, or escalate
+                    return (
+                      <TableRow key={app.id} className="border-white/5 hover:bg-white/[0.02] transition-colors">
+                        <TableCell className="pl-6 py-3.5">
+                          <div className="flex items-center gap-2.5">
+                            <div
+                              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                              style={{
+                                background: 'rgba(99,102,241,0.15)',
+                                color: '#818cf8',
+                                border: '1px solid rgba(99,102,241,0.25)',
+                              }}
+                            >
+                              <Building size={14} />
+                            </div>
+                            <div>
+                              <span className="text-sm font-semibold text-white block">{app.chapterName}</span>
+                              {app.customChapterName && (
+                                <span className="text-[10px] text-amber-400 italic">Proposed: {app.customChapterName}</span>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs text-gray-200 font-medium">{app.name} ({app.chapterRole})</TableCell>
+                        <TableCell className="text-xs text-gray-400">
+                          <div>{app.email}</div>
+                          <div className="text-[10px] text-gray-500 mt-0.5">{app.contactNumber}</div>
+                        </TableCell>
+                        <TableCell className="text-xs text-gray-400">{app.appliedDate}</TableCell>
+                        <TableCell>
+                          <Badge className="text-xs font-semibold" style={{ background: sc.bg, color: sc.color, border: 'none' }}>
+                            {sc.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="pr-6 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button
+                              size="sm"
+                              className="h-7 px-2.5 text-xs gap-1 font-semibold text-[#080D26] hover:bg-[#b0923d] border-none"
+                              onClick={() => openChapterReview(app)}
+                              style={{ background: GOLD }}
+                            >
+                              <Eye size={12} />
+                              Review
+                            </Button>
+                            {app.status === 'Pending' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleUpdateStatus(app.id, 'Approved', 'chapter')}
+                                  className="h-7 px-2 text-xs gap-1 border-emerald-500/30 text-emerald-400 bg-transparent hover:bg-emerald-500/10 hover:text-emerald-300"
+                                >
+                                  <UserCheck size={12} />
+                                  Approve
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          )}
+
+          <div className="px-6 py-3 text-xs text-gray-500 border-t border-white/5">
+            Showing {activeTab === 'creator' ? creatorApps.length : chapterApps.length} applications · Super Admin can verify digital metrics and launch chapters.
           </div>
         </CardContent>
       </Card>
 
-      {/* Review dialog */}
-      {selected && (
-        <ReviewDialog
-          app={selected}
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          onApprove={(id) => handleUpdateStatus(id, 'Approved')}
-          onReject={(id) => handleUpdateStatus(id, 'Rejected')}
-          onSaveDetails={handleSaveDetails}
+      {/* Dialogs */}
+      {selectedCreator && (
+        <CreatorReviewDialog
+          app={selectedCreator}
+          open={creatorDialogOpen}
+          onOpenChange={setCreatorDialogOpen}
+          onApprove={(id) => handleUpdateStatus(id, 'Approved', 'creator')}
+          onReject={(id) => handleUpdateStatus(id, 'Rejected', 'creator')}
+          onSaveDetails={handleSaveCreatorDetails}
+        />
+      )}
+
+      {selectedChapter && (
+        <ChapterReviewDialog
+          app={selectedChapter}
+          open={chapterDialogOpen}
+          onOpenChange={setChapterDialogOpen}
+          onApprove={(id) => handleUpdateStatus(id, 'Approved', 'chapter')}
+          onReject={(id) => handleUpdateStatus(id, 'Rejected', 'chapter')}
         />
       )}
     </div>

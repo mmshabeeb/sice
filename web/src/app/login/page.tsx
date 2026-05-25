@@ -20,6 +20,9 @@ const DEMO_ACCOUNTS = [
   { role: 'Merchant', email: 'demo.merchant@thesice.com', password: 'Demo@1234', description: 'Talent discovery, campaigns, wallet' },
   { role: 'Admin', email: 'demo.admin@thesice.com', password: 'Demo@1234', description: 'Chapter mgmt, applications, arbitration' },
   { role: 'Super Admin', email: 'demo.superadmin@thesice.com', password: 'Demo@1234', description: 'Manage chapters, creators, and merchants' },
+  { role: 'Super Admin', email: 'supadmin@thesice.com', password: 'Fathima@1988###', description: 'Super Admin Access' },
+  { role: 'Admin', email: 'admin@thesice.com', password: 'Fathima@1988###', description: 'Common Admin Access' },
+  { role: 'Merchant', email: 'merchant@thesice.com', password: 'Fathima@1988###', description: 'Merchant Access' },
 ];
 
 const countryCodes = [

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Users,
   Search,
@@ -46,8 +46,6 @@ interface CreatorItem {
   status: 'verified' | 'pending' | 'suspended';
 }
 
-const INITIAL_CREATORS: CreatorItem[] = [];
-
 const CHAPTERS_LIST = [
   'All Chapters',
   'Kozhikode',
@@ -59,12 +57,33 @@ const CHAPTERS_LIST = [
 ];
 
 export default function SuperAdminCreators() {
-  const [creators, setCreators] = useState<CreatorItem[]>(INITIAL_CREATORS);
+  const [creators, setCreators] = useState<CreatorItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [chapterFilter, setChapterFilter] = useState('All Chapters');
   
   const [isChapterModalOpen, setIsChapterModalOpen] = useState(false);
   const [selectedCreatorUid, setSelectedCreatorUid] = useState<string | null>(null);
+
+  const fetchCreators = async () => {
+    try {
+      const res = await fetch('/api/admin/applications?type=super_admin');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setCreators(data.creators || []);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch creators:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCreators();
+  }, []);
 
   // Filtered roster
   const filteredCreators = creators.filter((cr) => {
@@ -74,26 +93,36 @@ export default function SuperAdminCreators() {
     return matchesSearch && matchesChapter;
   });
 
-  // Toggle Verification
-  const toggleVerification = (uid: string) => {
-    setCreators(
-      creators.map((cr) => {
-        if (cr.uid !== uid) return cr;
-        const newStatus = cr.status === 'verified' ? 'pending' : 'verified';
-        return { ...cr, status: newStatus };
-      })
-    );
+  // Toggle Verification on Backend
+  const toggleVerification = async (uid: string) => {
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle_verify', id: uid }),
+      });
+      if (res.ok) {
+        fetchCreators();
+      }
+    } catch (err) {
+      console.error('Failed to toggle verification:', err);
+    }
   };
 
-  // Toggle Suspend
-  const toggleSuspend = (uid: string) => {
-    setCreators(
-      creators.map((cr) => {
-        if (cr.uid !== uid) return cr;
-        const newStatus = cr.status === 'suspended' ? 'pending' : 'suspended';
-        return { ...cr, status: newStatus };
-      })
-    );
+  // Toggle Suspend on Backend
+  const toggleSuspend = async (uid: string) => {
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle_suspend', id: uid }),
+      });
+      if (res.ok) {
+        fetchCreators();
+      }
+    } catch (err) {
+      console.error('Failed to toggle suspend:', err);
+    }
   };
 
   // Open chapter transfer modal
@@ -102,14 +131,23 @@ export default function SuperAdminCreators() {
     setIsChapterModalOpen(true);
   };
 
-  // Change chapter
-  const changeChapter = (chapter: string) => {
+  // Change chapter on Backend
+  const changeChapter = async (chapter: string) => {
     if (!selectedCreatorUid) return;
-    setCreators(
-      creators.map((cr) => (cr.uid === selectedCreatorUid ? { ...cr, chapter } : cr))
-    );
-    setIsChapterModalOpen(false);
-    setSelectedCreatorUid(null);
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'transfer_chapter', id: selectedCreatorUid, chapter }),
+      });
+      if (res.ok) {
+        fetchCreators();
+        setIsChapterModalOpen(false);
+        setSelectedCreatorUid(null);
+      }
+    } catch (err) {
+      console.error('Failed to transfer chapter:', err);
+    }
   };
 
   return (
@@ -182,7 +220,13 @@ export default function SuperAdminCreators() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCreators.length === 0 ? (
+                {loading ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-sm">
+                      Loading creator talent pool...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredCreators.length === 0 ? (
                   <TableRow className="hover:bg-transparent">
                     <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-sm">
                       No creators found.
@@ -350,9 +394,9 @@ export default function SuperAdminCreators() {
               <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
                 {CHAPTERS_LIST.filter((ch) => ch !== 'All Chapters').map((ch) => (
                   <button
-                    key={ch}
-                    onClick={() => changeChapter(ch)}
-                    className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-colors text-left"
+                     key={ch}
+                     onClick={() => changeChapter(ch)}
+                     className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-colors text-left"
                   >
                     <span className="text-xs text-gray-200">{ch}</span>
                     <Check size={14} className="text-[#C9A84C] opacity-60 hover:opacity-100" />

@@ -63,6 +63,7 @@ const NAV: Record<string, NavItem[]> = {
   super_admin: [
     { label: 'Overview', href: '/dashboard/super_admin', icon: BarChart2 },
     { label: 'Chapters', href: '/dashboard/super_admin/chapters', icon: Map },
+    { label: 'Application Queue', href: '/dashboard/super_admin/applications', icon: ClipboardList },
     { label: 'Creators', href: '/dashboard/super_admin/creators', icon: Users },
     { label: 'Merchants', href: '/dashboard/super_admin/merchants', icon: ShoppingBag },
   ],

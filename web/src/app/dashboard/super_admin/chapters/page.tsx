@@ -52,8 +52,11 @@ const AVAILABLE_ADMINS = [
   'Anjali Sharma',
 ];
 
+import { useEffect } from 'react';
+
 export default function SuperAdminChapters() {
   const [chapters, setChapters] = useState<ChapterItem[]>(INITIAL_CHAPTERS);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
@@ -64,13 +67,40 @@ export default function SuperAdminChapters() {
   const [state, setState] = useState('');
   const [adminName, setAdminName] = useState('');
 
+  const fetchChapters = async () => {
+    try {
+      const res = await fetch('/api/admin/applications?type=chapters');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setChapters(data.chapters || []);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch chapters:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchChapters();
+  }, []);
+
   // Toggle chapter status
-  const toggleStatus = (id: string) => {
-    setChapters(
-      chapters.map((ch) =>
-        ch.id === id ? { ...ch, status: ch.status === 'active' ? 'inactive' : 'active' } : ch
-      )
-    );
+  const toggleStatus = async (id: string) => {
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle_chapter_status', id }),
+      });
+      if (res.ok) {
+        fetchChapters();
+      }
+    } catch (err) {
+      console.error('Failed to toggle status:', err);
+    }
   };
 
   // Open assign admin modal
@@ -80,37 +110,47 @@ export default function SuperAdminChapters() {
   };
 
   // Assign admin
-  const assignAdmin = (admin: string | null) => {
+  const assignAdmin = async (admin: string | null) => {
     if (!selectedChapterId) return;
-    setChapters(
-      chapters.map((ch) => (ch.id === selectedChapterId ? { ...ch, adminName: admin } : ch))
-    );
-    setIsAdminModalOpen(false);
-    setSelectedChapterId(null);
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'assign_chapter_admin', id: selectedChapterId, adminName: admin }),
+      });
+      if (res.ok) {
+        fetchChapters();
+        setIsAdminModalOpen(false);
+        setSelectedChapterId(null);
+      }
+    } catch (err) {
+      console.error('Failed to assign admin:', err);
+    }
   };
 
   // Create chapter
-  const handleCreateChapter = (e: React.FormEvent) => {
+  const handleCreateChapter = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !city || !state) return;
 
-    const newCh: ChapterItem = {
-      id: name.toLowerCase().replace(/\s+/g, '-'),
-      name,
-      city,
-      state,
-      creatorsCount: 0,
-      adminName: adminName || null,
-      status: 'active',
-    };
-
-    setChapters([...chapters, newCh]);
-    setIsModalOpen(false);
-    // Reset form
-    setName('');
-    setCity('');
-    setState('');
-    setAdminName('');
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create_chapter', name, city, state, adminName: adminName || null }),
+      });
+      if (res.ok) {
+        fetchChapters();
+        setIsModalOpen(false);
+        // Reset form
+        setName('');
+        setCity('');
+        setState('');
+        setAdminName('');
+      }
+    } catch (err) {
+      console.error('Failed to create chapter:', err);
+    }
   };
 
   return (
@@ -168,7 +208,13 @@ export default function SuperAdminChapters() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {chapters.length === 0 ? (
+                {loading ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-sm">
+                      Loading chapters...
+                    </TableCell>
+                  </TableRow>
+                ) : chapters.length === 0 ? (
                   <TableRow className="hover:bg-transparent">
                     <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-sm">
                       No chapters registered yet.
