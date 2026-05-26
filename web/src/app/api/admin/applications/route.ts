@@ -266,6 +266,25 @@ export async function GET(request: NextRequest) {
           trustScore: data.trust_index || 88,
           chapter: data.chapter || 'Kozhikode',
           status,
+          
+          // Full profile fields for view/manage modal
+          email: data.email || '',
+          location: data.location || 'Kerala, India',
+          bio: data.statement_of_purpose || '',
+          contact_number: data.contact_number || '',
+          whatsapp_number: data.whatsapp_number || '',
+          niches: data.niches || ['General'],
+          instagram_url: data.instagram_url || '',
+          instagram_followers: data.instagram_followers || '',
+          x_url: data.x_url || '',
+          x_followers: data.x_followers || '',
+          youtube_url: data.youtube_url || '',
+          youtube_followers: data.youtube_followers || '',
+          facebook_url: data.facebook_url || '',
+          facebook_followers: data.facebook_followers || '',
+          linkedin_url: data.linkedin_url || '',
+          linkedin_followers: data.linkedin_followers || '',
+          auth_uid: data.auth_uid || null,
         };
       });
 
@@ -449,9 +468,17 @@ export async function POST(request: NextRequest) {
         facebookUrl,
         facebookFollowers,
         linkedinUrl,
-        linkedinFollowers
+        linkedinFollowers,
+        contactNumber,
+        whatsappNumber,
+        niches,
+        trustIndex,
+        engagementRate
       } = body;
 
+      const appData = docSnap.data();
+
+      // Update Firestore application document
       await docRef.update({
         full_name: name || '',
         email: email || '',
@@ -466,9 +493,67 @@ export async function POST(request: NextRequest) {
         facebook_url: facebookUrl || '',
         facebook_followers: facebookFollowers || '',
         linkedin_url: linkedinUrl || '',
-        linkedin_followers: linkedinFollowers || ''
+        linkedin_followers: linkedinFollowers || '',
+        contact_number: contactNumber || '',
+        whatsapp_number: whatsappNumber || '',
+        niches: niches || ['General'],
+        trust_index: trustIndex !== undefined ? Number(trustIndex) : 88,
+        engagement_rate: engagementRate || '4.2%'
       });
+
+      // Update linked users collection if uid exists
+      let authUid = appData?.auth_uid;
+      if (!authUid && appData?.email) {
+        // Query users by email to find linked user
+        const userSnap = await adminDb.collection('users').where('email', '==', appData.email).get();
+        if (!userSnap.empty) {
+          authUid = userSnap.docs[0].id;
+        }
+      }
+
+      if (authUid) {
+        try {
+          await adminDb.collection('users').doc(authUid).update({
+            full_name: name || '',
+            email: email || '',
+            instagram_url: instagramUrl || '',
+            instagram_followers: instagramFollowers || '',
+          });
+        } catch (uErr) {
+          console.error('Failed to sync changes to users collection:', uErr);
+        }
+      }
+
       return NextResponse.json({ success: true });
+    }
+
+    if (action === 'reset_creator_password') {
+      const { id, newPassword } = body;
+      if (!id || !newPassword) {
+        return NextResponse.json({ error: 'Missing application ID or newPassword' }, { status: 400 });
+      }
+
+      const appData = docSnap.data();
+      let authUid = appData?.auth_uid;
+
+      if (!authUid && appData?.email) {
+        const userSnap = await adminDb.collection('users').where('email', '==', appData.email).get();
+        if (!userSnap.empty) {
+          authUid = userSnap.docs[0].id;
+        }
+      }
+
+      if (!authUid) {
+        return NextResponse.json({ error: 'This creator does not have a linked login account.' }, { status: 400 });
+      }
+
+      try {
+        await adminAuth.updateUser(authUid, { password: newPassword });
+        return NextResponse.json({ success: true });
+      } catch (authErr: any) {
+        console.error('Password reset error:', authErr);
+        return NextResponse.json({ error: `Auth reset error: ${authErr.message}` }, { status: 500 });
+      }
     }
 
     if (action === 'create_admin_user') {

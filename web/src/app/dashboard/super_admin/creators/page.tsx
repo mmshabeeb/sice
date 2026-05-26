@@ -18,6 +18,7 @@ import {
   Check,
   Plus,
   UserPlus,
+  Lock,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +48,23 @@ interface CreatorItem {
   trustScore: number;
   chapter: string;
   status: 'verified' | 'pending' | 'suspended';
+  email?: string;
+  location?: string;
+  bio?: string;
+  contact_number?: string;
+  whatsapp_number?: string;
+  niches?: string[];
+  instagram_url?: string;
+  instagram_followers?: string;
+  x_url?: string;
+  x_followers?: string;
+  youtube_url?: string;
+  youtube_followers?: string;
+  facebook_url?: string;
+  facebook_followers?: string;
+  linkedin_url?: string;
+  linkedin_followers?: string;
+  auth_uid?: string | null;
 }
 
 const CHAPTERS_LIST = [
@@ -67,6 +85,45 @@ export default function SuperAdminCreators() {
   
   const [isChapterModalOpen, setIsChapterModalOpen] = useState(false);
   const [selectedCreatorUid, setSelectedCreatorUid] = useState<string | null>(null);
+
+  // View & Manage Creator modal states
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewCreator, setViewCreator] = useState<CreatorItem | null>(null);
+  
+  // Manage tabs: 'details' | 'edit' | 'security'
+  const [activeManageTab, setActiveManageTab] = useState<'details' | 'edit' | 'security'>('details');
+
+  // Edit Creator profile form states
+  const [editForm, setEditForm] = useState({
+    name: '',
+    email: '',
+    location: '',
+    bio: '',
+    contactNumber: '',
+    whatsappNumber: '',
+    niches: '',
+    instagramUrl: '',
+    instagramFollowers: '',
+    xUrl: '',
+    xFollowers: '',
+    youtubeUrl: '',
+    youtubeFollowers: '',
+    facebookUrl: '',
+    facebookFollowers: '',
+    linkedinUrl: '',
+    linkedinFollowers: '',
+    trustIndex: 88,
+    engagementRate: '4.2%'
+  });
+  
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  // Security password reset states
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordResetSuccess, setPasswordResetSuccess] = useState(false);
+  const [passwordResetError, setPasswordResetError] = useState<string | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
 
   // Create Creator modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -219,6 +276,154 @@ export default function SuperAdminCreators() {
       }
     } catch (err) {
       console.error('Failed to transfer chapter:', err);
+    }
+  };
+
+  const handleOpenViewCreator = (creator: CreatorItem) => {
+    setViewCreator(creator);
+    setEditForm({
+      name: creator.name || '',
+      email: creator.email || '',
+      location: creator.location || '',
+      bio: creator.bio || '',
+      contactNumber: creator.contact_number || '',
+      whatsappNumber: creator.whatsapp_number || '',
+      niches: creator.niches ? creator.niches.join(', ') : creator.niche || '',
+      instagramUrl: creator.instagram_url || '',
+      instagramFollowers: creator.instagram_followers || '',
+      xUrl: creator.x_url || '',
+      xFollowers: creator.x_followers || '',
+      youtubeUrl: creator.youtube_url || '',
+      youtubeFollowers: creator.youtube_followers || '',
+      facebookUrl: creator.facebook_url || '',
+      facebookFollowers: creator.facebook_followers || '',
+      linkedinUrl: creator.linkedin_url || '',
+      linkedinFollowers: creator.linkedin_followers || '',
+      trustIndex: creator.trustScore || 88,
+      engagementRate: creator.engagement || '4.2%'
+    });
+    setNewPassword('');
+    setPasswordResetSuccess(false);
+    setPasswordResetError(null);
+    setEditError(null);
+    setActiveManageTab('details');
+    setIsViewModalOpen(true);
+  };
+
+  const handleUpdateCreatorProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!viewCreator) return;
+    setEditLoading(true);
+    setEditError(null);
+
+    const nichesArray = editForm.niches.split(',').map(s => s.trim()).filter(Boolean);
+
+    try {
+      const res = await apiFetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_details',
+          id: viewCreator.uid,
+          name: editForm.name,
+          email: editForm.email,
+          location: editForm.location,
+          bio: editForm.bio,
+          contactNumber: editForm.contactNumber,
+          whatsappNumber: editForm.whatsappNumber,
+          niches: nichesArray,
+          instagramUrl: editForm.instagramUrl,
+          instagramFollowers: editForm.instagramFollowers,
+          xUrl: editForm.xUrl,
+          xFollowers: editForm.xFollowers,
+          youtubeUrl: editForm.youtubeUrl,
+          youtubeFollowers: editForm.youtubeFollowers,
+          facebookUrl: editForm.facebookUrl,
+          facebookFollowers: editForm.facebookFollowers,
+          linkedinUrl: editForm.linkedinUrl,
+          linkedinFollowers: editForm.linkedinFollowers,
+          trustIndex: editForm.trustIndex,
+          engagementRate: editForm.engagementRate
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        // Refresh the list
+        await fetchCreators();
+        
+        // Find and update currently viewCreator state to show updated values in modal
+        setViewCreator({
+          ...viewCreator,
+          name: editForm.name,
+          email: editForm.email,
+          location: editForm.location,
+          bio: editForm.bio,
+          contact_number: editForm.contactNumber,
+          whatsapp_number: editForm.whatsappNumber,
+          niches: nichesArray,
+          niche: nichesArray.join(', '),
+          instagram_url: editForm.instagramUrl,
+          instagram_followers: editForm.instagramFollowers,
+          x_url: editForm.xUrl,
+          x_followers: editForm.xFollowers,
+          youtube_url: editForm.youtubeUrl,
+          youtube_followers: editForm.youtubeFollowers,
+          facebook_url: editForm.facebookUrl,
+          facebook_followers: editForm.facebookFollowers,
+          linkedin_url: editForm.linkedinUrl,
+          linkedin_followers: editForm.linkedinFollowers,
+          trustScore: Number(editForm.trustIndex),
+          engagement: editForm.engagementRate
+        });
+        
+        setActiveManageTab('details');
+      } else {
+        setEditError(data.error || 'Failed to update profile details.');
+      }
+    } catch (err) {
+      console.error(err);
+      setEditError('An unexpected error occurred.');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!viewCreator || !newPassword) return;
+    if (newPassword.length < 6) {
+      setPasswordResetError('Password must be at least 6 characters.');
+      return;
+    }
+
+    setFormLoading(true);
+    setPasswordResetError(null);
+    setPasswordResetSuccess(false);
+
+    try {
+      const res = await apiFetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reset_creator_password',
+          id: viewCreator.uid,
+          newPassword
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setPasswordResetSuccess(true);
+        setNewPassword('');
+      } else {
+        setPasswordResetError(data.error || 'Failed to reset password.');
+      }
+    } catch (err) {
+      console.error(err);
+      setPasswordResetError('An unexpected error occurred.');
+    } finally {
+      setFormLoading(false);
     }
   };
 
@@ -406,6 +611,13 @@ export default function SuperAdminCreators() {
                         <TableCell className="pr-6 text-right py-4">
                           <div className="flex items-center justify-end gap-3 text-xs">
                             <button
+                              onClick={() => handleOpenViewCreator(cr)}
+                              className="text-[#C9A84C] hover:underline font-semibold"
+                            >
+                              View
+                            </button>
+
+                            <button
                               onClick={() => openChapterTransfer(cr.uid)}
                               className="text-gray-400 hover:text-[#C9A84C] hover:underline"
                             >
@@ -424,7 +636,7 @@ export default function SuperAdminCreators() {
                             >
                               {cr.status === 'suspended' ? <UserCheck size={14} /> : <Ban size={14} />}
                             </button>
-
+                            
                             {/* Verify Toggle */}
                             <button
                               onClick={() => toggleVerification(cr.uid)}
@@ -657,6 +869,485 @@ export default function SuperAdminCreators() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* VIEW & MANAGE CREATOR MODAL */}
+      {isViewModalOpen && viewCreator && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div
+            className="w-full max-w-2xl rounded-2xl border-0 p-6 space-y-5 my-8 animate-in fade-in zoom-in-95 duration-200"
+            style={{
+              background: '#080D26',
+              border: '1px solid rgba(240, 235, 224, 0.15)',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+            }}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
+                  style={{
+                    background: 'rgba(201,168,76,0.12)',
+                    border: '1px solid rgba(201,168,76,0.25)',
+                    color: GOLD,
+                  }}
+                >
+                  {viewCreator.name ? viewCreator.name.split(' ').map((n) => n[0]).join('') : '??'}
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white font-bricolage flex items-center gap-2">
+                    {viewCreator.name}
+                    <span className="text-[10px] font-mono text-gray-500 font-normal">({viewCreator.uid})</span>
+                  </h3>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-gray-400">{viewCreator.email || 'No email'}</span>
+                    <span className="text-gray-600">•</span>
+                    <span className="text-xs text-gray-400 capitalize">{viewCreator.chapter} Chapter</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsViewModalOpen(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Navigation Tabs */}
+            <div className="flex border-b border-white/10 gap-4">
+              <button
+                type="button"
+                onClick={() => setActiveManageTab('details')}
+                className={`pb-2 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 ${
+                  activeManageTab === 'details'
+                    ? 'border-[#C9A84C] text-[#C9A84C]'
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                Profile Details
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveManageTab('edit')}
+                className={`pb-2 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 ${
+                  activeManageTab === 'edit'
+                    ? 'border-[#C9A84C] text-[#C9A84C]'
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                Edit Info
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveManageTab('security')}
+                className={`pb-2 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 ${
+                  activeManageTab === 'security'
+                    ? 'border-[#C9A84C] text-[#C9A84C]'
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                Security & Password
+              </button>
+            </div>
+
+            {/* TAB CONTENT: DETAILS */}
+            {activeManageTab === 'details' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs text-gray-300 max-h-96 overflow-y-auto pr-1">
+                {/* General Stats */}
+                <div className="space-y-3 bg-white/[0.01] border border-white/5 rounded-xl p-4">
+                  <h4 className="text-[10px] uppercase font-bold text-[#C9A84C] tracking-widest border-b border-white/5 pb-1">
+                    Compliance & Overview
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Niche(s)</span>
+                      <span className="font-semibold text-white">{viewCreator.niche || 'General'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Location</span>
+                      <span className="font-semibold text-white">{viewCreator.location || 'Kerala, India'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Reach</span>
+                      <span className="font-semibold text-white font-mono">{viewCreator.followers} Followers</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Engagement Rate</span>
+                      <span className="font-semibold text-white font-mono">{viewCreator.engagement}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Trust Index</span>
+                      <span className="font-semibold text-white font-mono">{viewCreator.trustScore}%</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Status</span>
+                      <span className="font-semibold capitalize text-emerald-400">{viewCreator.status}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div className="space-y-3 bg-white/[0.01] border border-white/5 rounded-xl p-4">
+                  <h4 className="text-[10px] uppercase font-bold text-[#C9A84C] tracking-widest border-b border-white/5 pb-1">
+                    Contact Details
+                  </h4>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Email</span>
+                      <span className="font-semibold text-white font-mono">{viewCreator.email || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Contact Number</span>
+                      <span className="font-semibold text-white font-mono">{viewCreator.contact_number || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider">WhatsApp Number</span>
+                      <span className="font-semibold text-white font-mono">{viewCreator.whatsapp_number || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Social Handles */}
+                <div className="space-y-3 bg-white/[0.01] border border-white/5 rounded-xl p-4 md:col-span-2">
+                  <h4 className="text-[10px] uppercase font-bold text-[#C9A84C] tracking-widest border-b border-white/5 pb-1">
+                    Social Accounts & Links
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    <div>
+                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider font-semibold">Instagram</span>
+                      {viewCreator.instagram_url ? (
+                        <a href={viewCreator.instagram_url} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline break-all">
+                          {viewCreator.instagram_url}
+                        </a>
+                      ) : <span className="text-gray-600">Not linked</span>}
+                      {viewCreator.instagram_followers && <span className="text-[10px] text-gray-500 block mt-0.5">Followers: {viewCreator.instagram_followers}</span>}
+                    </div>
+
+                    <div>
+                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider font-semibold">X (Twitter)</span>
+                      {viewCreator.x_url ? (
+                        <a href={viewCreator.x_url} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline break-all">
+                          {viewCreator.x_url}
+                        </a>
+                      ) : <span className="text-gray-600">Not linked</span>}
+                      {viewCreator.x_followers && <span className="text-[10px] text-gray-500 block mt-0.5">Followers: {viewCreator.x_followers}</span>}
+                    </div>
+
+                    <div>
+                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider font-semibold">YouTube</span>
+                      {viewCreator.youtube_url ? (
+                        <a href={viewCreator.youtube_url} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline break-all">
+                          {viewCreator.youtube_url}
+                        </a>
+                      ) : <span className="text-gray-600">Not linked</span>}
+                      {viewCreator.youtube_followers && <span className="text-[10px] text-gray-500 block mt-0.5">Subscribers: {viewCreator.youtube_followers}</span>}
+                    </div>
+
+                    <div>
+                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider font-semibold">LinkedIn</span>
+                      {viewCreator.linkedin_url ? (
+                        <a href={viewCreator.linkedin_url} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline break-all">
+                          {viewCreator.linkedin_url}
+                        </a>
+                      ) : <span className="text-gray-600">Not linked</span>}
+                      {viewCreator.linkedin_followers && <span className="text-[10px] text-gray-500 block mt-0.5">Connections: {viewCreator.linkedin_followers}</span>}
+                    </div>
+
+                    <div>
+                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider font-semibold">Facebook</span>
+                      {viewCreator.facebook_url ? (
+                        <a href={viewCreator.facebook_url} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline break-all">
+                          {viewCreator.facebook_url}
+                        </a>
+                      ) : <span className="text-gray-600">Not linked</span>}
+                      {viewCreator.facebook_followers && <span className="text-[10px] text-gray-500 block mt-0.5">Followers: {viewCreator.facebook_followers}</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Statement of Purpose / Bio */}
+                <div className="space-y-2 bg-white/[0.01] border border-white/5 rounded-xl p-4 md:col-span-2">
+                  <h4 className="text-[10px] uppercase font-bold text-[#C9A84C] tracking-widest border-b border-white/5 pb-1">
+                    Creator Biography / Bio
+                  </h4>
+                  <p className="text-gray-300 leading-relaxed italic">
+                    "{viewCreator.bio || 'No biography details provided.'}"
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* TAB CONTENT: EDIT INFO */}
+            {activeManageTab === 'edit' && (
+              <form onSubmit={handleUpdateCreatorProfile} className="space-y-4 max-h-96 overflow-y-auto pr-1">
+                {editError && (
+                  <div className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-2 rounded-xl flex items-center gap-2">
+                    <AlertCircle size={14} />
+                    {editError}
+                  </div>
+                )}
+
+                {/* Core Profile */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Full Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.name}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Email Address *</label>
+                    <input
+                      type="email"
+                      required
+                      value={editForm.email}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Contact Number</label>
+                    <input
+                      type="text"
+                      value={editForm.contactNumber}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, contactNumber: e.target.value }))}
+                      placeholder="e.g. +91 98765 43210"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">WhatsApp Number</label>
+                    <input
+                      type="text"
+                      value={editForm.whatsappNumber}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, whatsappNumber: e.target.value }))}
+                      placeholder="e.g. +91 98765 43210"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Niche(s) (Comma separated)</label>
+                    <input
+                      type="text"
+                      value={editForm.niches}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, niches: e.target.value }))}
+                      placeholder="e.g. Food, Tech, Fashion"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Location</label>
+                    <input
+                      type="text"
+                      value={editForm.location}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder="e.g. Calicut, Kerala"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Trust Score (%)</label>
+                    <input
+                      type="number"
+                      max={100}
+                      value={editForm.trustIndex}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, trustIndex: Number(e.target.value) }))}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Engagement Rate</label>
+                    <input
+                      type="text"
+                      value={editForm.engagementRate}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, engagementRate: e.target.value }))}
+                      placeholder="e.g. 4.2%"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                </div>
+
+                {/* Bio / statement_of_purpose */}
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Creator Bio</label>
+                  <textarea
+                    value={editForm.bio}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+                    rows={3}
+                    placeholder="Short description of the creator..."
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50 resize-none text-xs"
+                  />
+                </div>
+
+                {/* Social links URL & Followers */}
+                <h4 className="text-[10px] uppercase font-bold text-[#C9A84C] tracking-widest border-b border-white/5 pb-1 pt-2">
+                  Social Channels
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Instagram */}
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-0.5 block">Instagram URL</label>
+                    <input
+                      type="url"
+                      value={editForm.instagramUrl}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, instagramUrl: e.target.value }))}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-0.5 block">Instagram Followers</label>
+                    <input
+                      type="text"
+                      value={editForm.instagramFollowers}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, instagramFollowers: e.target.value }))}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+
+                  {/* X */}
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-0.5 block">X (Twitter) URL</label>
+                    <input
+                      type="url"
+                      value={editForm.xUrl}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, xUrl: e.target.value }))}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-0.5 block">X Followers</label>
+                    <input
+                      type="text"
+                      value={editForm.xFollowers}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, xFollowers: e.target.value }))}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+
+                  {/* YouTube */}
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-0.5 block">YouTube Channel URL</label>
+                    <input
+                      type="url"
+                      value={editForm.youtubeUrl}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, youtubeUrl: e.target.value }))}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-0.5 block">YouTube Subscribers</label>
+                    <input
+                      type="text"
+                      value={editForm.youtubeFollowers}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, youtubeFollowers: e.target.value }))}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+
+                  {/* LinkedIn */}
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-0.5 block">LinkedIn URL</label>
+                    <input
+                      type="url"
+                      value={editForm.linkedinUrl}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, linkedinUrl: e.target.value }))}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-0.5 block">LinkedIn Connections</label>
+                    <input
+                      type="text"
+                      value={editForm.linkedinFollowers}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, linkedinFollowers: e.target.value }))}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveManageTab('details')}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 border border-white/10 hover:bg-white/5 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={editLoading}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold disabled:opacity-50 transition-transform active:scale-[0.98]"
+                    style={{ background: GOLD, color: '#080D26' }}
+                  >
+                    {editLoading ? 'Saving...' : 'Save Profile Changes'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* TAB CONTENT: SECURITY & PASSWORD */}
+            {activeManageTab === 'security' && (
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                {passwordResetSuccess && (
+                  <div className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2.5 rounded-xl flex items-center gap-2">
+                    <Check size={14} />
+                    Password reset successfully. The creator can now log in with the new credentials.
+                  </div>
+                )}
+
+                {passwordResetError && (
+                  <div className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-2.5 rounded-xl flex items-center gap-2">
+                    <AlertCircle size={14} />
+                    {passwordResetError}
+                  </div>
+                )}
+
+                <p className="text-xs text-gray-400">
+                  You can set a new login credentials password for this creator's SICE system account.
+                </p>
+
+                <div className="flex flex-col gap-1.5 max-w-sm">
+                  <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">New Login Password *</label>
+                  <div className="relative">
+                    <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="password"
+                      required
+                      placeholder="Min 6 characters"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveManageTab('details')}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={formLoading || !newPassword}
+                    className="px-4 py-2 rounded-xl text-xs font-bold disabled:opacity-50 transition-transform active:scale-[0.98]"
+                    style={{ background: GOLD, color: '#080D26' }}
+                  >
+                    {formLoading ? 'Resetting...' : 'Change Password'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
