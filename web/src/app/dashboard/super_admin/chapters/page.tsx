@@ -43,20 +43,11 @@ interface ChapterItem {
 
 const INITIAL_CHAPTERS: ChapterItem[] = [];
 
-const AVAILABLE_ADMINS = [
-  'Fathima Noor',
-  'Arjun Menon',
-  'Suresh Kumar',
-  'Thomas Mathew',
-  'Rahul Mehta',
-  'Priya Nair',
-  'Anjali Sharma',
-];
-
 import { useEffect } from 'react';
 
 export default function SuperAdminChapters() {
   const [chapters, setChapters] = useState<ChapterItem[]>(INITIAL_CHAPTERS);
+  const [admins, setAdmins] = useState<{ uid: string; name: string; email: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
@@ -84,8 +75,23 @@ export default function SuperAdminChapters() {
     }
   };
 
+  const fetchAdmins = async () => {
+    try {
+      const res = await apiFetch('/api/admin/applications?type=admins');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setAdmins(data.admins || []);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch admins:', err);
+    }
+  };
+
   useEffect(() => {
     fetchChapters();
+    fetchAdmins();
   }, []);
 
   // Toggle chapter status
@@ -413,9 +419,9 @@ export default function SuperAdminChapters() {
                   <option value="" style={{ background: '#080D26' }}>
                     Leave Unassigned
                   </option>
-                  {AVAILABLE_ADMINS.map((adm) => (
-                    <option key={adm} value={adm} style={{ background: '#080D26' }}>
-                      {adm}
+                  {admins.map((adm) => (
+                    <option key={adm.uid} value={adm.name} style={{ background: '#080D26' }}>
+                      {adm.name}
                     </option>
                   ))}
                 </select>
@@ -482,13 +488,13 @@ export default function SuperAdminChapters() {
                   <X size={14} className="text-rose-400" />
                 </button>
 
-                {AVAILABLE_ADMINS.map((adm) => (
+                {admins.map((adm) => (
                   <button
-                    key={adm}
-                    onClick={() => assignAdmin(adm)}
+                    key={adm.uid}
+                    onClick={() => assignAdmin(adm.name)}
                     className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-colors text-left"
                   >
-                    <span className="text-xs text-gray-200">{adm}</span>
+                    <span className="text-xs text-gray-200">{adm.name}</span>
                     <Check size={14} className="text-[#C9A84C] opacity-60 hover:opacity-100" />
                   </button>
                 ))}

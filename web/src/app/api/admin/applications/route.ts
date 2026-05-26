@@ -60,6 +60,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, merchants });
     }
 
+    if (type === 'admins') {
+      const snap = await adminDb
+        .collection('users')
+        .where('role', 'in', ['admin', 'super_admin'])
+        .get();
+      const admins = snap.docs.map(doc => {
+        const data = doc.data();
+        return {
+          uid: doc.id,
+          name: data.full_name || 'Unnamed Admin',
+          email: data.email || 'N/A',
+        };
+      });
+      return NextResponse.json({ success: true, admins });
+    }
+
     if (type === 'chapter_applications') {
       const snap = await adminDb
         .collection('applications')
