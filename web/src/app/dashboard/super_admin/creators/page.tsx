@@ -72,16 +72,23 @@ export default function SuperAdminCreators() {
   const [createForm, setCreateForm] = useState({
     full_name: '',
     email: '',
+    password: '',
     instagram_url: '',
     instagram_followers: '',
     niche: '',
     chapter: 'Kozhikode',
   });
   const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const handleCreateCreator = async () => {
-    if (!createForm.full_name || !createForm.email) return;
+    if (!createForm.full_name || !createForm.email || !createForm.password) return;
+    if (createForm.password.length < 6) {
+      setCreateError('Password must be at least 6 characters');
+      return;
+    }
     setCreateLoading(true);
+    setCreateError(null);
     try {
       const res = await fetch('/api/admin/applications', {
         method: 'POST',
@@ -91,13 +98,18 @@ export default function SuperAdminCreators() {
           ...createForm,
         }),
       });
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.success) {
         setIsCreateModalOpen(false);
-        setCreateForm({ full_name: '', email: '', instagram_url: '', instagram_followers: '', niche: '', chapter: 'Kozhikode' });
+        setCreateForm({ full_name: '', email: '', password: '', instagram_url: '', instagram_followers: '', niche: '', chapter: 'Kozhikode' });
+        setCreateError(null);
         fetchCreators();
+      } else {
+        setCreateError(data.error || 'Failed to create creator');
       }
     } catch (err) {
       console.error('Failed to create creator:', err);
+      setCreateError('Network error. Please try again.');
     } finally {
       setCreateLoading(false);
     }
@@ -523,6 +535,25 @@ export default function SuperAdminCreators() {
                 />
               </div>
 
+              {/* Password */}
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Login Password *</label>
+                <input
+                  type="password"
+                  value={createForm.password}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder="Min 6 characters"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-gray-600"
+                />
+              </div>
+
+              {/* Error message */}
+              {createError && (
+                <div className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">
+                  {createError}
+                </div>
+              )}
+
               {/* Instagram URL */}
               <div>
                 <label className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 block">Instagram URL</label>
@@ -587,7 +618,7 @@ export default function SuperAdminCreators() {
               </button>
               <button
                 onClick={handleCreateCreator}
-                disabled={createLoading || !createForm.full_name || !createForm.email}
+                disabled={createLoading || !createForm.full_name || !createForm.email || !createForm.password}
                 className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 style={{
                   background: 'linear-gradient(135deg, #C9A84C 0%, #a88a3a 100%)',

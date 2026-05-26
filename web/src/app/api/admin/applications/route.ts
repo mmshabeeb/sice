@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase/server';
+import { adminDb, adminAuth } from '@/lib/firebase/server';
 
 function extractHandle(url: string): string {
   try {
@@ -256,11 +256,46 @@ export async function POST(request: NextRequest) {
     const { action, id, status, chapter, name, city, state, adminName } = body;
 
     if (action === 'create_creator') {
-      const { email, full_name, platform, followers, niche, chapter: creatorChapter, instagram_url, instagram_followers } = body;
-      if (!email || !full_name) {
-        return NextResponse.json({ error: 'Missing email or full_name' }, { status: 400 });
+      const { email, full_name, password, platform, followers, niche, chapter: creatorChapter, instagram_url, instagram_followers } = body;
+      if (!email || !full_name || !password) {
+        return NextResponse.json({ error: 'Missing email, full_name, or password' }, { status: 400 });
       }
-      // Create in the 'applications' collection as an approved creator (same collection the super_admin query reads from)
+
+      // 1. Create Firebase Auth user so they can log in
+      let uid: string;
+      try {
+        const userRecord = await adminAuth.createUser({
+          email,
+          password,
+          displayName: full_name,
+        });
+        uid = userRecord.uid;
+      } catch (authErr: any) {
+        // If user already exists in Auth, get their UID
+        if (authErr.code === 'auth/email-already-exists') {
+          const existingUser = await adminAuth.getUserByEmail(email);
+          uid = existingUser.uid;
+        } else {
+          console.error('Firebase Auth createUser error:', authErr);
+          return NextResponse.json({ error: `Auth error: ${authErr.message}` }, { status: 500 });
+        }
+      }
+
+      // 2. Create the 'users' collection doc (keyed by uid) — login checks this for the role
+      await adminDb.collection('users').doc(uid).set({
+        role: 'creator',
+        full_name,
+        email,
+        platform: platform || 'Instagram',
+        instagram_url: instagram_url || '',
+        instagram_followers: instagram_followers || followers || '0',
+        chapter: creatorChapter || 'Kozhikode',
+        status: 'active',
+        created_at: new Date(),
+        created_manually: true,
+      }, { merge: true });
+
+      // 3. Also create in 'applications' collection so they appear in the super admin creators list
       const docId = `manual-${Date.now()}-${Math.random().toString(36).substring(7)}`;
       await adminDb.collection('applications').doc(docId).set({
         application_type: 'creator',
@@ -275,8 +310,10 @@ export async function POST(request: NextRequest) {
         engagement_rate: '4.2%',
         submitted_at: new Date(),
         created_manually: true,
+        auth_uid: uid,
       });
-      return NextResponse.json({ success: true });
+
+      return NextResponse.json({ success: true, uid });
     }
 
     if (action === 'create_chapter') {
