@@ -14,6 +14,7 @@ import {
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/client';
 import type { UserRole } from '@/types/database';
+import { apiFetch } from '@/utils/api';
 
 const DEMO_ACCOUNTS = [
   { role: 'Creator', email: 'demo.creator@thesice.com', password: 'Demo@1234', description: 'Social accounts, metrics, brand deals' },
@@ -133,7 +134,7 @@ export default function LoginPage() {
         }
       }
 
-      const res = await fetch('/api/auth/session', {
+      const res = await apiFetch('/api/auth/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken }),
@@ -194,7 +195,7 @@ export default function LoginPage() {
         throw new Error(`Access Denied: No account associated with Google email ${emailStr}.`);
       }
 
-      const res = await fetch('/api/auth/session', {
+      const res = await apiFetch('/api/auth/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken }),
@@ -327,7 +328,7 @@ export default function LoginPage() {
         throw new Error(`Access Denied: No account associated with mobile number ${verifiedPhone}.`);
       }
 
-      const res = await fetch('/api/auth/session', {
+      const res = await apiFetch('/api/auth/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken }),

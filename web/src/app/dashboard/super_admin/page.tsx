@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { apiFetch } from '@/utils/api';
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                             */
@@ -93,7 +94,7 @@ export default function SuperAdminOverview() {
     async function loadStats() {
       try {
         // 1. Fetch Creator applications for stats and platform distribution
-        const cRes = await fetch('/api/admin/applications?type=super_admin');
+        const cRes = await apiFetch('/api/admin/applications?type=super_admin');
         let rawCreators: any[] = [];
         if (cRes.ok) {
           const cData = await cRes.json();
@@ -119,7 +120,7 @@ export default function SuperAdminOverview() {
         }
 
         // 2. Fetch Chapter applications count
-        const chAppRes = await fetch('/api/admin/applications?type=chapter_applications');
+        const chAppRes = await apiFetch('/api/admin/applications?type=chapter_applications');
         let rawChapterApps: any[] = [];
         if (chAppRes.ok) {
           const chAppData = await chAppRes.json();
@@ -131,7 +132,7 @@ export default function SuperAdminOverview() {
         }
 
         // 3. Fetch active Chapters
-        const chRes = await fetch('/api/admin/applications?type=chapters');
+        const chRes = await apiFetch('/api/admin/applications?type=chapters');
         if (chRes.ok) {
           const chData = await chRes.json();
           if (chData.success) {
@@ -149,7 +150,7 @@ export default function SuperAdminOverview() {
         }
 
         // 4. Fetch Merchants
-        const mRes = await fetch('/api/admin/applications?type=merchants');
+        const mRes = await apiFetch('/api/admin/applications?type=merchants');
         if (mRes.ok) {
           const mData = await mRes.json();
           if (mData.success) {
@@ -158,7 +159,7 @@ export default function SuperAdminOverview() {
         }
 
         // 5. Fetch Creator applications detailed queue for Global Activity Stream
-        const cAppRes = await fetch('/api/admin/applications?type=applications');
+        const cAppRes = await apiFetch('/api/admin/applications?type=applications');
         let rawCreatorApps: any[] = [];
         if (cAppRes.ok) {
           const cAppData = await cAppRes.json();

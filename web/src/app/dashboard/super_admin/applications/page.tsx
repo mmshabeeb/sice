@@ -34,6 +34,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
+import { apiFetch } from '@/utils/api';
 
 const GOLD = '#C9A84C';
 
@@ -631,7 +632,7 @@ export default function SuperAdminApplications() {
     setLoading(true);
     try {
       // 1. Fetch Creator Applications
-      const cRes = await fetch('/api/admin/applications?type=applications');
+      const cRes = await apiFetch('/api/admin/applications?type=applications');
       if (cRes.ok) {
         const cData = await cRes.json();
         if (cData.success) {
@@ -640,7 +641,7 @@ export default function SuperAdminApplications() {
       }
 
       // 2. Fetch Chapter Applications
-      const chRes = await fetch('/api/admin/applications?type=chapter_applications');
+      const chRes = await apiFetch('/api/admin/applications?type=chapter_applications');
       if (chRes.ok) {
         const chData = await chRes.json();
         if (chData.success) {
@@ -660,7 +661,7 @@ export default function SuperAdminApplications() {
 
   const handleUpdateStatus = async (id: string, status: string, type: 'creator' | 'chapter') => {
     try {
-      const res = await fetch('/api/admin/applications', {
+      const res = await apiFetch('/api/admin/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_status', id, status }),
@@ -677,7 +678,7 @@ export default function SuperAdminApplications() {
 
   const handleSaveCreatorDetails = async (id: string, details: any) => {
     try {
-      const res = await fetch('/api/admin/applications', {
+      const res = await apiFetch('/api/admin/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_details', id, ...details }),

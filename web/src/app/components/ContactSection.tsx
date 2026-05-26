@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { apiFetch } from "@/utils/api";
 
 export default function ContactSection() {
   const [status, setStatus] = useState("");
@@ -15,7 +16,7 @@ export default function ContactSection() {
     const formData = new FormData(event.currentTarget);
 
     try {
-      const res = await fetch("/api/contact", {
+      const res = await apiFetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

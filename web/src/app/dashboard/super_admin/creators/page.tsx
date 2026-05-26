@@ -29,6 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { apiFetch } from '@/utils/api';
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                             */
@@ -90,7 +91,7 @@ export default function SuperAdminCreators() {
     setCreateLoading(true);
     setCreateError(null);
     try {
-      const res = await fetch('/api/admin/applications', {
+      const res = await apiFetch('/api/admin/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -117,7 +118,7 @@ export default function SuperAdminCreators() {
 
   const fetchCreators = async () => {
     try {
-      const res = await fetch('/api/admin/applications?type=super_admin');
+      const res = await apiFetch('/api/admin/applications?type=super_admin');
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
@@ -146,7 +147,7 @@ export default function SuperAdminCreators() {
   // Toggle Verification on Backend
   const toggleVerification = async (uid: string) => {
     try {
-      const res = await fetch('/api/admin/applications', {
+      const res = await apiFetch('/api/admin/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'toggle_verify', id: uid }),
@@ -162,7 +163,7 @@ export default function SuperAdminCreators() {
   // Toggle Suspend on Backend
   const toggleSuspend = async (uid: string) => {
     try {
-      const res = await fetch('/api/admin/applications', {
+      const res = await apiFetch('/api/admin/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'toggle_suspend', id: uid }),
@@ -185,7 +186,7 @@ export default function SuperAdminCreators() {
   const changeChapter = async (chapter: string) => {
     if (!selectedCreatorUid) return;
     try {
-      const res = await fetch('/api/admin/applications', {
+      const res = await apiFetch('/api/admin/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'transfer_chapter', id: selectedCreatorUid, chapter }),

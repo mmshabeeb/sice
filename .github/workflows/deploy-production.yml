@@ -90,7 +90,7 @@ jobs:
         
         # Install deps and restart on server
         ssh -i ~/.ssh/deploy_key -p ${SSH_PORT:-65002} -o StrictHostKeyChecking=no \
-          ${SSH_USER}@${SSH_HOST} "cd ${DEPLOY_PATH} && npm ci --production 2>/dev/null || npm install --production && (pm2 restart sice-production 2>/dev/null || pm2 start server.js --name sice-production) && echo '✅ Production deployment complete!'"
+          ${SSH_USER}@${SSH_HOST} "cd ${DEPLOY_PATH} && (/opt/alt/alt-nodejs22/root/bin/npm ci --production 2>/dev/null || /opt/alt/alt-nodejs22/root/bin/npm install --production) && mkdir -p tmp && touch tmp/restart.txt && echo '✅ Production deployment complete!'"
 
     - name: 📋 Production Deployment Summary
       run: |

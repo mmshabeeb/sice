@@ -11,6 +11,7 @@ import {
   type ConfirmationResult
 } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
+import { apiFetch } from "@/utils/api";
 
 const countryCodes = [
   { label: "India +91", value: "+91" },
@@ -155,7 +156,7 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
     if (!url || !url.trim()) return;
     setFetchingFollowers((prev) => ({ ...prev, [platform]: true }));
     try {
-      const res = await fetch("/api/social/followers", {
+      const res = await apiFetch("/api/social/followers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ platform, url }),
@@ -424,7 +425,7 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
         payload.statementOfPurpose = formData.get("statementOfPurpose");
       }
 
-      const res = await fetch("/api/apply", {
+      const res = await apiFetch("/api/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -31,6 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
+import { apiFetch } from '@/utils/api';
 
 /* ------------------------------------------------------------------ */
 /* Constants / Helpers                                                    */
@@ -590,7 +591,7 @@ export default function ApplicationsPage() {
 
   const fetchApplications = async () => {
     try {
-      const res = await fetch('/api/admin/applications?type=applications');
+      const res = await apiFetch('/api/admin/applications?type=applications');
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
@@ -610,7 +611,7 @@ export default function ApplicationsPage() {
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
-      const res = await fetch('/api/admin/applications', {
+      const res = await apiFetch('/api/admin/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_status', id, status }),
@@ -626,7 +627,7 @@ export default function ApplicationsPage() {
 
   const handleSaveDetails = async (id: string, details: any) => {
     try {
-      const res = await fetch('/api/admin/applications', {
+      const res = await apiFetch('/api/admin/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_details', id, ...details }),

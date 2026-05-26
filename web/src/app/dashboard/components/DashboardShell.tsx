@@ -26,6 +26,7 @@ import {
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { auth } from '@/lib/firebase/client';
 import { signOut } from 'firebase/auth';
+import { apiFetch } from '@/utils/api';
 
 /* ------------------------------------------------------------------ */
 /* Nav config                                                            */
@@ -99,7 +100,7 @@ function SidebarContent({
   const navItems = NAV[role] ?? NAV.creator;
 
   async function handleLogout() {
-    await fetch('/api/auth/session', { method: 'DELETE' });
+    await apiFetch('/api/auth/session', { method: 'DELETE' });
     await signOut(auth);
     router.push('/login');
   }

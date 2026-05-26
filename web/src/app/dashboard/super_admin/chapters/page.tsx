@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { apiFetch } from '@/utils/api';
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                             */
@@ -69,7 +70,7 @@ export default function SuperAdminChapters() {
 
   const fetchChapters = async () => {
     try {
-      const res = await fetch('/api/admin/applications?type=chapters');
+      const res = await apiFetch('/api/admin/applications?type=chapters');
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
@@ -90,7 +91,7 @@ export default function SuperAdminChapters() {
   // Toggle chapter status
   const toggleStatus = async (id: string) => {
     try {
-      const res = await fetch('/api/admin/applications', {
+      const res = await apiFetch('/api/admin/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'toggle_chapter_status', id }),
@@ -113,7 +114,7 @@ export default function SuperAdminChapters() {
   const assignAdmin = async (admin: string | null) => {
     if (!selectedChapterId) return;
     try {
-      const res = await fetch('/api/admin/applications', {
+      const res = await apiFetch('/api/admin/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'assign_chapter_admin', id: selectedChapterId, adminName: admin }),
@@ -134,7 +135,7 @@ export default function SuperAdminChapters() {
     if (!name || !city || !state) return;
 
     try {
-      const res = await fetch('/api/admin/applications', {
+      const res = await apiFetch('/api/admin/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'create_chapter', name, city, state, adminName: adminName || null }),

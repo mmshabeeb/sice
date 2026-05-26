@@ -30,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { apiFetch } from '@/utils/api';
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                             */
@@ -130,7 +131,7 @@ export default function RosterPage() {
 
   const fetchRoster = async () => {
     try {
-      const res = await fetch('/api/admin/applications?type=roster&chapter=Kozhikode');
+      const res = await apiFetch('/api/admin/applications?type=roster&chapter=Kozhikode');
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
@@ -150,7 +151,7 @@ export default function RosterPage() {
 
   const handleToggleSuspend = async (id: string) => {
     try {
-      const res = await fetch('/api/admin/applications', {
+      const res = await apiFetch('/api/admin/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'toggle_suspend', id }),

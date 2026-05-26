@@ -85,16 +85,17 @@ jobs:
           web/server.js \
           ${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH}/
         
-        # Create .env file on server with Firebase secrets
+        # Create .env file on server with Firebase secrets if needed, install dependencies, and restart
         ssh -i ~/.ssh/deploy_key -p ${SSH_PORT:-65002} -o StrictHostKeyChecking=no \
           ${SSH_USER}@${SSH_HOST} << 'ENDSSH'
           cd ${DEPLOY_PATH}
           
-          # Install production dependencies
-          npm ci --production 2>/dev/null || npm install --production
+          # Install production dependencies using explicit Node.js paths
+          /opt/alt/alt-nodejs22/root/bin/npm ci --production 2>/dev/null || /opt/alt/alt-nodejs22/root/bin/npm install --production
           
-          # Restart the application
-          pm2 restart sice-testing 2>/dev/null || pm2 start server.js --name sice-testing
+          # Restart the Passenger application
+          mkdir -p tmp
+          touch tmp/restart.txt
           
           echo "✅ Testing deployment complete!"
         ENDSSH
