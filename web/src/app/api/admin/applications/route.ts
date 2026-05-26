@@ -471,6 +471,139 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    if (action === 'create_admin_user') {
+      const { email, password, full_name, role, chapter_id } = body;
+      if (!email || !full_name || !password || !role) {
+        return NextResponse.json({ error: 'Missing email, full_name, password, or role' }, { status: 400 });
+      }
+
+      // 1. Create Firebase Auth user so they can log in
+      let uid: string;
+      try {
+        const userRecord = await adminAuth.createUser({
+          email,
+          password,
+          displayName: full_name,
+        });
+        uid = userRecord.uid;
+      } catch (authErr: any) {
+        if (authErr.code === 'auth/email-already-exists') {
+          const existingUser = await adminAuth.getUserByEmail(email);
+          uid = existingUser.uid;
+        } else {
+          console.error('Firebase Auth createUser error:', authErr);
+          return NextResponse.json({ error: `Auth error: ${authErr.message}` }, { status: 500 });
+        }
+      }
+
+      // 2. Create the 'users' collection doc
+      const userData: any = {
+        uid,
+        full_name,
+        email,
+        role,
+        status: 'active',
+        created_at: new Date(),
+      };
+
+      if (chapter_id) {
+        userData.chapter_id = chapter_id;
+      }
+
+      await adminDb.collection('users').doc(uid).set(userData, { merge: true });
+
+      // 3. Auto sync chapter director name if role is admin
+      if (role === 'admin' && chapter_id) {
+        try {
+          await adminDb.collection('chapters').doc(chapter_id).update({ adminName: full_name });
+        } catch (chErr) {
+          console.error('Failed to update chapter admin name:', chErr);
+        }
+      }
+
+      return NextResponse.json({ success: true, uid });
+    }
+
+    if (action === 'update_admin_user') {
+      const { uid, full_name, role, chapter_id, status } = body;
+      if (!uid) {
+        return NextResponse.json({ error: 'User UID is required' }, { status: 400 });
+      }
+
+      const userRef = adminDb.collection('users').doc(uid);
+      const userSnap = await userRef.get();
+      if (!userSnap.exists) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+
+      // Update Auth displayName if name changes
+      if (full_name) {
+        try {
+          await adminAuth.updateUser(uid, { displayName: full_name });
+        } catch (authErr) {
+          console.error('Firebase Auth updateUser error:', authErr);
+        }
+      }
+
+      const updateData: any = {};
+      if (full_name !== undefined) updateData.full_name = full_name;
+      if (role !== undefined) updateData.role = role;
+      if (status !== undefined) updateData.status = status;
+      
+      // Handle chapter_id
+      if (role === 'admin') {
+        updateData.chapter_id = chapter_id || null;
+        if (chapter_id && full_name) {
+          try {
+            await adminDb.collection('chapters').doc(chapter_id).update({ adminName: full_name });
+          } catch (chErr) {
+            console.error('Failed to update chapter admin name:', chErr);
+          }
+        }
+      } else {
+        updateData.chapter_id = null; // Reset chapter if role changes to non-admin
+      }
+
+      await userRef.update(updateData);
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === 'delete_admin_user') {
+      const { uid } = body;
+      if (!uid) {
+        return NextResponse.json({ error: 'User UID is required' }, { status: 400 });
+      }
+
+      // 1. Delete from Firebase Auth
+      try {
+        await adminAuth.deleteUser(uid);
+      } catch (authErr: any) {
+        console.warn('Firebase Auth deleteUser warning or error:', authErr);
+      }
+
+      // 2. Delete from Firestore users collection
+      await adminDb.collection('users').doc(uid).delete();
+
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === 'toggle_user_status') {
+      const { uid } = body;
+      if (!uid) {
+        return NextResponse.json({ error: 'User UID is required' }, { status: 400 });
+      }
+
+      const userRef = adminDb.collection('users').doc(uid);
+      const userSnap = await userRef.get();
+      if (userSnap.exists) {
+        const currentStatus = userSnap.data()?.status || 'active';
+        const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+        await userRef.update({ status: newStatus });
+        return NextResponse.json({ success: true, newStatus });
+      }
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     return NextResponse.json({ error: 'Invalid action parameter' }, { status: 400 });
 
   } catch (err: any) {

@@ -67,6 +67,7 @@ const NAV: Record<string, NavItem[]> = {
     { label: 'Application Queue', href: '/dashboard/super_admin/applications', icon: ClipboardList },
     { label: 'Creators', href: '/dashboard/super_admin/creators', icon: Users },
     { label: 'Merchants', href: '/dashboard/super_admin/merchants', icon: ShoppingBag },
+    { label: 'Users', href: '/dashboard/super_admin/users', icon: Users },
   ],
 };
 
@@ -75,6 +76,7 @@ const ROLE_LABELS: Record<string, string> = {
   merchant: 'Merchant',
   admin: 'Chapter Admin',
   super_admin: 'Super Admin',
+  employee: 'Employee',
 };
 
 /* ------------------------------------------------------------------ */
