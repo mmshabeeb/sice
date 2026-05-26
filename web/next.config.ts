@@ -3,6 +3,10 @@ import path from "path";
 
 const nextConfig: NextConfig = {
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
+  experimental: {
+    workerThreads: false,
+    cpus: 1,
+  },
   turbopack: {
     root: path.join(__dirname, ".."),
   },

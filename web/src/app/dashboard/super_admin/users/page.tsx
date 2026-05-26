@@ -18,6 +18,11 @@ import {
   Shield,
   Briefcase,
   AlertCircle,
+  RotateCw,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +58,7 @@ export default function SuperAdminUsers() {
   const [users, setUsers] = useState<UserItem[]>([]);
   const [chapters, setChapters] = useState<ChapterItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Modals state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -66,6 +72,15 @@ export default function SuperAdminUsers() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 25;
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, roleFilter, statusFilter]);
 
   // Form states
   const [fullName, setFullName] = useState('');
@@ -117,6 +132,17 @@ export default function SuperAdminUsers() {
     };
     loadData();
   }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([fetchUsers(), fetchChapters()]);
+    } catch (err) {
+      console.error('Failed to refresh data:', err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -284,6 +310,11 @@ export default function SuperAdminUsers() {
 
     return matchesSearch && matchesRole && matchesStatus;
   });
+
+  // Paginated users
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
 
   // Role Badges
   const getRoleBadge = (role: string) => {
@@ -454,6 +485,20 @@ export default function SuperAdminUsers() {
             <option value="active">Active</option>
             <option value="suspended">Suspended</option>
           </select>
+
+          {/* Refresh Button */}
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center justify-center gap-2 bg-white/[0.03] hover:bg-white/[0.08] active:scale-[0.98] border border-white/10 rounded-xl px-4 py-2 text-sm text-white transition-all duration-200 disabled:opacity-50"
+            title="Refresh User Data"
+          >
+            <RotateCw
+              size={16}
+              className={`${refreshing ? 'animate-spin text-[#C9A84C]' : 'text-gray-400 hover:text-white transition-colors'}`}
+            />
+            <span>{refreshing ? 'Syncing...' : 'Sync Data'}</span>
+          </button>
         </div>
       </div>
 
@@ -486,7 +531,7 @@ export default function SuperAdminUsers() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers.map((u) => {
+                  paginatedUsers.map((u) => {
                     const initials = u.name
                       ? u.name
                           .split(' ')
@@ -579,6 +624,95 @@ export default function SuperAdminUsers() {
             </Table>
           </div>
         </CardContent>
+
+        {/* PAGINATION CONTROLS */}
+        {filteredUsers.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-white/5 bg-white/[0.01]">
+            <div className="text-xs text-gray-400">
+              Showing <span className="font-semibold text-white">{Math.min(startIndex + 1, filteredUsers.length)}</span> to{' '}
+              <span className="font-semibold text-white">
+                {Math.min(startIndex + itemsPerPage, filteredUsers.length)}
+              </span>{' '}
+              of <span className="font-semibold text-white">{filteredUsers.length}</span> users
+            </div>
+            <div className="flex items-center gap-1.5">
+              {/* First Page */}
+              <button
+                type="button"
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 disabled:hover:bg-white/5 transition-all active:scale-[0.95]"
+                title="First Page"
+              >
+                <ChevronsLeft size={14} />
+              </button>
+
+              {/* Previous Page */}
+              <button
+                type="button"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 disabled:hover:bg-white/5 transition-all active:scale-[0.95]"
+                title="Previous Page"
+              >
+                <ChevronLeft size={14} />
+              </button>
+
+              {/* Page indicators */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, idx) => idx + 1)
+                  .filter((page) => {
+                    return (
+                      page === 1 ||
+                      page === totalPages ||
+                      Math.abs(page - currentPage) <= 1
+                    );
+                  })
+                  .map((page, index, array) => {
+                    const isGap = index > 0 && page - array[index - 1] > 1;
+                    return (
+                      <div key={page} className="flex items-center gap-1">
+                        {isGap && <span className="px-1 text-xs text-gray-500">...</span>}
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all active:scale-[0.95] ${
+                            currentPage === page
+                              ? 'border-[#C9A84C] text-[#C9A84C] bg-[#C9A84C]/10 font-bold'
+                              : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      </div>
+                    );
+                  })}
+              </div>
+
+              {/* Next Page */}
+              <button
+                type="button"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 disabled:hover:bg-white/5 transition-all active:scale-[0.95]"
+                title="Next Page"
+              >
+                <ChevronRight size={14} />
+              </button>
+
+              {/* Last Page */}
+              <button
+                type="button"
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 disabled:hover:bg-white/5 transition-all active:scale-[0.95]"
+                title="Last Page"
+              >
+                <ChevronsRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* CREATE USER DIALOG (MODAL) */}
