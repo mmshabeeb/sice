@@ -466,12 +466,12 @@ export default function SuperAdminUsers() {
             className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50 cursor-pointer"
             style={{ colorScheme: 'dark' }}
           >
-            <option value="all">All Roles</option>
-            <option value="super_admin">Super Admins</option>
-            <option value="admin">Chapter Admins</option>
-            <option value="employee">Employees</option>
-            <option value="merchant">Merchants</option>
-            <option value="creator">Creators</option>
+            <option value="all" style={{ background: '#080D26', color: '#fff' }}>All Roles</option>
+            <option value="super_admin" style={{ background: '#080D26', color: '#fff' }}>Super Admins</option>
+            <option value="admin" style={{ background: '#080D26', color: '#fff' }}>Chapter Admins</option>
+            <option value="employee" style={{ background: '#080D26', color: '#fff' }}>Employees</option>
+            <option value="merchant" style={{ background: '#080D26', color: '#fff' }}>Merchants</option>
+            <option value="creator" style={{ background: '#080D26', color: '#fff' }}>Creators</option>
           </select>
 
           {/* Status Filter */}
@@ -481,9 +481,9 @@ export default function SuperAdminUsers() {
             className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50 cursor-pointer"
             style={{ colorScheme: 'dark' }}
           >
-            <option value="all">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="suspended">Suspended</option>
+            <option value="all" style={{ background: '#080D26', color: '#fff' }}>All Statuses</option>
+            <option value="active" style={{ background: '#080D26', color: '#fff' }}>Active</option>
+            <option value="suspended" style={{ background: '#080D26', color: '#fff' }}>Suspended</option>
           </select>
 
           {/* Refresh Button */}
