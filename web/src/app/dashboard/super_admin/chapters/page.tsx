@@ -47,7 +47,8 @@ import { useEffect } from 'react';
 
 export default function SuperAdminChapters() {
   const [chapters, setChapters] = useState<ChapterItem[]>(INITIAL_CHAPTERS);
-  const [admins, setAdmins] = useState<{ uid: string; name: string; email: string }[]>([]);
+  const [users, setUsers] = useState<{ uid: string; name: string; email: string; role: string }[]>([]);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
@@ -58,6 +59,50 @@ export default function SuperAdminChapters() {
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [adminName, setAdminName] = useState('');
+
+  const filteredUsers = users.filter((u) => {
+    const q = userSearchQuery.toLowerCase();
+    return (
+      u.name.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q) ||
+      u.role.toLowerCase().includes(q)
+    );
+  });
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'super_admin':
+        return (
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-md border border-[#C9A84C]/25 bg-[#C9A84C]/10 text-[#C9A84C] uppercase tracking-wider">
+            Super Admin
+          </span>
+        );
+      case 'admin':
+        return (
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-md border border-amber-500/20 bg-amber-500/10 text-amber-400 uppercase tracking-wider">
+            Admin
+          </span>
+        );
+      case 'merchant':
+        return (
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-md border border-cyan-500/20 bg-cyan-500/10 text-cyan-400 uppercase tracking-wider">
+            Merchant
+          </span>
+        );
+      case 'creator':
+        return (
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-md border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 uppercase tracking-wider">
+            Creator
+          </span>
+        );
+      default:
+        return (
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-md border border-white/10 bg-white/5 text-gray-400 uppercase tracking-wider">
+            {role}
+          </span>
+        );
+    }
+  };
 
   const fetchChapters = async () => {
     try {
@@ -75,23 +120,23 @@ export default function SuperAdminChapters() {
     }
   };
 
-  const fetchAdmins = async () => {
+  const fetchUsers = async () => {
     try {
-      const res = await apiFetch('/api/admin/applications?type=admins');
+      const res = await apiFetch('/api/admin/applications?type=all_users');
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
-          setAdmins(data.admins || []);
+          setUsers(data.users || []);
         }
       }
     } catch (err) {
-      console.error('Failed to fetch admins:', err);
+      console.error('Failed to fetch users:', err);
     }
   };
 
   useEffect(() => {
     fetchChapters();
-    fetchAdmins();
+    fetchUsers();
   }, []);
 
   // Toggle chapter status
@@ -114,6 +159,7 @@ export default function SuperAdminChapters() {
   const openAssignAdmin = (id: string) => {
     setSelectedChapterId(id);
     setIsAdminModalOpen(true);
+    setUserSearchQuery('');
   };
 
   // Assign admin
@@ -419,9 +465,9 @@ export default function SuperAdminChapters() {
                   <option value="" style={{ background: '#080D26' }}>
                     Leave Unassigned
                   </option>
-                  {admins.map((adm) => (
-                    <option key={adm.uid} value={adm.name} style={{ background: '#080D26' }}>
-                      {adm.name}
+                  {users.map((u) => (
+                    <option key={u.uid} value={u.name} style={{ background: '#080D26' }}>
+                      {u.name} ({u.role})
                     </option>
                   ))}
                 </select>
@@ -455,7 +501,7 @@ export default function SuperAdminChapters() {
       {isAdminModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div
-            className="w-full max-w-sm rounded-2xl border-0 p-6 space-y-6"
+            className="w-full max-w-sm rounded-2xl border-0 p-6 space-y-4"
             style={{
               background: '#080D26',
               border: '1px solid rgba(240, 235, 224, 0.15)',
@@ -474,12 +520,31 @@ export default function SuperAdminChapters() {
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               <p className="text-xs text-gray-400">
-                Select an administrator to assign as the official regional representative.
+                Select any user to assign as the official regional representative.
               </p>
 
-              <div className="flex flex-col gap-2">
+              {/* Search input */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search by name, email, or role..."
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-amber-500/50 transition-colors"
+                />
+                {userSearchQuery && (
+                  <button
+                    onClick={() => setUserSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1">
                 <button
                   onClick={() => assignAdmin(null)}
                   className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-colors text-left"
@@ -488,16 +553,28 @@ export default function SuperAdminChapters() {
                   <X size={14} className="text-rose-400" />
                 </button>
 
-                {admins.map((adm) => (
-                  <button
-                    key={adm.uid}
-                    onClick={() => assignAdmin(adm.name)}
-                    className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-colors text-left"
-                  >
-                    <span className="text-xs text-gray-200">{adm.name}</span>
-                    <Check size={14} className="text-[#C9A84C] opacity-60 hover:opacity-100" />
-                  </button>
-                ))}
+                {filteredUsers.length === 0 ? (
+                  <div className="text-center py-6 text-xs text-gray-500">
+                    No users found matching "{userSearchQuery}"
+                  </div>
+                ) : (
+                  filteredUsers.map((u) => (
+                    <button
+                      key={u.uid}
+                      onClick={() => assignAdmin(u.name)}
+                      className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-colors text-left"
+                    >
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-xs text-gray-200 font-medium">{u.name}</span>
+                        <span className="text-[10px] text-gray-500">{u.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getRoleBadge(u.role)}
+                        <Check size={14} className="text-[#C9A84C] opacity-60 hover:opacity-100" />
+                      </div>
+                    </button>
+                  ))
+                )}
               </div>
             </div>
           </div>

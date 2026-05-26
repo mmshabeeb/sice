@@ -76,6 +76,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, admins });
     }
 
+    if (type === 'all_users') {
+      const snap = await adminDb.collection('users').get();
+      const users = snap.docs.map(doc => {
+        const data = doc.data();
+        return {
+          uid: doc.id,
+          name: data.full_name || data.brand_name || 'Unnamed User',
+          email: data.email || 'N/A',
+          role: data.role || 'N/A',
+        };
+      });
+      return NextResponse.json({ success: true, users });
+    }
+
     if (type === 'chapter_applications') {
       const snap = await adminDb
         .collection('applications')
