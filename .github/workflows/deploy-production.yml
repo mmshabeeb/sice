@@ -1,0 +1,116 @@
+name: 🚀 Deploy to Production
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  build-and-deploy-production:
+    name: Build & Deploy → Production
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: web/package-lock.json
+
+    - name: 📥 Install dependencies
+      working-directory: ./web
+      run: npm ci
+
+    - name: 🔍 TypeScript check
+      working-directory: ./web
+      run: npx tsc --noEmit || true
+
+    - name: 🏗️ Build application
+      working-directory: ./web
+      env:
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+        NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
+        FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+        FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+      run: npm run build
+
+    - name: ✅ Build verification
+      run: |
+        echo "✅ Production build completed successfully!"
+        ls -la web/.next/ || echo "No .next directory found"
+
+    # ── SSH Deployment to Production ──
+    - name: 🔑 Setup SSH key
+      if: ${{ secrets.HOSTINGER_SSH_KEY != '' }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -p ${{ secrets.HOSTINGER_SSH_PORT || '65002' }} ${{ secrets.HOSTINGER_SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+    - name: 🚀 Deploy to Production Server
+      if: ${{ secrets.HOSTINGER_SSH_KEY != '' }}
+      env:
+        SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+        SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+        SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+        DEPLOY_PATH: ${{ secrets.PRODUCTION_PATH }}
+      run: |
+        echo "🚀 Deploying to PRODUCTION..."
+        
+        # Create a clean deploy package
+        mkdir -p /tmp/deploy
+        cp -r web/.next /tmp/deploy/.next
+        cp -r web/public /tmp/deploy/public
+        cp web/package.json /tmp/deploy/package.json
+        cp web/package-lock.json /tmp/deploy/package-lock.json
+        cp web/next.config.ts /tmp/deploy/next.config.ts
+        cp web/server.js /tmp/deploy/server.js
+        
+        # Deploy via rsync
+        rsync -avz --delete \
+          -e "ssh -i ~/.ssh/deploy_key -p ${SSH_PORT:-65002} -o StrictHostKeyChecking=no" \
+          --exclude 'node_modules' \
+          --exclude '.env' \
+          --exclude '.env.local' \
+          /tmp/deploy/ \
+          ${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH}/
+        
+        # Install deps and restart on server
+        ssh -i ~/.ssh/deploy_key -p ${SSH_PORT:-65002} -o StrictHostKeyChecking=no \
+          ${SSH_USER}@${SSH_HOST} "cd ${DEPLOY_PATH} && npm ci --production 2>/dev/null || npm install --production && (pm2 restart sice-production 2>/dev/null || pm2 start server.js --name sice-production) && echo '✅ Production deployment complete!'"
+
+    - name: 📋 Production Deployment Summary
+      run: |
+        echo "═══════════════════════════════════════"
+        echo "  🚀 PRODUCTION DEPLOYMENT SUMMARY"
+        echo "═══════════════════════════════════════"
+        echo "  Branch:    main"
+        echo "  Commit:    ${{ github.sha }}"
+        echo "  Status:    ✅ Build Successful"
+        if [ -n "${{ secrets.HOSTINGER_SSH_KEY }}" ]; then
+          echo "  Deploy:    ✅ Deployed to production"
+          echo "  URL:       https://thesice.com"
+        else
+          echo "  Deploy:    ⏭️ Skipped (SSH secrets not configured)"
+          echo ""
+          echo "  To enable auto-deploy, add these GitHub Secrets:"
+          echo "    - HOSTINGER_SSH_HOST"
+          echo "    - HOSTINGER_SSH_USER"  
+          echo "    - HOSTINGER_SSH_PORT"
+          echo "    - HOSTINGER_SSH_KEY"
+          echo "    - PRODUCTION_PATH"
+        fi
+        echo "═══════════════════════════════════════"

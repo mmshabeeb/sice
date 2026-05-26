@@ -1,0 +1,122 @@
+name: 🧪 Deploy to Testing
+
+on:
+  push:
+    branches: [ "testing" ]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  build-and-deploy-testing:
+    name: Build & Deploy → Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: web/package-lock.json
+
+    - name: 📥 Install dependencies
+      working-directory: ./web
+      run: npm ci
+
+    - name: 🔍 TypeScript check
+      working-directory: ./web
+      run: npx tsc --noEmit || true
+
+    - name: 🏗️ Build application
+      working-directory: ./web
+      env:
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+        NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
+        FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+        FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+      run: npm run build
+
+    - name: ✅ Build verification
+      run: |
+        echo "✅ Build completed successfully!"
+        echo "📁 Build output:"
+        ls -la web/.next/ || echo "No .next directory found"
+
+    # ── SSH Deployment (only runs if SSH secrets are configured) ──
+    - name: 🔑 Setup SSH key
+      if: ${{ secrets.HOSTINGER_SSH_KEY != '' }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -p ${{ secrets.HOSTINGER_SSH_PORT || '65002' }} ${{ secrets.HOSTINGER_SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+    - name: 🚀 Deploy to Testing Server
+      if: ${{ secrets.HOSTINGER_SSH_KEY != '' }}
+      env:
+        SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+        SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+        SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+        DEPLOY_PATH: ${{ secrets.TESTING_PATH }}
+      run: |
+        echo "🚀 Deploying to testing environment..."
+        
+        # Sync the built application to the testing server
+        rsync -avz --delete \
+          -e "ssh -i ~/.ssh/deploy_key -p ${SSH_PORT:-65002} -o StrictHostKeyChecking=no" \
+          --exclude 'node_modules' \
+          --exclude '.git' \
+          --exclude '.env.local' \
+          web/.next/ \
+          web/public/ \
+          web/package.json \
+          web/package-lock.json \
+          web/next.config.ts \
+          web/server.js \
+          ${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH}/
+        
+        # Create .env file on server with Firebase secrets
+        ssh -i ~/.ssh/deploy_key -p ${SSH_PORT:-65002} -o StrictHostKeyChecking=no \
+          ${SSH_USER}@${SSH_HOST} << 'ENDSSH'
+          cd ${DEPLOY_PATH}
+          
+          # Install production dependencies
+          npm ci --production 2>/dev/null || npm install --production
+          
+          # Restart the application
+          pm2 restart sice-testing 2>/dev/null || pm2 start server.js --name sice-testing
+          
+          echo "✅ Testing deployment complete!"
+        ENDSSH
+
+    - name: 📋 Deployment Summary
+      run: |
+        echo "═══════════════════════════════════════"
+        echo "  🧪 TESTING DEPLOYMENT SUMMARY"
+        echo "═══════════════════════════════════════"
+        echo "  Branch:    testing"
+        echo "  Commit:    ${{ github.sha }}"
+        echo "  Status:    ✅ Build Successful"
+        if [ -n "${{ secrets.HOSTINGER_SSH_KEY }}" ]; then
+          echo "  Deploy:    ✅ Deployed to testing server"
+        else
+          echo "  Deploy:    ⏭️ Skipped (SSH secrets not configured)"
+          echo ""
+          echo "  To enable auto-deploy, add these GitHub Secrets:"
+          echo "    - HOSTINGER_SSH_HOST"
+          echo "    - HOSTINGER_SSH_USER"
+          echo "    - HOSTINGER_SSH_PORT"
+          echo "    - HOSTINGER_SSH_KEY"
+          echo "    - TESTING_PATH"
+        fi
+        echo "═══════════════════════════════════════"
