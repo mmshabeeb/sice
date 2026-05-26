@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase/server';
 import { FieldValue } from 'firebase-admin/firestore';
+import { sendMail, generateApplicationEmail } from '@/lib/email';
 
 function formatE164(countryCode: string, number: string): string {
   const cleanCode = countryCode.replace(/[^0-9+]/g, '');
@@ -186,6 +187,20 @@ export async function POST(request: NextRequest) {
         google_verified: !!googleVerified,
         phone_verified: !!phoneVerified,
       });
+    }
+
+    // Send application confirmation email
+    if (email && fullName) {
+      try {
+        const html = generateApplicationEmail(fullName, applicationType);
+        await sendMail({
+          to: String(email).trim().toLowerCase(),
+          subject: 'SICE Application Received',
+          html,
+        });
+      } catch (emailErr) {
+        console.error('Failed to send application confirmation email:', emailErr);
+      }
     }
 
     return NextResponse.json({ success: true });

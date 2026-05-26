@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase/server';
+import { sendMail, generateActivationEmail, generatePasswordResetEmail, generateSecurePassword } from '@/lib/email';
 
 function extractHandle(url: string): string {
   try {
@@ -362,6 +363,18 @@ export async function POST(request: NextRequest) {
         auth_uid: uid,
       });
 
+      // Send activation / login details email for manual onboarding
+      try {
+        const welcomeHtml = generateActivationEmail(full_name, 'creator', email, password);
+        await sendMail({
+          to: email,
+          subject: 'Welcome to SICE - Account Activated',
+          html: welcomeHtml,
+        });
+      } catch (emailErr) {
+        console.error('Failed to send welcome email for manual creator creation:', emailErr);
+      }
+
       return NextResponse.json({ success: true, uid });
     }
 
@@ -429,6 +442,92 @@ export async function POST(request: NextRequest) {
           creatorsCount: 0,
           created_at: new Date(),
         }, { merge: true });
+      }
+
+      // Automatically create User account and send welcome / login details email upon approval
+      if (status === 'Approved' && appData?.email) {
+        try {
+          const emailStr = String(appData.email).trim().toLowerCase();
+          const fullNameStr = appData.full_name || appData.contact_person_name || 'SICE Member';
+          const role = appData.application_type === 'chapter' ? 'admin' : (appData.application_type || 'creator');
+          
+          let authUid = appData.auth_uid;
+          let tempPass = '';
+
+          // 1. Check if auth user already exists in Firebase Auth by email
+          let authUser = null;
+          try {
+            authUser = await adminAuth.getUserByEmail(emailStr);
+            authUid = authUser.uid;
+          } catch (authNotFoundErr) {
+            // User does not exist, let's create a new one in Firebase Auth
+            tempPass = generateSecurePassword();
+            try {
+              const createdUser = await adminAuth.createUser({
+                email: emailStr,
+                password: tempPass,
+                displayName: fullNameStr,
+              });
+              authUser = createdUser;
+              authUid = createdUser.uid;
+            } catch (createErr) {
+              console.error('Error creating auth user on approval:', createErr);
+            }
+          }
+
+          if (authUid) {
+            // Link auth_uid in the application doc
+            await docRef.update({ auth_uid: authUid });
+
+            // 2. Set/update the Firestore 'users' collection document
+            const userData: any = {
+              uid: authUid,
+              role,
+              full_name: fullNameStr,
+              email: emailStr,
+              status: 'active',
+              updated_at: new Date(),
+            };
+
+            if (appData.contact_number) userData.contact_number = appData.contact_number;
+            if (appData.whatsapp_number) userData.whatsapp_number = appData.whatsapp_number;
+            if (appData.location) userData.location = appData.location;
+            if (appData.bio || appData.statement_of_purpose) userData.bio = appData.bio || appData.statement_of_purpose;
+
+            if (role === 'admin' && appData.chapter_name) {
+              userData.chapter_id = appData.chapter_name.toLowerCase().trim().replace(/\s+/g, '-');
+            } else if (appData.chapter || updateData.chapter) {
+              userData.chapter = appData.chapter || updateData.chapter;
+            }
+
+            // Sync social details for creators
+            if (role === 'creator') {
+              if (appData.instagram_url) userData.instagram_url = appData.instagram_url;
+              if (appData.instagram_followers) userData.instagram_followers = appData.instagram_followers;
+              if (appData.x_url) userData.x_url = appData.x_url;
+              if (appData.youtube_url) userData.youtube_url = appData.youtube_url;
+              if (appData.linkedin_url) userData.linkedin_url = appData.linkedin_url;
+              if (appData.facebook_url) userData.facebook_url = appData.facebook_url;
+            } else if (role === 'merchant') {
+              if (appData.brand_name) userData.brand_name = appData.brand_name;
+              if (appData.city) userData.city = appData.city;
+              if (appData.state) userData.state = appData.state;
+              if (appData.country) userData.country = appData.country;
+            }
+
+            await adminDb.collection('users').doc(authUid).set(userData, { merge: true });
+
+            // 3. Send Activation / Login Details email
+            const welcomeHtml = generateActivationEmail(fullNameStr, role, emailStr, tempPass || undefined);
+            await sendMail({
+              to: emailStr,
+              subject: 'Welcome to SICE - Account Activated',
+              html: welcomeHtml,
+            });
+          }
+        } catch (procErr) {
+          console.error('Failed to auto-provision user on approval:', procErr);
+        }
       }
 
       return NextResponse.json({ success: true });
@@ -547,8 +646,26 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'This creator does not have a linked login account.' }, { status: 400 });
       }
 
-      try {
+       try {
         await adminAuth.updateUser(authUid, { password: newPassword });
+
+        if (appData?.email) {
+          try {
+            const resetHtml = generatePasswordResetEmail(
+              appData.full_name || appData.contact_person_name || 'SICE Member',
+              appData.email,
+              newPassword
+            );
+            await sendMail({
+              to: appData.email,
+              subject: 'SICE Password Reset Complete',
+              html: resetHtml,
+            });
+          } catch (emailErr) {
+            console.error('Failed to send password reset confirmation email:', emailErr);
+          }
+        }
+
         return NextResponse.json({ success: true });
       } catch (authErr: any) {
         console.error('Password reset error:', authErr);
@@ -604,6 +721,18 @@ export async function POST(request: NextRequest) {
         } catch (chErr) {
           console.error('Failed to update chapter admin name:', chErr);
         }
+      }
+
+      // Send activation / login details email for manual onboarding
+      try {
+        const welcomeHtml = generateActivationEmail(full_name, role, email, password);
+        await sendMail({
+          to: email,
+          subject: 'Welcome to SICE - Account Activated',
+          html: welcomeHtml,
+        });
+      } catch (emailErr) {
+        console.error('Failed to send welcome email for manual admin creation:', emailErr);
       }
 
       return NextResponse.json({ success: true, uid });
