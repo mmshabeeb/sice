@@ -129,18 +129,24 @@ export default function SuperAdminChapters() {
     }
   };
 
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
   // Create chapter
-  const handleCreateChapter = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreateChapter = async (e?: React.SyntheticEvent) => {
+    if (e) e.preventDefault();
     if (!name || !city || !state) return;
 
+    setCreateLoading(true);
+    setCreateError(null);
     try {
       const res = await apiFetch('/api/admin/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'create_chapter', name, city, state, adminName: adminName || null }),
       });
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.success) {
         fetchChapters();
         setIsModalOpen(false);
         // Reset form
@@ -148,9 +154,14 @@ export default function SuperAdminChapters() {
         setCity('');
         setState('');
         setAdminName('');
+      } else {
+        setCreateError(data.error || 'Failed to create chapter');
       }
     } catch (err) {
       console.error('Failed to create chapter:', err);
+      setCreateError('Network error. Please try again.');
+    } finally {
+      setCreateLoading(false);
     }
   };
 
@@ -336,45 +347,54 @@ export default function SuperAdminChapters() {
             </div>
 
             <form onSubmit={handleCreateChapter} className="space-y-4">
+              {createError && (
+                <div className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl">
+                  {createError}
+                </div>
+              )}
+
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                  Chapter Name
+                  Chapter Name *
                 </label>
                 <input
                   type="text"
                   required
+                  disabled={createLoading}
                   placeholder="e.g. Kozhikode East"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors"
+                  className="bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors disabled:opacity-55"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                    City
+                    City *
                   </label>
                   <input
                     type="text"
                     required
+                    disabled={createLoading}
                     placeholder="e.g. Calicut"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    className="bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors"
+                    className="bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors disabled:opacity-55"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                    State
+                    State *
                   </label>
                   <input
                     type="text"
                     required
+                    disabled={createLoading}
                     placeholder="e.g. Kerala"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
-                    className="bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors"
+                    className="bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors disabled:opacity-55"
                   />
                 </div>
               </div>
@@ -385,8 +405,9 @@ export default function SuperAdminChapters() {
                 </label>
                 <select
                   value={adminName}
+                  disabled={createLoading}
                   onChange={(e) => setAdminName(e.target.value)}
-                  className="bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors cursor-pointer"
+                  className="bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors cursor-pointer disabled:opacity-55"
                   style={{ colorScheme: 'dark' }}
                 >
                   <option value="" style={{ background: '#080D26' }}>
@@ -403,17 +424,20 @@ export default function SuperAdminChapters() {
               <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
                 <button
                   type="button"
+                  disabled={createLoading}
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-55"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl text-xs font-semibold"
+                  disabled={createLoading || !name || !city || !state}
+                  onClick={handleCreateChapter}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold disabled:opacity-50"
                   style={{ background: GOLD, color: '#080D26' }}
                 >
-                  Create Jurisdiction
+                  {createLoading ? 'Creating...' : 'Create Jurisdiction'}
                 </button>
               </div>
             </form>

@@ -116,6 +116,26 @@ export default function SuperAdminCreators() {
     }
   };
 
+  const [dynamicChapters, setDynamicChapters] = useState<string[]>([]);
+
+  const fetchChapters = async () => {
+    try {
+      const res = await apiFetch('/api/admin/applications?type=chapters');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.chapters) {
+          const names = data.chapters.map((ch: any) => ch.name);
+          setDynamicChapters(names);
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch chapters:', err);
+    }
+    // Fallback
+    setDynamicChapters(CHAPTERS_LIST.filter((ch) => ch !== 'All Chapters'));
+  };
+
   const fetchCreators = async () => {
     try {
       const res = await apiFetch('/api/admin/applications?type=super_admin');
@@ -134,6 +154,7 @@ export default function SuperAdminCreators() {
 
   useEffect(() => {
     fetchCreators();
+    fetchChapters();
   }, []);
 
   // Filtered roster
@@ -249,7 +270,7 @@ export default function SuperAdminCreators() {
             className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500/50 transition-colors cursor-pointer"
             style={{ colorScheme: 'dark' }}
           >
-            {CHAPTERS_LIST.map((chap) => (
+            {['All Chapters', ...dynamicChapters].map((chap) => (
               <option key={chap} value={chap} style={{ background: '#080D26' }}>
                 {chap}
               </option>
@@ -457,7 +478,7 @@ export default function SuperAdminCreators() {
               </p>
 
               <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
-                {CHAPTERS_LIST.filter((ch) => ch !== 'All Chapters').map((ch) => (
+                {dynamicChapters.map((ch) => (
                   <button
                      key={ch}
                      onClick={() => changeChapter(ch)}
@@ -600,7 +621,7 @@ export default function SuperAdminCreators() {
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500/50 transition-colors cursor-pointer"
                   style={{ colorScheme: 'dark' }}
                 >
-                  {CHAPTERS_LIST.filter((ch) => ch !== 'All Chapters').map((ch) => (
+                  {dynamicChapters.map((ch) => (
                     <option key={ch} value={ch} style={{ background: '#080D26' }}>
                       {ch}
                     </option>

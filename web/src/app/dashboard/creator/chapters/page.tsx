@@ -12,6 +12,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
+import { apiFetch } from '@/utils/api';
+
 const GOLD = '#C9A84C';
 
 interface ChapterItem {
@@ -23,6 +25,15 @@ interface ChapterItem {
   description: string;
   status: 'active' | 'inception';
 }
+
+const DEFAULT_DESCRIPTIONS: Record<string, string> = {
+  'kozhikode': 'The founding chapter. Anchors the Malabar creator community and serves as the SICE operational base.',
+  'kochi': 'Centering central Kerala\'s media and fashion content creators, with regular local brand integrations.',
+  'bangalore-east': 'Tech and professional creators hub, bridging regional language publishing with tech startups.',
+  'chennai-central': 'Tamil arts, entertainment, and culinary creators networking hub with active workspace meetups.',
+  'hyderabad-gachibowli': 'Telugu cinema, gaming, and design creators community currently in local development phase.',
+  'mumbai-colaba': 'SICE diaspora chapter connecting regional language publishers with central agency stakeholders.',
+};
 
 const CHAPTERS_DIRECTORY: ChapterItem[] = [
   {
@@ -44,7 +55,7 @@ const CHAPTERS_DIRECTORY: ChapterItem[] = [
     status: 'active',
   },
   {
-    id: 'bangalore',
+    id: 'bangalore-east',
     name: 'Bangalore East',
     city: 'Bengaluru',
     state: 'Karnataka',
@@ -53,7 +64,7 @@ const CHAPTERS_DIRECTORY: ChapterItem[] = [
     status: 'active',
   },
   {
-    id: 'chennai',
+    id: 'chennai-central',
     name: 'Chennai Central',
     city: 'Chennai',
     state: 'Tamil Nadu',
@@ -62,7 +73,7 @@ const CHAPTERS_DIRECTORY: ChapterItem[] = [
     status: 'active',
   },
   {
-    id: 'hyderabad',
+    id: 'hyderabad-gachibowli',
     name: 'Hyderabad Gachibowli',
     city: 'Hyderabad',
     state: 'Telangana',
@@ -71,7 +82,7 @@ const CHAPTERS_DIRECTORY: ChapterItem[] = [
     status: 'inception',
   },
   {
-    id: 'mumbai',
+    id: 'mumbai-colaba',
     name: 'Mumbai Colaba',
     city: 'Mumbai',
     state: 'Maharashtra',
@@ -82,20 +93,57 @@ const CHAPTERS_DIRECTORY: ChapterItem[] = [
 ];
 
 export default function CreatorChaptersPage() {
+  const [chapters, setChapters] = useState<ChapterItem[]>([]);
   const [joinedChapters, setJoinedChapters] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Load selections from localStorage
+  // Load selections from localStorage and chapters from API
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('sice-joined-chapters');
-      if (saved) {
-        setJoinedChapters(JSON.parse(saved));
+    async function loadData() {
+      // 1. Load joined chapters
+      try {
+        const saved = localStorage.getItem('sice-joined-chapters');
+        if (saved) {
+          setJoinedChapters(JSON.parse(saved));
+        }
+      } catch (e) {
+        console.error('Failed to load joined chapters', e);
       }
-    } catch (e) {
-      console.error('Failed to load joined chapters', e);
+      setLoaded(true);
+
+      // 2. Load active chapters from Firestore API
+      try {
+        const res = await apiFetch('/api/admin/applications?type=chapters');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.chapters) {
+            const list = data.chapters.map((ch: any) => {
+              const cleanId = ch.id.toLowerCase();
+              return {
+                id: ch.id,
+                name: ch.name,
+                city: ch.city,
+                state: ch.state,
+                creatorsCount: ch.creatorsCount || 0,
+                description: DEFAULT_DESCRIPTIONS[cleanId] || 'Regional SICE chapter supporting regional language content publishers and brand campaign integrations.',
+                status: ch.status === 'active' ? 'active' : 'inception',
+              };
+            });
+            setChapters(list);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch chapters from API:', e);
+      }
+      // Fallback
+      setChapters(CHAPTERS_DIRECTORY);
+      setLoading(false);
     }
-    setLoaded(true);
+    
+    loadData();
   }, []);
 
   // Save selection helper
@@ -151,9 +199,18 @@ export default function CreatorChaptersPage() {
 
       {/* Chapters grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {CHAPTERS_DIRECTORY.map((ch) => {
-          const isJoined = joinedChapters.includes(ch.id);
-          return (
+        {loading ? (
+          <div className="col-span-full py-12 text-center text-gray-500 text-sm">
+            Loading chapters...
+          </div>
+        ) : chapters.length === 0 ? (
+          <div className="col-span-full py-12 text-center text-gray-500 text-sm">
+            No regional chapters found.
+          </div>
+        ) : (
+          chapters.map((ch) => {
+            const isJoined = joinedChapters.includes(ch.id);
+            return (
             <Card
               key={ch.id}
               className={`border-0 transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
@@ -251,7 +308,8 @@ export default function CreatorChaptersPage() {
               </CardContent>
             </Card>
           );
-        })}
+        })
+      )}
       </div>
     </div>
   );
