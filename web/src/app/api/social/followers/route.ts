@@ -109,6 +109,29 @@ function extractUsername(platform: string, url: string): string {
 
 // Platform Scrapers
 
+async function fetchDDGFollowers(query: string, pattern: RegExp, signal: AbortSignal): Promise<string | null> {
+  try {
+    const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': getRandomUserAgent(),
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      signal,
+    });
+    if (response.ok) {
+      const html = await response.text();
+      const match = html.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+  } catch (err) {
+    console.warn(`DDG fetch failed for query "${query}":`, err);
+  }
+  return null;
+}
+
 async function fetchYouTubeFollowers(url: string, username: string, signal: AbortSignal): Promise<string | null> {
   try {
     const cleanUrl = url.trim().startsWith('http') ? url.trim() : `https://${url.trim()}`;
@@ -127,14 +150,18 @@ async function fetchYouTubeFollowers(url: string, username: string, signal: Abor
         return subMatch[1].replace(/subscribers/gi, '').trim();
       }
 
-      const fallbackMatch = html.match(/([\d\.]+[KMB]?)\s+subscribers/i);
+      const fallbackMatch = html.match(/([\d\.,KMB]+)\s+subscribers/i);
       if (fallbackMatch && fallbackMatch[1]) {
         return fallbackMatch[1].trim();
       }
     }
   } catch (err) {
-    console.warn('YouTube direct fetch failed, trying Yahoo fallback:', err);
+    console.warn('YouTube direct fetch failed, trying DDG and Yahoo fallback:', err);
   }
+
+  // DDG Fallback
+  const ddgCount = await fetchDDGFollowers(`site:youtube.com/${username}`, /([\d\.,KMB]+)\s*subscribers/i, signal);
+  if (ddgCount) return ddgCount;
 
   // Yahoo Search fallback
   try {
@@ -159,6 +186,15 @@ async function fetchYouTubeFollowers(url: string, username: string, signal: Abor
 }
 
 async function fetchInstagramFollowers(username: string, signal: AbortSignal): Promise<string | null> {
+  // 1. Try DDG site query
+  let ddgCount = await fetchDDGFollowers(`site:instagram.com/${username}`, /([\d\.,KMB]+)\s*Followers/i, signal);
+  if (ddgCount) return ddgCount;
+
+  // 2. Try DDG general query
+  ddgCount = await fetchDDGFollowers(`${username} instagram`, /([\d\.,KMB]+)\s*Followers/i, signal);
+  if (ddgCount) return ddgCount;
+
+  // 3. Fallback to Yahoo
   try {
     const url = `https://search.yahoo.com/search?p=site:instagram.com/${encodeURIComponent(username)}`;
     const response = await fetch(url, {
@@ -182,6 +218,15 @@ async function fetchInstagramFollowers(username: string, signal: AbortSignal): P
 }
 
 async function fetchFacebookFollowers(username: string, signal: AbortSignal): Promise<string | null> {
+  // 1. Try DDG site query
+  let ddgCount = await fetchDDGFollowers(`site:facebook.com/${username}`, /([\d\.,KMB]+)\s*followers/i, signal);
+  if (ddgCount) return ddgCount;
+
+  // 2. Try DDG general query
+  ddgCount = await fetchDDGFollowers(`${username} facebook followers`, /([\d\.,KMB]+)\s*followers/i, signal);
+  if (ddgCount) return ddgCount;
+
+  // 3. Fallback to Yahoo
   try {
     const url = `https://search.yahoo.com/search?p=site:facebook.com/${encodeURIComponent(username)}`;
     const response = await fetch(url, {
