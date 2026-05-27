@@ -439,15 +439,33 @@ export default function SuperAdminChapters() {
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                     State *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     required
                     disabled={createLoading}
-                    placeholder="e.g. Kerala"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
-                    className="bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors disabled:opacity-55"
-                  />
+                    className="bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors cursor-pointer disabled:opacity-55"
+                    style={{ colorScheme: 'dark' }}
+                  >
+                    <option value="" style={{ background: '#080D26' }}>
+                      Select State
+                    </option>
+                    <option value="Kerala" style={{ background: '#080D26' }}>
+                      Kerala
+                    </option>
+                    <option value="Tamil Nadu" style={{ background: '#080D26' }}>
+                      Tamil Nadu
+                    </option>
+                    <option value="Karnataka" style={{ background: '#080D26' }}>
+                      Karnataka
+                    </option>
+                    <option value="Telangana" style={{ background: '#080D26' }}>
+                      Telangana
+                    </option>
+                    <option value="Hyderabad" style={{ background: '#080D26' }}>
+                      Hyderabad
+                    </option>
+                  </select>
                 </div>
               </div>
 
