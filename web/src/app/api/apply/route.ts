@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase/server';
 import { FieldValue } from 'firebase-admin/firestore';
-import { sendMail, generateApplicationEmail } from '@/lib/email';
+import { sendMail, generateApplicationEmail, generateActivationEmail, generateSecurePassword } from '@/lib/email';
 
 function formatE164(countryCode: string, number: string): string {
   const cleanCode = countryCode.replace(/[^0-9+]/g, '');
@@ -166,11 +166,55 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'At least one social media URL is required.' }, { status: 400 });
       }
 
+      const emailStr = String(email).trim().toLowerCase();
+      const phoneStr = formatE164(contactCountryCode || '', contactNumber || '');
+
+      let authUser = null;
+      let generatedPassword = '';
+
+      // Check if user already exists in Firebase Auth
+      try {
+        authUser = await adminAuth.getUserByEmail(emailStr);
+      } catch {
+        try {
+          authUser = await adminAuth.getUserByPhoneNumber(phoneStr);
+        } catch {
+          // Create new user in Auth with secure password
+          try {
+            generatedPassword = generateSecurePassword();
+            authUser = await adminAuth.createUser({
+              email: emailStr,
+              phoneNumber: phoneStr,
+              displayName: String(fullName).trim(),
+              password: generatedPassword,
+            });
+          } catch (createErr: any) {
+            console.error('Error creating auth user for creator:', createErr);
+          }
+        }
+      }
+
+      const targetUid = authUser?.uid || `creator_${Date.now()}`;
+
+      // Create users collection document to allow login
+      await adminDb.collection('users').doc(targetUid).set({
+        uid: targetUid,
+        role: 'creator',
+        full_name: String(fullName).trim(),
+        email: emailStr,
+        phone: phoneStr,
+        contact_number: `${contactCountryCode ?? ''} ${contactNumber}`.trim(),
+        whatsapp_number: `${whatsappCountryCode ?? ''} ${whatsappNumber}`.trim(),
+        status: 'pending',
+        created_at: FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      // Save application document
       await adminDb.collection('applications').add({
         submitted_at: FieldValue.serverTimestamp(),
         application_type: 'creator',
         full_name: String(fullName).trim(),
-        email: String(email).trim(),
+        email: emailStr,
         contact_number: `${contactCountryCode ?? ''} ${contactNumber}`.trim(),
         whatsapp_number: `${whatsappCountryCode ?? ''} ${whatsappNumber}`.trim(),
         facebook_url: String(facebookUrl || '').trim(),
@@ -186,11 +230,28 @@ export async function POST(request: NextRequest) {
         status: 'pending',
         google_verified: !!googleVerified,
         phone_verified: !!phoneVerified,
+        auth_uid: targetUid,
       });
+
+      // Send Welcome/Activation email with credentials
+      if (emailStr && fullName) {
+        try {
+          const mailHtml = generatedPassword
+            ? generateActivationEmail(fullName, 'creator', emailStr, generatedPassword)
+            : generateActivationEmail(fullName, 'creator', emailStr);
+          await sendMail({
+            to: emailStr,
+            subject: 'Welcome to SICE - Creator Account Credentials',
+            html: mailHtml,
+          });
+        } catch (emailErr) {
+          console.error('Failed to send creator activation email:', emailErr);
+        }
+      }
     }
 
-    // Send application confirmation email
-    if (email && fullName) {
+    // Send application confirmation email for non-creators
+    if (applicationType !== 'creator' && email && fullName) {
       try {
         const html = generateApplicationEmail(fullName, applicationType);
         await sendMail({
