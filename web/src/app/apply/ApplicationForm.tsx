@@ -153,21 +153,24 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
 
   const handleSocialBlur = async (platform: string, url: string) => {
     if (!url || !url.trim()) return;
+    const platformLabel = platform === "x" ? "X" : platform.charAt(0).toUpperCase() + platform.slice(1);
     setFetchingFollowers((prev) => ({ ...prev, [platform]: true }));
+    setSocialError("");
     try {
       const res = await fetch("/api/social/followers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ platform, url }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.count) {
-          setFollowers((prev) => ({ ...prev, [platform]: data.count }));
-        }
+      const data = await res.json();
+      if (res.ok && data.success && data.count) {
+        setFollowers((prev) => ({ ...prev, [platform]: data.count }));
+      } else {
+        setSocialError(data.error || `${platformLabel} follower count could not be fetched. Enter it manually.`);
       }
     } catch (err) {
       console.error(`Failed to fetch ${platform} followers:`, err);
+      setSocialError(`${platformLabel} follower count could not be fetched. Enter it manually.`);
     } finally {
       setFetchingFollowers((prev) => ({ ...prev, [platform]: false }));
     }
@@ -468,25 +471,27 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
   // Identity Verification Step
   if (step === "verify") {
     return (
-      <>
-        <h1>
-          {type === "merchant" 
-            ? "Merchant Membership" 
-            : type === "chapter" 
-            ? "Chapter Organizer" 
-            : "Creator Membership"} <em>application.</em>
-        </h1>
-        <p className="lede light" style={{ marginBottom: 40 }}>
-          Complete the details below to apply for SICE {type === "merchant" ? "Merchant" : type === "chapter" ? "Chapter Organizer" : "Creator"} Membership.
-          We review all applications and respond via email.
-        </p>
+      <div className="apply-layout apply-layout-verify">
+        <div className="apply-copy">
+          <h1>
+            {type === "merchant" 
+              ? "Merchant Membership" 
+              : type === "chapter" 
+              ? "Chapter Organizer" 
+              : "Creator Membership"} <em>application.</em>
+          </h1>
+          <p className="lede light">
+            Complete the details below to apply for SICE {type === "merchant" ? "Merchant" : type === "chapter" ? "Chapter Organizer" : "Creator"} Membership.
+            We review all applications and respond via email.
+          </p>
+        </div>
 
         <div 
-          className="form application-form" 
+          className="form application-form verification-panel" 
           style={{ 
             display: "block", 
-            maxWidth: 600, 
-            margin: "0 auto", 
+            maxWidth: 620, 
+            margin: 0, 
             padding: 32, 
             borderRadius: 8,
             boxSizing: "border-box"
@@ -836,26 +841,28 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
           </div>
         )}
       </div>
-      </>
+      </div>
     );
   }
 
   // Application Form Step
   return (
-    <>
-      <h1>
-        {type === "merchant" 
-          ? "Merchant Membership" 
-          : type === "chapter" 
-          ? "Chapter Organizer" 
-          : "Creator Membership"} <em>application.</em>
-      </h1>
-      <p className="lede light" style={{ marginBottom: 40 }}>
-        Complete the details below to apply for SICE {type === "merchant" ? "Merchant" : type === "chapter" ? "Chapter Organizer" : "Creator"} Membership.
-        We review all applications and respond via email.
-      </p>
+    <div className="apply-layout apply-layout-form">
+      <div className="apply-copy">
+        <h1>
+          {type === "merchant" 
+            ? "Merchant Membership" 
+            : type === "chapter" 
+            ? "Chapter Organizer" 
+            : "Creator Membership"} <em>application.</em>
+        </h1>
+        <p className="lede light">
+          Complete the details below to apply for SICE {type === "merchant" ? "Merchant" : type === "chapter" ? "Chapter Organizer" : "Creator"} Membership.
+          We review all applications and respond via email.
+        </p>
+      </div>
 
-      <form className="form application-form" onSubmit={handleSubmit}>
+      <form className="form application-form membership-form" onSubmit={handleSubmit}>
       {type === "merchant" && (
         <>
           <div className="form-field full">
@@ -1338,6 +1345,6 @@ export default function ApplicationForm({ type: propType }: { type?: string }) {
       </button>
       {status && <div className="form-status">{status}</div>}
     </form>
-    </>
+    </div>
   );
 }

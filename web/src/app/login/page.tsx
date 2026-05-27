@@ -1,343 +1,166 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
+import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  type ConfirmationResult
 } from 'firebase/auth';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/client';
+import { usePhoneVerification } from '@/hooks/use-phone-verification';
+import { DEMO_ACCOUNTS, findDemoByEmail, findDemoByPhone, isMockFirebase } from '@/lib/demo/accounts';
 import type { UserRole } from '@/types/database';
 
-const DEMO_ACCOUNTS = [
-  { role: 'Creator', email: 'demo.creator@thesice.com', password: 'Demo@1234', description: 'Social accounts, metrics, brand deals' },
-  { role: 'Merchant', email: 'demo.merchant@thesice.com', password: 'Demo@1234', description: 'Talent discovery, campaigns, wallet' },
-  { role: 'Admin', email: 'demo.admin@thesice.com', password: 'Demo@1234', description: 'Chapter mgmt, applications, arbitration' },
-  { role: 'Super Admin', email: 'demo.superadmin@thesice.com', password: 'Demo@1234', description: 'Manage chapters, creators, and merchants' },
+const countryCodes = [
+  { label: 'India +91', value: '+91' },
+  { label: 'United States +1', value: '+1' },
+  { label: 'United Kingdom +44', value: '+44' },
+  { label: 'UAE +971', value: '+971' },
+  { label: 'Saudi Arabia +966', value: '+966' },
+  { label: 'Singapore +65', value: '+65' },
 ];
 
-const countryCodes = [
-  { label: "India +91", value: "+91" },
-  { label: "United States +1", value: "+1" },
-  { label: "United Kingdom +44", value: "+44" },
-  { label: "UAE +971", value: "+971" },
-  { label: "Saudi Arabia +966", value: "+966" },
-  { label: "Singapore +65", value: "+65" },
-];
+async function fetchRoleByEmail(emailStr: string): Promise<UserRole | null> {
+  try {
+    const snap = await getDocs(query(collection(db, 'users'), where('email', '==', emailStr)));
+    return snap.empty ? null : (snap.docs[0].data().role as UserRole);
+  } catch (e) {
+    console.error('fetchRoleByEmail:', e instanceof Error ? e.message : String(e));
+    return null;
+  }
+}
+
+async function fetchRoleByPhone(phoneStr: string): Promise<UserRole | null> {
+  try {
+    const snap1 = await getDocs(query(collection(db, 'users'), where('phone', '==', phoneStr)));
+    if (!snap1.empty) return snap1.docs[0].data().role as UserRole;
+
+    const snap2 = await getDocs(query(collection(db, 'users'), where('contact_number', '==', phoneStr)));
+    if (!snap2.empty) return snap2.docs[0].data().role as UserRole;
+
+    const allUsers = await getDocs(collection(db, 'users'));
+    const cleanTarget = phoneStr.replace(/[^0-9]/g, '');
+    for (const d of allUsers.docs) {
+      const udata = d.data();
+      const uPhone = String(udata.phone || udata.contact_number || '').replace(/[^0-9]/g, '');
+      if (uPhone && cleanTarget && (uPhone.includes(cleanTarget) || cleanTarget.includes(uPhone))) {
+        return udata.role as UserRole;
+      }
+    }
+  } catch (e) {
+    console.error('fetchRoleByPhone:', e instanceof Error ? e.message : String(e));
+  }
+  return null;
+}
 
 export default function LoginPage() {
   const router = useRouter();
   const [loginMethod, setLoginMethod] = useState<'password' | 'otp'>('password');
-  
-  // Password states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  // OTP states
-  const [phoneInput, setPhoneInput] = useState('');
-  const [selectedCountryCode, setSelectedCountryCode] = useState('+91');
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState('');
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+  const phone = usePhoneVerification('recaptcha-container-login');
 
-  // Helper: Find user by email in Firestore
-  async function findUserByEmail(emailStr: string): Promise<UserRole | null> {
-    try {
-      const q = query(collection(db, 'users'), where('email', '==', emailStr));
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        return querySnapshot.docs[0].data().role as UserRole;
-      }
-    } catch (e) {
-      console.error("Error finding user by email:", e);
-    }
-    return null;
+  async function createSession(idToken: string): Promise<boolean> {
+    const res = await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+    return res.ok;
   }
 
-  // Helper: Find user by phone in Firestore
-  async function findUserByPhone(phoneStr: string): Promise<UserRole | null> {
-    try {
-      const q1 = query(collection(db, 'users'), where('phone', '==', phoneStr));
-      const snap1 = await getDocs(q1);
-      if (!snap1.empty) return snap1.docs[0].data().role as UserRole;
-
-      const q2 = query(collection(db, 'users'), where('contact_number', '==', phoneStr));
-      const snap2 = await getDocs(q2);
-      if (!snap2.empty) return snap2.docs[0].data().role as UserRole;
-
-      // Fallback: Sanitized comparison
-      const allUsers = await getDocs(collection(db, 'users'));
-      for (const d of allUsers.docs) {
-        const udata = d.data();
-        const uPhone = String(udata.phone || udata.contact_number || '').replace(/[^0-9]/g, '');
-        const cleanTarget = phoneStr.replace(/[^0-9]/g, '');
-        if (uPhone && cleanTarget && (uPhone.includes(cleanTarget) || cleanTarget.includes(uPhone))) {
-          return udata.role as UserRole;
-        }
-      }
-    } catch (e) {
-      console.error("Error finding user by phone:", e);
-    }
-    return null;
-  }
-
-  // 1. Submit email/password form
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     try {
-      const isMockFirebase = !process.env.NEXT_PUBLIC_FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY === 'mock-api-key-for-prerendering';
-      const isDemo = DEMO_ACCOUNTS.find(
-        (acc) => acc.email.toLowerCase() === email.toLowerCase() && acc.password === password
-      );
-
+      const demo = findDemoByEmail(email);
       let idToken: string;
       let role: UserRole;
 
-      if (isDemo) {
-        idToken = `mock-id-token-${isDemo.role.replace(' ', '_').toLowerCase()}`;
-        role = isDemo.role.replace(' ', '_').toLowerCase() as UserRole;
+      if (demo && demo.password === password) {
+        idToken = `mock-id-token-${demo.label}`;
+        role = demo.label;
       } else {
         const { user } = await signInWithEmailAndPassword(auth, email, password);
         idToken = await user.getIdToken();
-
         const profileSnap = await getDoc(doc(db, 'users', user.uid));
-        if (profileSnap.exists()) {
-          role = profileSnap.data().role as UserRole;
-        } else {
-          // Fallback check by email
-          const matchedRole = await findUserByEmail(email);
-          if (matchedRole) {
-            role = matchedRole;
-          } else {
-            setError('Profile not found. Please contact support.');
-            setLoading(false);
-            return;
-          }
-        }
+        const resolvedRole = profileSnap.exists()
+          ? (profileSnap.data().role as UserRole)
+          : await fetchRoleByEmail(email);
+        if (!resolvedRole) { setError('Profile not found. Please contact support.'); setLoading(false); return; }
+        role = resolvedRole;
       }
 
-      const res = await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      });
-
-      if (!res.ok) throw new Error('Session creation failed. Please try again.');
-
+      if (!await createSession(idToken)) throw new Error('Session creation failed. Please try again.');
       router.push(`/dashboard/${role}`);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Sign in failed. Please try again.';
+      const msg = err instanceof Error ? err.message : 'Sign in failed.';
       setError(msg.replace('Firebase: ', '').replace(/\(auth\/.*\)\.?/, '').trim());
       setLoading(false);
     }
   }
 
-  // 2. Google Login Flow
   async function handleGoogleLogin() {
     setLoading(true);
     setError(null);
     try {
-      const isMockFirebase = !process.env.NEXT_PUBLIC_FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY === 'mock-api-key-for-prerendering';
-      
       let emailStr: string;
       let idToken: string;
       let role: UserRole | null = null;
 
-      if (isMockFirebase) {
-        emailStr = 'demo.creator@thesice.com';
-        idToken = 'mock-id-token-creator';
-        role = 'creator';
+      if (isMockFirebase()) {
+        emailStr = DEMO_ACCOUNTS[0].email;
+        idToken = `mock-id-token-${DEMO_ACCOUNTS[0].label}`;
+        role = DEMO_ACCOUNTS[0].label;
       } else {
         const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: "select_account" });
+        provider.setCustomParameters({ prompt: 'select_account' });
         const result = await signInWithPopup(auth, provider);
-        if (!result.user || !result.user.email) {
-          throw new Error("Could not retrieve email from Google Sign-In.");
-        }
+        if (!result.user?.email) throw new Error('Could not retrieve email from Google Sign-In.');
         emailStr = result.user.email;
         idToken = await result.user.getIdToken();
-
         const docSnap = await getDoc(doc(db, 'users', result.user.uid));
-        if (docSnap.exists()) {
-          role = docSnap.data().role as UserRole;
-        } else {
-          role = await findUserByEmail(emailStr);
-        }
+        role = docSnap.exists() ? (docSnap.data().role as UserRole) : await fetchRoleByEmail(emailStr);
       }
 
       if (!role) {
-        const demoMatch = DEMO_ACCOUNTS.find(d => d.email.toLowerCase() === emailStr.toLowerCase());
-        if (demoMatch) {
-          role = demoMatch.role.replace(' ', '_').toLowerCase() as UserRole;
-          idToken = `mock-id-token-${role}`;
-        }
+        const demo = findDemoByEmail(emailStr);
+        if (demo) { role = demo.label; idToken = `mock-id-token-${demo.label}`; }
       }
+      if (!role) throw new Error(`Access Denied: No account linked to ${emailStr}.`);
 
-      if (!role) {
-        throw new Error(`Access Denied: No account associated with Google email ${emailStr}.`);
-      }
-
-      const res = await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      });
-
-      if (!res.ok) throw new Error('Session creation failed. Please try again.');
-
+      if (!await createSession(idToken)) throw new Error('Session creation failed. Please try again.');
       router.push(`/dashboard/${role}`);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Google Login failed.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Google Login failed.');
     } finally {
       setLoading(false);
     }
   }
 
-  // 3. Send SMS OTP Login Flow
-  async function handleSendOtp() {
-    if (!phoneInput || !/^[0-9]{7,15}$/.test(phoneInput)) {
-      setError("Please enter a valid phone number (7 to 15 digits).");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    const fullPhone = `${selectedCountryCode}${phoneInput}`;
-    try {
-      const isMockFirebase = !process.env.NEXT_PUBLIC_FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY === 'mock-api-key-for-prerendering';
-      const isDemoPhone = fullPhone.endsWith('9876543210') ||
-                          fullPhone.endsWith('9876543211') ||
-                          fullPhone.endsWith('9876543212') ||
-                          fullPhone.endsWith('9876543213') ||
-                          phoneInput.endsWith('9876543210') ||
-                          phoneInput.endsWith('9876543211') ||
-                          phoneInput.endsWith('9876543212') ||
-                          phoneInput.endsWith('9876543213');
-
-      if (isMockFirebase || isDemoPhone) {
-        setOtpSent(true);
-      } else {
-        if (!recaptchaVerifierRef.current) {
-          recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container-login", {
-            size: "invisible",
-            callback: () => {}
-          });
-        }
-        const confirmation = await signInWithPhoneNumber(auth, fullPhone, recaptchaVerifierRef.current);
-        setConfirmationResult(confirmation);
-        setOtpSent(true);
-      }
-    } catch (err: any) {
-      console.error(err);
-      let errMsg = err.message || "Failed to send OTP code.";
-      if (err.code === "auth/unauthorized-domain") {
-        errMsg = "Unauthorized Domain: Please authorize this domain in the Firebase Console.";
-      }
-      setError(errMsg);
-      if (recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current.clear();
-        recaptchaVerifierRef.current = null;
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // 4. Verify SMS OTP Login Flow
   async function handleVerifyOtp() {
-    if (!otpCode || otpCode.length !== 6) {
-      setError("Please enter a 6-digit OTP code.");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    const fullPhone = `${selectedCountryCode}${phoneInput}`;
+    const result = await phone.verifyOtp();
+    if (!result) return;
     try {
-      const isMockFirebase = !process.env.NEXT_PUBLIC_FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY === 'mock-api-key-for-prerendering';
-      const isDemoPhone = fullPhone.endsWith('9876543210') ||
-                          fullPhone.endsWith('9876543211') ||
-                          fullPhone.endsWith('9876543212') ||
-                          fullPhone.endsWith('9876543213') ||
-                          phoneInput.endsWith('9876543210') ||
-                          phoneInput.endsWith('9876543211') ||
-                          phoneInput.endsWith('9876543212') ||
-                          phoneInput.endsWith('9876543213');
-      
-      let verifiedPhone: string = fullPhone;
-      let idToken: string = "";
-      let role: UserRole | null = null;
-
-      if (isMockFirebase || isDemoPhone) {
-        if (otpCode !== '123456') {
-          throw new Error("Invalid OTP code. Use 123456 for demo mode.");
-        }
-        verifiedPhone = fullPhone;
-        idToken = "mock-id-token-creator";
-      } else {
-        if (!confirmationResult) {
-          throw new Error("No active verification session. Please request OTP again.");
-        }
-        const result = await confirmationResult.confirm(otpCode);
-        if (!result.user) throw new Error("SMS verification failed.");
-        verifiedPhone = result.user.phoneNumber || fullPhone;
-        idToken = await result.user.getIdToken();
-
-        const docSnap = await getDoc(doc(db, 'users', result.user.uid));
-        if (docSnap.exists()) {
-          role = docSnap.data().role as UserRole;
-        } else {
-          role = await findUserByPhone(verifiedPhone);
-        }
-      }
-
-      // Check demo phone matches
+      let role: UserRole | null = result.demoRole as UserRole | null;
       if (!role) {
-        if (verifiedPhone.endsWith('9876543210')) {
-          role = 'creator';
-        } else if (verifiedPhone.endsWith('9876543211')) {
-          role = 'merchant';
-        } else if (verifiedPhone.endsWith('9876543212')) {
-          role = 'admin';
-        } else if (verifiedPhone.endsWith('9876543213')) {
-          role = 'super_admin';
-        }
-        if (role) {
-          idToken = `mock-id-token-${role}`;
-        }
+        role = await fetchRoleByPhone(result.phone);
+        const demo = findDemoByPhone(result.phone);
+        if (!role && demo) role = demo.label;
       }
-
-      if (!role) {
-        throw new Error(`Access Denied: No account associated with mobile number ${verifiedPhone}.`);
-      }
-
-      const res = await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      });
-
-      if (!res.ok) throw new Error('Session creation failed. Please try again.');
-
+      if (!role) throw new Error(`Access Denied: No account linked to ${result.phone}.`);
+      if (!await createSession(result.idToken)) throw new Error('Session creation failed. Please try again.');
       router.push(`/dashboard/${role}`);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'OTP verification failed.');
-    } finally {
-      setLoading(false);
+    } catch (err: unknown) {
+      phone.clearError();
+      setError(err instanceof Error ? err.message : 'Login failed.');
     }
   }
 
@@ -590,7 +413,7 @@ export default function LoginPage() {
             {/* OTP Login Form */}
             {loginMethod === 'otp' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                {!otpSent ? (
+                {!phone.otpSent ? (
                   <>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <label style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.45)' }}>
@@ -598,18 +421,9 @@ export default function LoginPage() {
                       </label>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <select
-                          value={selectedCountryCode}
-                          onChange={(e) => setSelectedCountryCode(e.target.value)}
-                          style={{
-                            background: 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(240,235,224,0.10)',
-                            borderRadius: 8,
-                            padding: '11px 14px',
-                            fontSize: 14,
-                            color: '#F0EBE0',
-                            outline: 'none',
-                            width: '40%',
-                          }}
+                          value={phone.countryCode}
+                          onChange={(e) => phone.setCountryCode(e.target.value)}
+                          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(240,235,224,0.10)', borderRadius: 8, padding: '11px 14px', fontSize: 14, color: '#F0EBE0', outline: 'none', width: '40%' }}
                         >
                           {countryCodes.map((c) => (
                             <option key={c.value} value={c.value} style={{ background: '#080D26', color: '#F0EBE0' }}>{c.label}</option>
@@ -618,59 +432,29 @@ export default function LoginPage() {
                         <input
                           type="tel"
                           required
-                          value={phoneInput}
-                          onChange={(e) => setPhoneInput(e.target.value.replace(/[^0-9]/g, ''))}
+                          value={phone.phoneInput}
+                          onChange={(e) => phone.setPhoneInput(e.target.value.replace(/[^0-9]/g, ''))}
                           placeholder="9876543210"
-                          style={{
-                            background: 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(240,235,224,0.10)',
-                            borderRadius: 8,
-                            padding: '11px 14px',
-                            fontSize: 14,
-                            color: '#F0EBE0',
-                            outline: 'none',
-                            flex: 1,
-                          }}
+                          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(240,235,224,0.10)', borderRadius: 8, padding: '11px 14px', fontSize: 14, color: '#F0EBE0', outline: 'none', flex: 1 }}
                           onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(200,169,104,0.50)'; }}
                           onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(240,235,224,0.10)'; }}
                         />
                       </div>
                     </div>
 
-                    {error && (
-                      <div style={{
-                        background: 'rgba(220,38,38,0.10)',
-                        border: '1px solid rgba(220,38,38,0.25)',
-                        borderRadius: 8,
-                        padding: '10px 14px',
-                        fontSize: 13,
-                        color: '#fca5a5',
-                      }}>
-                        {error}
+                    {(phone.error || error) && (
+                      <div style={{ background: 'rgba(220,38,38,0.10)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#fca5a5' }}>
+                        {phone.error ?? error}
                       </div>
                     )}
 
                     <button
                       type="button"
-                      onClick={handleSendOtp}
-                      disabled={loading || !phoneInput}
-                      style={{
-                        background: '#C8A968',
-                        color: '#080D26',
-                        border: 'none',
-                        borderRadius: 100,
-                        padding: '12px 24px',
-                        fontSize: 12,
-                        fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.15em',
-                        cursor: (loading || !phoneInput) ? 'not-allowed' : 'pointer',
-                        opacity: (loading || !phoneInput) ? 0.6 : 1,
-                        transition: 'all 0.3s',
-                        width: '100%',
-                      }}
+                      onClick={phone.sendOtp}
+                      disabled={phone.loading || !phone.phoneInput}
+                      style={{ background: '#C8A968', color: '#080D26', border: 'none', borderRadius: 100, padding: '12px 24px', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.15em', cursor: (phone.loading || !phone.phoneInput) ? 'not-allowed' : 'pointer', opacity: (phone.loading || !phone.phoneInput) ? 0.6 : 1, transition: 'all 0.3s', width: '100%' }}
                     >
-                      {loading ? 'Sending Code...' : 'Send OTP Code'}
+                      {phone.loading ? 'Sending Code...' : 'Send OTP Code'}
                     </button>
                   </>
                 ) : (
@@ -683,37 +467,18 @@ export default function LoginPage() {
                         type="text"
                         maxLength={6}
                         required
-                        value={otpCode}
-                        onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                        value={phone.otpCode}
+                        onChange={(e) => phone.setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
                         placeholder="123456"
-                        style={{
-                          background: 'rgba(255,255,255,0.05)',
-                          border: '1px solid rgba(240,235,224,0.10)',
-                          borderRadius: 8,
-                          padding: '11px 14px',
-                          fontSize: 16,
-                          color: '#F0EBE0',
-                          outline: 'none',
-                          textAlign: 'center',
-                          letterSpacing: '0.3em',
-                          fontFamily: 'monospace',
-                          width: '100%',
-                        }}
+                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(240,235,224,0.10)', borderRadius: 8, padding: '11px 14px', fontSize: 16, color: '#F0EBE0', outline: 'none', textAlign: 'center', letterSpacing: '0.3em', fontFamily: 'monospace', width: '100%' }}
                         onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(200,169,104,0.50)'; }}
                         onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(240,235,224,0.10)'; }}
                       />
                     </div>
 
-                    {error && (
-                      <div style={{
-                        background: 'rgba(220,38,38,0.10)',
-                        border: '1px solid rgba(220,38,38,0.25)',
-                        borderRadius: 8,
-                        padding: '10px 14px',
-                        fontSize: 13,
-                        color: '#fca5a5',
-                      }}>
-                        {error}
+                    {(phone.error || error) && (
+                      <div style={{ background: 'rgba(220,38,38,0.10)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#fca5a5' }}>
+                        {phone.error ?? error}
                       </div>
                     )}
 
@@ -721,41 +486,15 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={handleVerifyOtp}
-                        disabled={loading || otpCode.length !== 6}
-                        style={{
-                          background: '#C8A968',
-                          color: '#080D26',
-                          border: 'none',
-                          borderRadius: 100,
-                          padding: '12px 24px',
-                          fontSize: 12,
-                          fontWeight: 600,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.15em',
-                          cursor: (loading || otpCode.length !== 6) ? 'not-allowed' : 'pointer',
-                          opacity: (loading || otpCode.length !== 6) ? 0.6 : 1,
-                          transition: 'all 0.3s',
-                          flex: 2,
-                        }}
+                        disabled={phone.loading || phone.otpCode.length !== 6}
+                        style={{ background: '#C8A968', color: '#080D26', border: 'none', borderRadius: 100, padding: '12px 24px', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.15em', cursor: (phone.loading || phone.otpCode.length !== 6) ? 'not-allowed' : 'pointer', opacity: (phone.loading || phone.otpCode.length !== 6) ? 0.6 : 1, transition: 'all 0.3s', flex: 2 }}
                       >
-                        {loading ? 'Verifying...' : 'Verify & Login'}
+                        {phone.loading ? 'Verifying...' : 'Verify & Login'}
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setOtpSent(false); setOtpCode(''); setError(null); }}
-                        style={{
-                          background: 'rgba(255,255,255,0.05)',
-                          color: '#F0EBE0',
-                          border: '1px solid rgba(240,235,224,0.10)',
-                          borderRadius: 100,
-                          padding: '12px 24px',
-                          fontSize: 12,
-                          fontWeight: 600,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.15em',
-                          cursor: 'pointer',
-                          flex: 1,
-                        }}
+                        onClick={phone.reset}
+                        style={{ background: 'rgba(255,255,255,0.05)', color: '#F0EBE0', border: '1px solid rgba(240,235,224,0.10)', borderRadius: 100, padding: '12px 24px', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', flex: 1 }}
                       >
                         Back
                       </button>
