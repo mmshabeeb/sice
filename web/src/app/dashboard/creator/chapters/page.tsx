@@ -118,18 +118,20 @@ export default function CreatorChaptersPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.chapters) {
-            const list = data.chapters.map((ch: any) => {
-              const cleanId = ch.id.toLowerCase();
-              return {
-                id: ch.id,
-                name: ch.name,
-                city: ch.city,
-                state: ch.state,
-                creatorsCount: ch.creatorsCount || 0,
-                description: DEFAULT_DESCRIPTIONS[cleanId] || 'Regional SICE chapter supporting regional language content publishers and brand campaign integrations.',
-                status: ch.status === 'active' ? 'active' : 'inception',
-              };
-            });
+            const list = data.chapters
+              .filter((ch: any) => ch.status === 'active')
+              .map((ch: any) => {
+                const cleanId = ch.id.toLowerCase();
+                return {
+                  id: ch.id,
+                  name: ch.name,
+                  city: ch.city,
+                  state: ch.state,
+                  creatorsCount: ch.creatorsCount || 0,
+                  description: DEFAULT_DESCRIPTIONS[cleanId] || 'Regional SICE chapter supporting regional language content publishers and brand campaign integrations.',
+                  status: ch.status,
+                };
+              });
             setChapters(list);
             setLoading(false);
             return;
@@ -139,7 +141,7 @@ export default function CreatorChaptersPage() {
         console.error('Failed to fetch chapters from API:', e);
       }
       // Fallback
-      setChapters(CHAPTERS_DIRECTORY);
+      setChapters(CHAPTERS_DIRECTORY.filter(ch => ch.status === 'active'));
       setLoading(false);
     }
     
