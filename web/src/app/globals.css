@@ -956,6 +956,29 @@
       min-height: 100vh;
       padding-top: 64px;
     }
+    .apply-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(420px, 0.72fr);
+      gap: clamp(40px, 6vw, 88px);
+      align-items: start;
+      padding: 8px 0 64px;
+    }
+    .apply-layout-form {
+      grid-template-columns: minmax(280px, 0.48fr) minmax(620px, 0.9fr);
+      gap: clamp(44px, 5vw, 76px);
+    }
+    .apply-copy {
+      max-width: 680px;
+      padding-top: 10px;
+    }
+    .apply-copy .lede {
+      max-width: 580px;
+      margin-bottom: 0;
+      font-family: var(--font-fraunces), serif;
+      font-style: italic;
+      font-size: clamp(17px, 1.4vw, 22px);
+      line-height: 1.55;
+    }
     .apply-back {
       display: inline-flex;
       align-items: center;
@@ -975,6 +998,173 @@
       background: var(--bone);
       border: 1px solid rgba(240, 235, 224, 0.22);
       box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+    }
+    .verification-panel {
+      align-self: start;
+      background:
+        linear-gradient(180deg, rgba(14, 21, 55, 0.96), rgba(8, 13, 38, 0.98)) !important;
+      border: 1px solid rgba(200, 169, 104, 0.28) !important;
+      box-shadow: 0 28px 90px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(240, 235, 224, 0.06) !important;
+      color: var(--cream);
+    }
+    .verification-panel h2 {
+      color: var(--cream) !important;
+      font-family: var(--font-bricolage), sans-serif;
+      font-size: 24px !important;
+      font-weight: 500 !important;
+      letter-spacing: -0.02em !important;
+      margin-bottom: 8px !important;
+    }
+    .verification-panel > p {
+      color: rgba(240, 235, 224, 0.68) !important;
+      font-size: 13px !important;
+      line-height: 1.65 !important;
+    }
+    .verification-panel > div:first-of-type > div {
+      background: rgba(240, 235, 224, 0.035) !important;
+      border: 1px solid rgba(240, 235, 224, 0.11) !important;
+      border-radius: 8px !important;
+      padding: 22px !important;
+    }
+    .verification-panel > div:first-of-type > div > div:first-child span:first-child {
+      color: var(--gold) !important;
+    }
+    .verification-panel p,
+    .verification-panel div {
+      color: rgba(240, 235, 224, 0.76);
+    }
+    .verification-panel strong {
+      color: var(--cream) !important;
+    }
+    .verification-panel select,
+    .verification-panel input {
+      min-height: 42px;
+      background: rgba(240, 235, 224, 0.06) !important;
+      border: 1px solid rgba(240, 235, 224, 0.14) !important;
+      color: var(--cream) !important;
+      border-radius: 6px !important;
+    }
+    .verification-panel input::placeholder {
+      color: rgba(240, 235, 224, 0.42) !important;
+    }
+    .verification-panel select option {
+      color: var(--indigo);
+    }
+    .verification-panel button {
+      border-radius: 7px !important;
+    }
+    .verification-panel > div:first-of-type > div button:not(:disabled) {
+      background: rgba(200, 169, 104, 0.14) !important;
+      border: 1px solid rgba(200, 169, 104, 0.34) !important;
+      color: var(--cream) !important;
+    }
+    .verification-panel > div:first-of-type > div button:not(:disabled):hover {
+      background: rgba(200, 169, 104, 0.22) !important;
+    }
+    .verification-panel button:not(:disabled) {
+      box-shadow: none !important;
+    }
+    .verification-panel button[disabled] {
+      background: rgba(240, 235, 224, 0.08) !important;
+      color: rgba(240, 235, 224, 0.38) !important;
+    }
+    .verification-panel > button:last-of-type:not(:disabled) {
+      background: var(--gold) !important;
+      color: var(--indigo) !important;
+      box-shadow: 0 12px 28px rgba(200, 169, 104, 0.18) !important;
+    }
+    .verification-panel > button:last-of-type:not(:disabled):hover {
+      background: var(--gold-bright) !important;
+      transform: translateY(-1px);
+    }
+    .membership-form {
+      background:
+        linear-gradient(180deg, rgba(14, 21, 55, 0.95), rgba(8, 13, 38, 0.98)) !important;
+      border: 1px solid rgba(200, 169, 104, 0.24) !important;
+      box-shadow: 0 28px 90px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(240, 235, 224, 0.06) !important;
+      color: var(--cream);
+      border-radius: 8px !important;
+      max-width: 860px;
+      width: 100%;
+    }
+    .membership-form .form-field {
+      margin-bottom: 4px;
+    }
+    .membership-form .form-field label,
+    .membership-form .social-fieldset legend {
+      color: rgba(200, 169, 104, 0.92) !important;
+    }
+    .membership-form .form-field input,
+    .membership-form .form-field select,
+    .membership-form .form-field textarea {
+      min-height: 44px;
+      color: var(--cream) !important;
+      background: rgba(240, 235, 224, 0.045) !important;
+      border: 1px solid rgba(240, 235, 224, 0.12) !important;
+      border-radius: 7px !important;
+      padding: 11px 13px !important;
+    }
+    .membership-form .form-field input:focus,
+    .membership-form .form-field select:focus,
+    .membership-form .form-field textarea:focus {
+      border-color: rgba(200, 169, 104, 0.62) !important;
+      box-shadow: 0 0 0 3px rgba(200, 169, 104, 0.08);
+    }
+    .membership-form .form-field input::placeholder,
+    .membership-form .form-field textarea::placeholder {
+      color: rgba(240, 235, 224, 0.38) !important;
+    }
+    .membership-form .form-field select option {
+      color: var(--indigo);
+    }
+    .membership-form .phone-row {
+      align-items: start;
+    }
+    .membership-form .social-fieldset {
+      border-color: rgba(240, 235, 224, 0.13);
+      border-radius: 8px;
+      background: rgba(240, 235, 224, 0.025);
+    }
+    .membership-form .social-fieldset p,
+    .membership-form .checkbox-group label {
+      color: rgba(240, 235, 224, 0.72);
+    }
+    .membership-form .checkbox-group {
+      border-top: 1px solid rgba(240, 235, 224, 0.1);
+      padding-top: 4px;
+    }
+    .membership-form .checkbox-group input {
+      accent-color: var(--gold);
+    }
+    .membership-form .checkbox-group a {
+      color: var(--gold);
+      border-bottom-color: rgba(200, 169, 104, 0.42);
+    }
+    .membership-form .form-submit {
+      background: var(--gold);
+      color: var(--indigo);
+      border-radius: 7px;
+      box-shadow: 0 12px 28px rgba(200, 169, 104, 0.16);
+    }
+    .membership-form .form-submit:hover:not(:disabled) {
+      background: var(--gold-bright);
+      transform: translateY(-1px);
+    }
+    .membership-form .form-submit:disabled {
+      background: rgba(240, 235, 224, 0.08);
+      color: rgba(240, 235, 224, 0.42);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .membership-form .form-error {
+      color: #fca5a5;
+    }
+    .membership-form .form-status {
+      color: var(--gold);
+    }
+    .membership-form .followers-spinner {
+      border-color: rgba(240, 235, 224, 0.18);
+      border-top-color: var(--gold);
     }
     .application-form .form-field label {
       color: rgba(8, 13, 38, 0.62);
@@ -1195,6 +1385,20 @@
       .footer-top { grid-template-columns: 1fr; gap: 40px; }
       .footer-bottom { flex-direction: column; align-items: flex-start; }
       .form { padding: 24px; }
+      .apply-hero {
+        padding-top: 40px;
+      }
+      .apply-layout {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        padding-bottom: 40px;
+      }
+      .apply-layout-form {
+        grid-template-columns: 1fr;
+      }
+      .apply-copy {
+        padding-top: 0;
+      }
       .application-form,
       .social-grid,
       .phone-row {

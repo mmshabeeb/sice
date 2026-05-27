@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase/server';
 import { FieldValue } from 'firebase-admin/firestore';
 import { sendMail, generateApplicationEmail, generateActivationEmail, generateSecurePassword } from '@/lib/email';
+import { applicationSchema } from '@/lib/validation/schemas';
+import { ZodError } from 'zod';
 
 function formatE164(countryCode: string, number: string): string {
   const cleanCode = countryCode.replace(/[^0-9+]/g, '');
@@ -10,164 +12,109 @@ function formatE164(countryCode: string, number: string): string {
   return raw.startsWith('+') ? raw : `+${raw}`;
 }
 
-export async function POST(request: NextRequest) {
+async function resolveAuthUser(uid: string | undefined, email: string, phone: string, displayName: string) {
+  // Try by UID first
+  if (uid) {
+    try { return await adminAuth.getUser(uid); } catch (e) {
+      console.warn(`getUser(${uid}) failed:`, e instanceof Error ? e.message : String(e));
+    }
+  }
+  // Try by email
+  try { return await adminAuth.getUserByEmail(email); } catch { /* not found */ }
+  // Try by phone
+  try { return await adminAuth.getUserByPhoneNumber(phone); } catch { /* not found */ }
+  // Create new user
   try {
-    const data = await request.json();
+    return await adminAuth.createUser({ email, phoneNumber: phone, displayName });
+  } catch (e) {
+    console.error('createUser failed:', e instanceof Error ? e.message : String(e));
+    return null;
+  }
+}
 
-    const {
-      applicationType = 'creator',
-      fullName,
-      contactCountryCode,
-      contactNumber,
-      whatsappCountryCode,
-      whatsappNumber,
-      email,
-      facebookUrl,
-      facebookFollowers,
-      instagramUrl,
-      instagramFollowers,
-      youtubeUrl,
-      youtubeFollowers,
-      xUrl,
-      xFollowers,
-      linkedinUrl,
-      linkedinFollowers,
-      googleVerified,
-      phoneVerified,
-      brandName,
-      city,
-      state,
-      country,
-      uid,
-      // Chapter application fields
-      chapterName,
-      customChapterName,
-      chapterRole,
-      chapterProfileUrl,
-      statementOfPurpose,
-    } = data;
+export async function POST(request: NextRequest) {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
+  }
 
-    if (applicationType === 'merchant') {
-      if (!brandName || !city || !state || !country || !fullName || !contactNumber || !whatsappNumber || !email) {
-        return NextResponse.json({ error: 'Missing required fields for merchant application.' }, { status: 400 });
-      }
+  // Default applicationType so discriminatedUnion can match
+  if (typeof body === 'object' && body !== null && !('applicationType' in body)) {
+    (body as Record<string, unknown>).applicationType = 'creator';
+  }
 
-      // 1. Create or link Firebase Auth user
-      let authUser = null;
-      const emailStr = String(email).trim().toLowerCase();
-      const phoneStr = formatE164(contactCountryCode || '', contactNumber || '');
+  const parsed = applicationSchema.safeParse(body);
+  if (!parsed.success) {
+    const issues = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`);
+    return NextResponse.json({ error: issues.join('; ') }, { status: 400 });
+  }
 
-      if (uid) {
-        try {
-          authUser = await adminAuth.getUser(uid);
-        } catch {
-          // ignore
-        }
-      }
+  const data = parsed.data;
 
-      if (!authUser) {
-        try {
-          authUser = await adminAuth.getUserByEmail(emailStr);
-        } catch {
-          try {
-            authUser = await adminAuth.getUserByPhoneNumber(phoneStr);
-          } catch {
-            // Neither exists, create a new user
-            try {
-              authUser = await adminAuth.createUser({
-                email: emailStr,
-                phoneNumber: phoneStr,
-                displayName: String(fullName).trim(),
-              });
-            } catch (createErr: any) {
-              console.error('Error creating auth user:', createErr);
-            }
-          }
-        }
-      }
+  try {
+    if (data.applicationType === 'merchant') {
+      const emailStr = data.email.trim().toLowerCase();
+      const phoneStr = formatE164(data.contactCountryCode, data.contactNumber);
+      const authUser = await resolveAuthUser(data.uid, emailStr, phoneStr, data.fullName.trim());
 
-      // Sync attributes to the user auth record if possible
-      if (authUser) {
-        const updates: any = {};
-        if (!authUser.email) updates.email = emailStr;
-        if (!authUser.phoneNumber) updates.phoneNumber = phoneStr;
-        if (!authUser.displayName) updates.displayName = String(fullName).trim();
+      const targetUid = authUser?.uid ?? data.uid ?? `user_${Date.now()}`;
 
-        if (Object.keys(updates).length > 0) {
-          try {
-            authUser = await adminAuth.updateUser(authUser.uid, updates);
-          } catch (updateErr: any) {
-            console.error('Error updating auth user:', updateErr);
-          }
-        }
-      }
-
-      // 2. Set user record in Firestore 'users' collection to enable logins
-      const targetUid = authUser?.uid || uid || `user_${Date.now()}`;
       await adminDb.collection('users').doc(targetUid).set({
         uid: targetUid,
         role: 'merchant',
-        full_name: String(fullName).trim(),
+        full_name: data.fullName.trim(),
         email: emailStr,
         phone: phoneStr,
-        contact_number: `${contactCountryCode ?? ''} ${contactNumber}`.trim(),
-        brand_name: String(brandName).trim(),
-        city: String(city).trim(),
-        state: String(state).trim(),
-        country: String(country).trim(),
+        brand_name: data.brandName.trim(),
+        city: data.city.trim(),
+        state: data.state.trim(),
+        country: data.country.trim(),
         created_at: FieldValue.serverTimestamp(),
       }, { merge: true });
 
-      // 3. Log the application in the queue
       await adminDb.collection('applications').add({
         submitted_at: FieldValue.serverTimestamp(),
         application_type: 'merchant',
-        brand_name: String(brandName).trim(),
-        city: String(city).trim(),
-        state: String(state).trim(),
-        country: String(country).trim(),
-        contact_person_name: String(fullName).trim(),
-        email: String(email).trim(),
-        contact_number: `${contactCountryCode ?? ''} ${contactNumber}`.trim(),
-        whatsapp_number: `${whatsappCountryCode ?? ''} ${whatsappNumber}`.trim(),
+        brand_name: data.brandName.trim(),
+        city: data.city.trim(),
+        state: data.state.trim(),
+        country: data.country.trim(),
+        contact_person_name: data.fullName.trim(),
+        email: emailStr,
+        contact_number: `${data.contactCountryCode} ${data.contactNumber}`.trim(),
+        whatsapp_number: `${data.whatsappCountryCode} ${data.whatsappNumber}`.trim(),
         status: 'pending',
-        google_verified: !!googleVerified,
-        phone_verified: !!phoneVerified,
+        google_verified: !!data.googleVerified,
+        phone_verified: !!data.phoneVerified,
       });
-    } else if (applicationType === 'chapter') {
-      if (!fullName || !contactNumber || !whatsappNumber || !email || !chapterName || !chapterRole || !chapterProfileUrl || !statementOfPurpose) {
-        return NextResponse.json({ error: 'Missing required fields for chapter application.' }, { status: 400 });
-      }
-
+    } else if (data.applicationType === 'chapter') {
       await adminDb.collection('applications').add({
         submitted_at: FieldValue.serverTimestamp(),
         application_type: 'chapter',
-        full_name: String(fullName).trim(),
-        email: String(email).trim(),
-        contact_number: `${contactCountryCode ?? ''} ${contactNumber}`.trim(),
-        whatsapp_number: `${whatsappCountryCode ?? ''} ${whatsappNumber}`.trim(),
-        chapter_name: String(chapterName).trim(),
-        custom_chapter_name: customChapterName ? String(customChapterName).trim() : null,
-        chapter_role: String(chapterRole).trim(),
-        chapter_profile_url: String(chapterProfileUrl).trim(),
-        statement_of_purpose: String(statementOfPurpose).trim(),
+        full_name: data.fullName.trim(),
+        email: data.email.trim(),
+        contact_number: `${data.contactCountryCode} ${data.contactNumber}`.trim(),
+        whatsapp_number: `${data.whatsappCountryCode} ${data.whatsappNumber}`.trim(),
+        chapter_name: data.chapterName.trim(),
+        custom_chapter_name: data.customChapterName?.trim() ?? null,
+        chapter_role: data.chapterRole.trim(),
+        chapter_profile_url: data.chapterProfileUrl.trim(),
+        statement_of_purpose: data.statementOfPurpose.trim(),
         status: 'pending',
-        google_verified: !!googleVerified,
-        phone_verified: !!phoneVerified,
+        google_verified: !!data.googleVerified,
+        phone_verified: !!data.phoneVerified,
       });
     } else {
-      if (!fullName || !contactNumber || !whatsappNumber || !email) {
-        return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
-      }
-
-      const socialUrls = [facebookUrl, instagramUrl, youtubeUrl, xUrl, linkedinUrl];
-      const hasSocial = socialUrls.some((u) => String(u || '').trim());
-      if (!hasSocial) {
+      // creator
+      const socialUrls = [data.facebookUrl, data.instagramUrl, data.youtubeUrl, data.xUrl, data.linkedinUrl];
+      if (!socialUrls.some((u) => u && u.trim())) {
         return NextResponse.json({ error: 'At least one social media URL is required.' }, { status: 400 });
       }
 
-      const emailStr = String(email).trim().toLowerCase();
-      const phoneStr = formatE164(contactCountryCode || '', contactNumber || '');
+      const emailStr = data.email.trim().toLowerCase();
+      const phoneStr = formatE164(data.contactCountryCode || '', data.contactNumber || '');
 
       let authUser = null;
       let generatedPassword = '';
@@ -185,7 +132,7 @@ export async function POST(request: NextRequest) {
             authUser = await adminAuth.createUser({
               email: emailStr,
               phoneNumber: phoneStr,
-              displayName: String(fullName).trim(),
+              displayName: data.fullName.trim(),
               password: generatedPassword,
             });
           } catch (createErr: any) {
@@ -200,11 +147,11 @@ export async function POST(request: NextRequest) {
       await adminDb.collection('users').doc(targetUid).set({
         uid: targetUid,
         role: 'creator',
-        full_name: String(fullName).trim(),
+        full_name: data.fullName.trim(),
         email: emailStr,
         phone: phoneStr,
-        contact_number: `${contactCountryCode ?? ''} ${contactNumber}`.trim(),
-        whatsapp_number: `${whatsappCountryCode ?? ''} ${whatsappNumber}`.trim(),
+        contact_number: `${data.contactCountryCode ?? ''} ${data.contactNumber}`.trim(),
+        whatsapp_number: `${data.whatsappCountryCode ?? ''} ${data.whatsappNumber}`.trim(),
         status: 'pending',
         created_at: FieldValue.serverTimestamp(),
       }, { merge: true });
@@ -213,32 +160,32 @@ export async function POST(request: NextRequest) {
       await adminDb.collection('applications').add({
         submitted_at: FieldValue.serverTimestamp(),
         application_type: 'creator',
-        full_name: String(fullName).trim(),
+        full_name: data.fullName.trim(),
         email: emailStr,
-        contact_number: `${contactCountryCode ?? ''} ${contactNumber}`.trim(),
-        whatsapp_number: `${whatsappCountryCode ?? ''} ${whatsappNumber}`.trim(),
-        facebook_url: String(facebookUrl || '').trim(),
-        facebook_followers: String(facebookFollowers || '').trim(),
-        instagram_url: String(instagramUrl || '').trim(),
-        instagram_followers: String(instagramFollowers || '').trim(),
-        youtube_url: String(youtubeUrl || '').trim(),
-        youtube_followers: String(youtubeFollowers || '').trim(),
-        x_url: String(xUrl || '').trim(),
-        x_followers: String(xFollowers || '').trim(),
-        linkedin_url: String(linkedinUrl || '').trim(),
-        linkedin_followers: String(linkedinFollowers || '').trim(),
+        contact_number: `${data.contactCountryCode ?? ''} ${data.contactNumber}`.trim(),
+        whatsapp_number: `${data.whatsappCountryCode ?? ''} ${data.whatsappNumber}`.trim(),
+        facebook_url: data.facebookUrl?.trim() ?? '',
+        facebook_followers: data.facebookFollowers?.trim() ?? '',
+        instagram_url: data.instagramUrl?.trim() ?? '',
+        instagram_followers: data.instagramFollowers?.trim() ?? '',
+        youtube_url: data.youtubeUrl?.trim() ?? '',
+        youtube_followers: data.youtubeFollowers?.trim() ?? '',
+        x_url: data.xUrl?.trim() ?? '',
+        x_followers: data.xFollowers?.trim() ?? '',
+        linkedin_url: data.linkedinUrl?.trim() ?? '',
+        linkedin_followers: data.linkedinFollowers?.trim() ?? '',
         status: 'pending',
-        google_verified: !!googleVerified,
-        phone_verified: !!phoneVerified,
+        google_verified: !!data.googleVerified,
+        phone_verified: !!data.phoneVerified,
         auth_uid: targetUid,
       });
 
       // Send Welcome/Activation email with credentials
-      if (emailStr && fullName) {
+      if (emailStr && data.fullName) {
         try {
           const mailHtml = generatedPassword
-            ? generateActivationEmail(fullName, 'creator', emailStr, generatedPassword)
-            : generateActivationEmail(fullName, 'creator', emailStr);
+            ? generateActivationEmail(data.fullName.trim(), 'creator', emailStr, generatedPassword)
+            : generateActivationEmail(data.fullName.trim(), 'creator', emailStr);
           await sendMail({
             to: emailStr,
             subject: 'Welcome to SICE - Creator Account Credentials',
@@ -251,11 +198,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Send application confirmation email for non-creators
-    if (applicationType !== 'creator' && email && fullName) {
+    if (data.applicationType !== 'creator' && data.email && data.fullName) {
       try {
-        const html = generateApplicationEmail(fullName, applicationType);
+        const html = generateApplicationEmail(data.fullName.trim(), data.applicationType);
         await sendMail({
-          to: String(email).trim().toLowerCase(),
+          to: data.email.trim().toLowerCase(),
           subject: 'SICE Application Received',
           html,
         });
@@ -265,8 +212,9 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    console.error('Apply API error:', err);
-    return NextResponse.json({ error: `Failed to submit: ${err?.message || String(err)}` }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('Apply API error:', message);
+    return NextResponse.json({ error: `Failed to submit: ${message}` }, { status: 500 });
   }
 }
