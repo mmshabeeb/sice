@@ -462,8 +462,8 @@ export default function SuperAdminChapters() {
                     <option value="Telangana" style={{ background: '#080D26' }}>
                       Telangana
                     </option>
-                    <option value="Hyderabad" style={{ background: '#080D26' }}>
-                      Hyderabad
+                    <option value="Andhra Pradesh" style={{ background: '#080D26' }}>
+                      Andhra Pradesh
                     </option>
                   </select>
                 </div>
