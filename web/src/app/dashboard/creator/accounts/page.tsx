@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Clock, CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
+import { Clock, CheckCircle2, ExternalLink, Loader2, X, AlertCircle, Link2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,13 +20,13 @@ interface LinkedAccount {
   lastSyncedAt: string | null;
 }
 
-const PLATFORM_META: Record<string, { emoji: string; color: string; unit: string }> = {
-  instagram: { emoji: '📸', color: '#E1306C', unit: 'Followers' },
-  youtube: { emoji: '▶️', color: '#FF0000', unit: 'Subscribers' },
-  facebook: { emoji: '🔵', color: '#1877F2', unit: 'Followers' },
-  x: { emoji: '🐦', color: '#14171A', unit: 'Followers' },
-  linkedin: { emoji: '💼', color: '#0A66C2', unit: 'Connections' },
-  tiktok: { emoji: '🎵', color: '#010101', unit: 'Followers' },
+const PLATFORM_META: Record<string, { emoji: string; color: string; unit: string; placeholder: string }> = {
+  instagram: { emoji: '📸', color: '#E1306C', unit: 'Followers', placeholder: 'e.g. _razii___ or instagram profile URL' },
+  youtube: { emoji: '▶️', color: '#FF0000', unit: 'Subscribers', placeholder: 'e.g. @sice_media or youtube channel URL' },
+  facebook: { emoji: '🔵', color: '#1877F2', unit: 'Followers', placeholder: 'e.g. sice.media or facebook profile URL' },
+  x: { emoji: '🐦', color: '#14171A', unit: 'Followers', placeholder: 'e.g. sice_media or x.com profile URL' },
+  linkedin: { emoji: '💼', color: '#0A66C2', unit: 'Connections', placeholder: 'e.g. company/sice or linkedin profile URL' },
+  tiktok: { emoji: '🎵', color: '#010101', unit: 'Followers', placeholder: 'e.g. sice_media or tiktok profile URL' },
 };
 
 const ALL_PLATFORMS = ['instagram', 'youtube', 'facebook', 'x', 'linkedin', 'tiktok'];
@@ -48,7 +48,17 @@ export default function SocialAccountsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  // Connect Modal state
+  const [isConnectOpen, setIsConnectOpen] = useState(false);
+  const [connectPlatform, setConnectPlatform] = useState<string | null>(null);
+  const [usernameOrUrl, setUsernameOrUrl] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const [verifiedCount, setVerifiedCount] = useState<string | null>(null);
+  const [connectError, setConnectError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const fetchAccounts = () => {
+    setLoading(true);
     fetch('/api/social-accounts')
       .then((r) => r.json())
       .then((data) => {
@@ -57,10 +67,109 @@ export default function SocialAccountsPage() {
       })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Failed to load accounts'))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchAccounts();
   }, []);
 
   const linkedMap = new Map(accounts.map((a) => [a.platform.toLowerCase(), a]));
   const lastSync = accounts[0]?.lastSyncedAt ?? null;
+
+  const openConnect = (platform: string) => {
+    setConnectPlatform(platform);
+    setUsernameOrUrl('');
+    setVerifiedCount(null);
+    setConnectError(null);
+    setIsConnectOpen(true);
+  };
+
+  function getProfileDetails(platform: string, input: string) {
+    let username = input.trim();
+    let profileUrl = input.trim();
+    
+    if (profileUrl.includes('//') || profileUrl.includes('.')) {
+      // Extract username from URL
+      try {
+        const parts = profileUrl.split('/').filter(Boolean);
+        const lastPart = parts[parts.length - 1].split('?')[0].replace(/^@/, '');
+        username = lastPart || input;
+      } catch {
+        username = input;
+      }
+    } else {
+      // Construct URL from handle
+      username = username.replace(/^@/, '');
+      if (platform === 'instagram') profileUrl = `https://instagram.com/${username}`;
+      else if (platform === 'youtube') profileUrl = `https://youtube.com/@${username}`;
+      else if (platform === 'facebook') profileUrl = `https://facebook.com/${username}`;
+      else if (platform === 'x') profileUrl = `https://x.com/${username}`;
+      else if (platform === 'linkedin') profileUrl = `https://linkedin.com/in/${username}`;
+      else if (platform === 'tiktok') profileUrl = `https://tiktok.com/@${username}`;
+    }
+    return { username, profileUrl };
+  }
+
+  const handleVerify = async () => {
+    if (!usernameOrUrl.trim() || !connectPlatform) return;
+    setVerifying(true);
+    setConnectError(null);
+    setVerifiedCount(null);
+
+    const { profileUrl } = getProfileDetails(connectPlatform, usernameOrUrl);
+
+    try {
+      const res = await fetch('/api/social/followers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platform: connectPlatform, url: profileUrl }),
+      });
+      const data = await res.json();
+      if (data.success && data.count) {
+        setVerifiedCount(data.count);
+      } else {
+        setConnectError(data.error || 'Failed to verify account followers. Please try again.');
+      }
+    } catch (err) {
+      setConnectError('Verification request failed. Please check your network and try again.');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleConnectSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!connectPlatform || !usernameOrUrl.trim() || actionLoading) return;
+    
+    setActionLoading(true);
+    setConnectError(null);
+
+    const { username, profileUrl } = getProfileDetails(connectPlatform, usernameOrUrl);
+
+    try {
+      const res = await fetch('/api/social-accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform: connectPlatform,
+          username,
+          profileUrl,
+          followerCount: verifiedCount || '0',
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsConnectOpen(false);
+        fetchAccounts();
+      } else {
+        setConnectError(data.error || 'Failed to connect social account.');
+      }
+    } catch (err) {
+      setConnectError('Connect request failed.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -91,7 +200,7 @@ export default function SocialAccountsPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {ALL_PLATFORMS.map((key) => {
-            const meta = PLATFORM_META[key] ?? { emoji: '🔗', color: '#6b7280', unit: 'Followers' };
+            const meta = PLATFORM_META[key] ?? { emoji: '🔗', color: '#6b7280', unit: 'Followers', placeholder: '' };
             const linked = linkedMap.get(key);
             const count = linked
               ? (key === 'youtube' ? linked.subscriberCount : linked.followerCount)
@@ -100,7 +209,7 @@ export default function SocialAccountsPage() {
             return linked ? (
               <Card
                 key={key}
-                className="border-0 shadow-sm"
+                className="border-0 shadow-sm animate-in fade-in duration-300"
                 style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(240,235,224,0.08)', borderRadius: '14px', overflow: 'hidden' }}
               >
                 <div style={{ height: '4px', background: meta.color }} />
@@ -155,7 +264,7 @@ export default function SocialAccountsPage() {
               <Card
                 key={key}
                 className="border-0 shadow-sm"
-                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(240,235,224,0.04)', borderRadius: '14px', overflow: 'hidden', opacity: 0.75 }}
+                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(240,235,224,0.04)', borderRadius: '14px', overflow: 'hidden', opacity: 0.85 }}
               >
                 <div style={{ height: '4px', background: '#374151' }} />
                 <CardHeader className="pb-0 pt-4">
@@ -176,9 +285,9 @@ export default function SocialAccountsPage() {
                     Connect your {key === 'x' ? 'X (Twitter)' : key} account to track followers, sync posts, and apply for brand deals.
                   </p>
                   <Button
-                    className="w-full text-sm font-bold bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950"
+                    className="w-full text-sm font-bold bg-[#C9A84C] hover:bg-[#b0913b] text-slate-950 transition-all hover:scale-[1.02]"
                     style={{ border: 'none', height: '36px', borderRadius: '10px' }}
-                    onClick={() => alert('OAuth flow would open here')}
+                    onClick={() => openConnect(key)}
                   >
                     Connect Account
                   </Button>
@@ -186,6 +295,130 @@ export default function SocialAccountsPage() {
               </Card>
             );
           })}
+        </div>
+      )}
+
+      {/* CONNECT PLATFORM MODAL */}
+      {isConnectOpen && connectPlatform && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div
+            className="w-full max-w-md rounded-2xl border-0 p-6 space-y-6 animate-in zoom-in-95 duration-200"
+            style={{
+              background: '#080D26',
+              border: '1px solid rgba(240, 235, 224, 0.15)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)',
+            }}
+          >
+            {/* Modal Header */}
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl leading-none">
+                  {PLATFORM_META[connectPlatform]?.emoji}
+                </span>
+                <h3 className="text-lg font-bold text-white font-bricolage capitalize">
+                  Connect {connectPlatform === 'x' ? 'X (Twitter)' : connectPlatform}
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsConnectOpen(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+                disabled={actionLoading || verifying}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleConnectSubmit} className="space-y-4">
+              {connectError && (
+                <div className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl flex items-start gap-2 animate-in shake duration-300">
+                  <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                  <span>{connectError}</span>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                  Profile Username or Link *
+                </label>
+                <div className="relative flex items-center">
+                  <Link2 size={14} className="absolute left-3.5 text-gray-500" />
+                  <input
+                    type="text"
+                    required
+                    disabled={verifying || actionLoading}
+                    placeholder={PLATFORM_META[connectPlatform]?.placeholder}
+                    value={usernameOrUrl}
+                    onChange={(e) => setUsernameOrUrl(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-28 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors disabled:opacity-55"
+                  />
+                  <button
+                    type="button"
+                    disabled={verifying || actionLoading || !usernameOrUrl.trim()}
+                    onClick={handleVerify}
+                    className="absolute right-2 px-3 py-1 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/15 text-[#C9A84C] transition-colors disabled:opacity-40"
+                  >
+                    {verifying ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : verifiedCount ? (
+                      'Verified ✓'
+                    ) : (
+                      'Verify Account'
+                    )}
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-500 mt-1">
+                  Enter your account username/handle or full profile URL. SICE will query evolutionary metrics.
+                </p>
+              </div>
+
+              {/* Verified Result Display */}
+              {verifiedCount && (
+                <div
+                  className="rounded-xl p-3 border border-white/5 flex items-center justify-between bg-white/2 bg-emerald-500/5 animate-in slide-in-from-bottom-2 duration-300"
+                  style={{ border: '1px solid rgba(16, 185, 129, 0.15)' }}
+                >
+                  <div>
+                    <div className="text-[10px] uppercase font-mono tracking-wider text-emerald-400">
+                      Verified Follower Base
+                    </div>
+                    <div className="text-lg font-bold text-white font-bricolage mt-0.5">
+                      {verifiedCount} {PLATFORM_META[connectPlatform]?.unit}
+                    </div>
+                  </div>
+                  <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+                    ACTIVE PROFILE
+                  </Badge>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+                <button
+                  type="button"
+                  disabled={actionLoading || verifying}
+                  onClick={() => setIsConnectOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-55"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading || verifying || !verifiedCount}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold disabled:opacity-50 transition-all hover:scale-[1.02]"
+                  style={{ background: GOLD, color: '#080D26' }}
+                >
+                  {actionLoading ? (
+                    <span className="flex items-center gap-1.5">
+                      <Loader2 size={12} className="animate-spin" /> Connecting...
+                    </span>
+                  ) : (
+                    'Connect Account'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
