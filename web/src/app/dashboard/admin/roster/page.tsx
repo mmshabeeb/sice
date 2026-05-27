@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Search,
   Users,
@@ -41,12 +41,8 @@ const BG = '#F8F7F4';
 
 type StatusType = 'Active' | 'Onboarding' | 'Suspended';
 
-/* ------------------------------------------------------------------ */
-/* Mock data                                                             */
-/* ------------------------------------------------------------------ */
-
 interface Creator {
-  id: number;
+  id: string;
   name: string;
   email: string;
   platforms: string[];
@@ -55,8 +51,6 @@ interface Creator {
   status: StatusType;
   joined: string;
 }
-
-const CREATORS: Creator[] = [];
 
 const STATUS_CONFIG: Record<StatusType, { bg: string; color: string }> = {
   Active: { bg: 'rgba(34,197,94,0.15)', color: '#34d399' },
@@ -129,10 +123,47 @@ function TrustBar({ score }: { score: number }) {
 /* ------------------------------------------------------------------ */
 
 export default function RosterPage() {
+  const [creators, setCreators] = useState<Creator[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const filtered = CREATORS.filter((c) => {
+  const fetchRoster = async () => {
+    try {
+      const res = await fetch('/api/admin/applications?type=roster&chapter=Kozhikode');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setCreators(data.creators || []);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch roster:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRoster();
+  }, []);
+
+  const handleToggleSuspend = async (id: string) => {
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle_suspend', id }),
+      });
+      if (res.ok) {
+        fetchRoster();
+      }
+    } catch (err) {
+      console.error('Failed to toggle suspend:', err);
+    }
+  };
+
+  const filtered = creators.filter((c) => {
     const matchSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.email.toLowerCase().includes(search.toLowerCase());
@@ -166,9 +197,9 @@ export default function RosterPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard icon={Users} label="Total Creators" value="52" />
+        <StatCard icon={Users} label="Total Creators" value={creators.length} />
         <StatCard icon={Megaphone} label="Active Campaigns" value="8" />
-        <StatCard icon={ClipboardList} label="Pending Reviews" value="3" />
+        <StatCard icon={ClipboardList} label="Suspended Accounts" value={creators.filter(c => c.status === 'Suspended').length} />
       </div>
 
       {/* Table card */}
@@ -232,7 +263,13 @@ export default function RosterPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.length === 0 ? (
+              {loading ? (
+                <TableRow className="border-white/5 hover:bg-transparent">
+                  <TableCell colSpan={8} className="text-center py-10 text-sm text-gray-500">
+                    Loading roster...
+                  </TableCell>
+                </TableRow>
+              ) : filtered.length === 0 ? (
                 <TableRow className="border-white/5 hover:bg-transparent">
                   <TableCell colSpan={8} className="text-center py-10 text-sm text-gray-500">
                     No creators match your filters.
@@ -240,7 +277,7 @@ export default function RosterPage() {
                 </TableRow>
               ) : (
                 filtered.map((creator) => {
-                  const sc = STATUS_CONFIG[creator.status];
+                  const sc = STATUS_CONFIG[creator.status] || STATUS_CONFIG.Active;
                   return (
                     <TableRow
                       key={creator.id}
@@ -314,16 +351,19 @@ export default function RosterPage() {
                             <Eye size={12} />
                             Profile
                           </Button>
-                          {creator.status !== 'Suspended' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 px-2 text-xs gap-1 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-white bg-transparent"
-                            >
-                              <Ban size={12} />
-                              Suspend
-                            </Button>
-                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleToggleSuspend(creator.id)}
+                            className={`h-7 px-2 text-xs gap-1 bg-transparent hover:text-white ${
+                              creator.status === 'Suspended'
+                                ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
+                                : 'border-red-500/30 text-red-400 hover:bg-red-500/10'
+                            }`}
+                          >
+                            <Ban size={12} />
+                            {creator.status === 'Suspended' ? 'Activate' : 'Suspend'}
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
@@ -348,7 +388,7 @@ export default function RosterPage() {
             }}
           >
             <span>
-              Showing {filtered.length} of {CREATORS.length} creators
+              Showing {filtered.length} of {creators.length} creators
             </span>
             <span>Chapter RLS enforced — only Kozhikode data visible</span>
           </div>

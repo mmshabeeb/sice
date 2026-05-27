@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import {
   Map,
   Plus,
@@ -12,7 +12,6 @@ import {
   Check,
   AlertCircle,
   Building,
-  Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +40,8 @@ interface ChapterItem {
   status: 'active' | 'inactive';
 }
 
+const INITIAL_CHAPTERS: ChapterItem[] = [];
+
 const AVAILABLE_ADMINS = [
   'Fathima Noor',
   'Arjun Menon',
@@ -51,14 +52,14 @@ const AVAILABLE_ADMINS = [
   'Anjali Sharma',
 ];
 
+import { useEffect } from 'react';
+
 export default function SuperAdminChapters() {
-  const [chapters, setChapters] = useState<ChapterItem[]>([]);
+  const [chapters, setChapters] = useState<ChapterItem[]>(INITIAL_CHAPTERS);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // New chapter form state
   const [name, setName] = useState('');
@@ -66,31 +67,40 @@ export default function SuperAdminChapters() {
   const [state, setState] = useState('');
   const [adminName, setAdminName] = useState('');
 
-  const fetchChapters = useCallback(async () => {
+  const fetchChapters = async () => {
     try {
-      const res = await fetch('/api/chapters');
-      const data = await res.json();
-      if (res.ok) setChapters(data.chapters);
+      const res = await fetch('/api/admin/applications?type=chapters');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setChapters(data.chapters || []);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch chapters:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     fetchChapters();
-  }, [fetchChapters]);
+  }, []);
 
   // Toggle chapter status
   const toggleStatus = async (id: string) => {
-    const chapter = chapters.find((ch) => ch.id === id);
-    if (!chapter) return;
-    const newStatus = chapter.status === 'active' ? 'inactive' : 'active';
-    setChapters(chapters.map((ch) => (ch.id === id ? { ...ch, status: newStatus } : ch)));
-    await fetch('/api/chapters', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status: newStatus }),
-    });
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle_chapter_status', id }),
+      });
+      if (res.ok) {
+        fetchChapters();
+      }
+    } catch (err) {
+      console.error('Failed to toggle status:', err);
+    }
   };
 
   // Open assign admin modal
@@ -102,48 +112,44 @@ export default function SuperAdminChapters() {
   // Assign admin
   const assignAdmin = async (admin: string | null) => {
     if (!selectedChapterId) return;
-    setChapters(
-      chapters.map((ch) => (ch.id === selectedChapterId ? { ...ch, adminName: admin } : ch))
-    );
-    setIsAdminModalOpen(false);
-    setSelectedChapterId(null);
-    await fetch('/api/chapters', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: selectedChapterId, adminName: admin }),
-    });
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'assign_chapter_admin', id: selectedChapterId, adminName: admin }),
+      });
+      if (res.ok) {
+        fetchChapters();
+        setIsAdminModalOpen(false);
+        setSelectedChapterId(null);
+      }
+    } catch (err) {
+      console.error('Failed to assign admin:', err);
+    }
   };
 
   // Create chapter
   const handleCreateChapter = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !city || !state) return;
-    setSubmitting(true);
-    setError(null);
 
     try {
-      const res = await fetch('/api/chapters', {
+      const res = await fetch('/api/admin/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, city, state, adminName }),
+        body: JSON.stringify({ action: 'create_chapter', name, city, state, adminName: adminName || null }),
       });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Failed to create chapter');
-        return;
+      if (res.ok) {
+        fetchChapters();
+        setIsModalOpen(false);
+        // Reset form
+        setName('');
+        setCity('');
+        setState('');
+        setAdminName('');
       }
-
-      setChapters((prev) => [{ ...data, creatorsCount: 0 }, ...prev]);
-      setIsModalOpen(false);
-      setName('');
-      setCity('');
-      setState('');
-      setAdminName('');
-    } catch {
-      setError('Network error. Please try again.');
-    } finally {
-      setSubmitting(false);
+    } catch (err) {
+      console.error('Failed to create chapter:', err);
     }
   };
 
@@ -205,8 +211,7 @@ export default function SuperAdminChapters() {
                 {loading ? (
                   <TableRow className="hover:bg-transparent">
                     <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-sm">
-                      <Loader2 size={18} className="inline animate-spin mr-2" />
-                      Loading chapters…
+                      Loading chapters...
                     </TableCell>
                   </TableRow>
                 ) : chapters.length === 0 ? (
@@ -322,7 +327,7 @@ export default function SuperAdminChapters() {
                 Create New Jurisdiction
               </h3>
               <button
-                onClick={() => { setIsModalOpen(false); setError(null); }}
+                onClick={() => setIsModalOpen(false)}
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 <X size={18} />
@@ -394,29 +399,20 @@ export default function SuperAdminChapters() {
                 </select>
               </div>
 
-              {error && (
-                <p className="text-xs text-rose-400 flex items-center gap-1.5">
-                  <AlertCircle size={12} />
-                  {error}
-                </p>
-              )}
-
               <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
                 <button
                   type="button"
-                  onClick={() => { setIsModalOpen(false); setError(null); }}
+                  onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 disabled:opacity-60"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold"
                   style={{ background: GOLD, color: '#080D26' }}
                 >
-                  {submitting && <Loader2 size={12} className="animate-spin" />}
-                  {submitting ? 'Creating…' : 'Create Jurisdiction'}
+                  Create Jurisdiction
                 </button>
               </div>
             </form>
