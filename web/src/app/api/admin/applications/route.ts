@@ -459,6 +459,14 @@ export async function POST(request: NextRequest) {
           try {
             authUser = await adminAuth.getUserByEmail(emailStr);
             authUid = authUser.uid;
+            // Generate a fresh temporary password and set it on approval
+            tempPass = generateSecurePassword();
+            try {
+              await adminAuth.updateUser(authUid, { password: tempPass });
+            } catch (updateErr) {
+              console.error('Error resetting password for existing user on approval:', updateErr);
+              tempPass = '';
+            }
           } catch (authNotFoundErr) {
             // User does not exist, let's create a new one in Firebase Auth
             tempPass = generateSecurePassword();

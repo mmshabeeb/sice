@@ -217,20 +217,17 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 3. Send Credentials Welcome Email to all applicant types
+    // 3. Send Application Confirmation Email to all applicant types
     if (emailStr && data.fullName) {
       try {
-        const roleVal = data.applicationType === 'chapter' ? 'admin' : data.applicationType;
-        const mailHtml = generatedPassword
-          ? generateActivationEmail(data.fullName.trim(), roleVal, emailStr, generatedPassword)
-          : generateActivationEmail(data.fullName.trim(), roleVal, emailStr);
+        const mailHtml = generateApplicationEmail(data.fullName.trim(), data.applicationType);
         await sendMail({
           to: emailStr,
-          subject: 'Welcome to SICE - Account Credentials',
+          subject: 'Welcome to SICE - Application Received',
           html: mailHtml,
         });
       } catch (emailErr) {
-        console.error('Failed to send activation email:', emailErr);
+        console.error('Failed to send application confirmation email:', emailErr);
       }
     }
 

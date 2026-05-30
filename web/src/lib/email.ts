@@ -5,7 +5,7 @@ const smtpPort = parseInt(process.env.SMTP_PORT || '465');
 const smtpSecure = process.env.SMTP_SECURE !== 'false'; // true by default (TLS)
 const smtpUser = process.env.SMTP_USER;
 const smtpPassword = process.env.SMTP_PASSWORD;
-const smtpFrom = process.env.SMTP_FROM || '"SICE" <no-reply@thesice.com>';
+const smtpFrom = process.env.SMTP_FROM || '"SICE" <apply@thesice.com>';
 
 interface SendMailParams {
   to: string;
