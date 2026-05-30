@@ -186,6 +186,47 @@ async function fetchYouTubeFollowers(url: string, username: string, signal: Abor
 }
 
 async function fetchInstagramFollowers(username: string, signal: AbortSignal): Promise<string | null> {
+  // 0. Try direct fetch to Instagram first (using realistic browser headers)
+  try {
+    const directUrl = `https://www.instagram.com/${username}/`;
+    const res = await fetch(directUrl, {
+      headers: {
+        'User-Agent': getRandomUserAgent(),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      signal,
+    });
+    if (res.ok) {
+      const html = await res.text();
+      
+      // Look for the Chrome inspect element container: <span class="... x5n80e2 ..." title="9,258">
+      const spanMatch = html.match(/<span\s+class="[^"]*?x5n80e2[^"]*?"\s+title="([^"]+)"/i)
+                     || html.match(/title="([^"]+)"[^>]*?>[^<]*?<\/span>\s*followers/i);
+      if (spanMatch && spanMatch[1]) {
+        return spanMatch[1].trim();
+      }
+
+      // Look for meta description og:description: "9,258 Followers, 5,957 Following..."
+      const metaMatch = html.match(/<meta[^>]*property="og:description"[^>]*content="([\d\.,KMB]+)\s*Followers/i)
+                     || html.match(/<meta[^>]*name="description"[^>]*content="([\d\.,KMB]+)\s*Followers/i);
+      if (metaMatch && metaMatch[1]) {
+        return metaMatch[1].trim();
+      }
+
+      // Look for JSON structure: "edge_followed_by":{"count":9258}
+      const jsonMatch = html.match(/"edge_followed_by"\s*:\s*\{\s*"count"\s*:\s*(\d+)\s*\}/);
+      if (jsonMatch && jsonMatch[1]) {
+        const countNum = parseInt(jsonMatch[1]);
+        if (!isNaN(countNum) && countNum > 0) {
+          return formatCount(countNum);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(`Direct Instagram fetch failed for ${username}:`, err);
+  }
+
   // 1. Try DDG site query
   let ddgCount = await fetchDDGFollowers(`site:instagram.com/${username}`, /([\d\.,KMB]+)\s*Followers/i, signal);
   if (ddgCount) return ddgCount;
