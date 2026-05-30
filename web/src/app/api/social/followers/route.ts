@@ -201,7 +201,9 @@ async function fetchInstagramFollowers(username: string, signal: AbortSignal): P
       const html = await res.text();
       
       // Look for the Chrome inspect element container: <span class="... x5n80e2 ..." title="9,258">
+      // or the mobile layout container: <span class="... x1lliihq x1plv1lk xryxfnj x1n2onr6 ...">198</span>
       const spanMatch = html.match(/<span\s+class="[^"]*?x5n80e2[^"]*?"\s+title="([^"]+)"/i)
+                     || html.match(/<span\s+class="[^"]*?x1lliihq[^"]*?x1plv1lk[^"]*?xryxfnj[^"]*?x1n2onr6[^"]*?"[^>]*?>([\d\.,KMB]+)<\/span>/i)
                      || html.match(/title="([^"]+)"[^>]*?>[^<]*?<\/span>\s*followers/i);
       if (spanMatch && spanMatch[1]) {
         return spanMatch[1].trim();
