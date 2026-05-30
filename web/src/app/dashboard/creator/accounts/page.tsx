@@ -54,6 +54,7 @@ export default function SocialAccountsPage() {
   const [usernameOrUrl, setUsernameOrUrl] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [verifiedCount, setVerifiedCount] = useState<string | null>(null);
+  const [followerCountInput, setFollowerCountInput] = useState('');
   const [connectError, setConnectError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -80,6 +81,7 @@ export default function SocialAccountsPage() {
     setConnectPlatform(platform);
     setUsernameOrUrl('');
     setVerifiedCount(null);
+    setFollowerCountInput('');
     setConnectError(null);
     setIsConnectOpen(true);
   };
@@ -127,6 +129,7 @@ export default function SocialAccountsPage() {
       const data = await res.json();
       if (data.success && data.count) {
         setVerifiedCount(data.count);
+        setFollowerCountInput(data.count);
       } else {
         setConnectError(data.error || 'Failed to verify account followers. Please try again.');
       }
@@ -154,7 +157,7 @@ export default function SocialAccountsPage() {
           platform: connectPlatform,
           username,
           profileUrl,
-          followerCount: verifiedCount || '0',
+          followerCount: followerCountInput || '0',
         }),
       });
       const data = await res.json();
@@ -350,47 +353,51 @@ export default function SocialAccountsPage() {
                     placeholder={PLATFORM_META[connectPlatform]?.placeholder}
                     value={usernameOrUrl}
                     onChange={(e) => setUsernameOrUrl(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-28 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors disabled:opacity-55"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors disabled:opacity-55"
                   />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                    {PLATFORM_META[connectPlatform]?.unit} Count *
+                  </label>
                   <button
                     type="button"
                     disabled={verifying || actionLoading || !usernameOrUrl.trim()}
                     onClick={handleVerify}
-                    className="absolute right-2 px-3 py-1 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/15 text-[#C9A84C] transition-colors disabled:opacity-40"
+                    className="text-xs font-semibold text-[#C9A84C] hover:text-[#b0913b] disabled:opacity-40 transition-colors flex items-center gap-1"
                   >
                     {verifying ? (
-                      <Loader2 size={12} className="animate-spin" />
-                    ) : verifiedCount ? (
-                      'Verified ✓'
+                      <>
+                        <Loader2 size={11} className="animate-spin" /> Fetching...
+                      </>
                     ) : (
-                      'Verify Account'
+                      '🔍 Auto-Fetch Count'
                     )}
                   </button>
                 </div>
-                <p className="text-[10px] text-gray-500 mt-1">
-                  Enter your account username/handle or full profile URL. SICE will query evolutionary metrics.
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    required
+                    disabled={actionLoading}
+                    placeholder="e.g. 12.5K, 3933, or 1.2M"
+                    value={followerCountInput}
+                    onChange={(e) => setFollowerCountInput(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors disabled:opacity-55"
+                  />
+                  {verifiedCount && verifiedCount === followerCountInput && (
+                    <Badge className="absolute right-3 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-[9px] pointer-events-none">
+                      VERIFIED
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-[10px] text-gray-500">
+                  You can enter your exact count manually or click &quot;Auto-Fetch Count&quot; to fetch it automatically.
                 </p>
               </div>
-
-              {/* Verified Result Display */}
-              {verifiedCount && (
-                <div
-                  className="rounded-xl p-3 border border-white/5 flex items-center justify-between bg-white/2 bg-emerald-500/5 animate-in slide-in-from-bottom-2 duration-300"
-                  style={{ border: '1px solid rgba(16, 185, 129, 0.15)' }}
-                >
-                  <div>
-                    <div className="text-[10px] uppercase font-mono tracking-wider text-emerald-400">
-                      Verified Follower Base
-                    </div>
-                    <div className="text-lg font-bold text-white font-bricolage mt-0.5">
-                      {verifiedCount} {PLATFORM_META[connectPlatform]?.unit}
-                    </div>
-                  </div>
-                  <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
-                    ACTIVE PROFILE
-                  </Badge>
-                </div>
-              )}
 
               {/* Action Buttons */}
               <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
@@ -404,7 +411,7 @@ export default function SocialAccountsPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={actionLoading || verifying || !verifiedCount}
+                  disabled={actionLoading || verifying || !usernameOrUrl.trim() || !followerCountInput.trim()}
                   className="px-4 py-2 rounded-xl text-xs font-semibold disabled:opacity-50 transition-all hover:scale-[1.02]"
                   style={{ background: GOLD, color: '#080D26' }}
                 >
