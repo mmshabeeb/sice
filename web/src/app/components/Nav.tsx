@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 
 export default function Nav() {
   useEffect(() => {
@@ -37,7 +38,7 @@ export default function Nav() {
         if (links) links.style.display = "none";
       }
     };
-    document.querySelectorAll(".nav-link, .nav-cta").forEach((link) =>
+    document.querySelectorAll(".nav-link, .nav-cta, .nav-login").forEach((link) =>
       link.addEventListener("click", closeMenu)
     );
 
@@ -57,8 +58,8 @@ export default function Nav() {
           <a href="#chapters" className="nav-link">Chapters</a>
           <a href="#membership" className="nav-link">Membership</a>
           <a href="#editorial" className="nav-link">Editorial</a>
-          <a href="/apply" className="nav-cta">Apply</a>
-          <a href="/login" className="nav-login">Login</a>
+          <Link href="/apply" className="nav-cta">Apply</Link>
+          <Link href="/login" className="nav-login">Login</Link>
         </div>
         <button className="nav-toggle" aria-label="Open menu">&#9776;</button>
       </div>
