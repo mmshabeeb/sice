@@ -92,7 +92,7 @@ function wrapLayout(title: string, bodyContent: string): string {
                       SICE
                     </div>
                     <div style="font-size: 10px; font-weight: bold; color: ${TEXT_MUTED}; letter-spacing: 3px; margin-top: 5px; text-transform: uppercase;">
-                      The South Indian Creators Association
+                      The South Indian Creator Economy
                     </div>
                   </td>
                 </tr>
@@ -107,7 +107,7 @@ function wrapLayout(title: string, bodyContent: string): string {
                 <!-- Footer -->
                 <tr>
                   <td align="center" style="padding: 30px 40px; background-color: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(240, 235, 224, 0.05); font-size: 11px; color: ${TEXT_MUTED}; line-height: 1.5;">
-                    <p style="margin: 0; font-weight: bold; color: ${GOLD};">SICE | The South Indian Creators Association</p>
+                    <p style="margin: 0; font-weight: bold; color: ${GOLD};">SICE | The South Indian Creator Economy</p>
                     <p style="margin: 5px 0 0 0;">This is an automated operational notification regarding your account state.</p>
                     <p style="margin: 5px 0 0 0;">&copy; 2026 SICE. All rights reserved.</p>
                   </td>
@@ -137,7 +137,7 @@ export function generateApplicationEmail(fullName: string, applicationType: stri
       Application Received
     </h2>
     <p style="margin-top: 0;">Hi <strong>${fullName}</strong>,</p>
-    <p>Thank you for submitting your application to join the **SICE (South Indian Creators Association)** under the <strong>${typeLabel}</strong> category.</p>
+    <p>Thank you for submitting your application to join the **SICE (South Indian Creator Economy)** under the <strong>${typeLabel}</strong> category.</p>
     <p>Our administrative board is currently reviewing your details, social media footprints, and compliance indexes. The standard verification window is <strong>24 to 48 hours</strong>.</p>
     
     <div style="background-color: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 20px; margin: 25px 0; text-align: center;">
