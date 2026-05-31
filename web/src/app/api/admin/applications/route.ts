@@ -343,6 +343,7 @@ export async function POST(request: NextRequest) {
         status: 'active',
         created_at: new Date(),
         created_manually: true,
+        mustChangePassword: true,
       }, { merge: true });
 
       // 3. Also create in 'applications' collection so they appear in the super admin creators list
@@ -496,6 +497,10 @@ export async function POST(request: NextRequest) {
               status: 'active',
               updated_at: new Date(),
             };
+
+            if (tempPass) {
+              userData.mustChangePassword = true;
+            }
 
             if (appData.contact_number) userData.contact_number = appData.contact_number;
             if (appData.whatsapp_number) userData.whatsapp_number = appData.whatsapp_number;
@@ -657,6 +662,12 @@ export async function POST(request: NextRequest) {
        try {
         await adminAuth.updateUser(authUid, { password: newPassword });
 
+        // Update mustChangePassword in Firestore
+        await adminDb.collection('users').doc(authUid).set({
+          mustChangePassword: true,
+          updated_at: new Date(),
+        }, { merge: true });
+
         if (appData?.email) {
           try {
             const resetHtml = generatePasswordResetEmail(
@@ -714,6 +725,7 @@ export async function POST(request: NextRequest) {
         role,
         status: 'active',
         created_at: new Date(),
+        mustChangePassword: true,
       };
 
       if (chapter_id) {

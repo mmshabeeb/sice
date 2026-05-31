@@ -7,8 +7,10 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  updatePassword,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/client';
 import { usePhoneVerification } from '@/hooks/use-phone-verification';
 import { DEMO_ACCOUNTS, findDemoByEmail, findDemoByPhone, isMockFirebase } from '@/lib/demo/accounts';
@@ -65,6 +67,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Password change and forgot password states
+  const [changePasswordUser, setChangePasswordUser] = useState<any | null>(null);
+  const [changePasswordRole, setChangePasswordRole] = useState<UserRole | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
+
   const phone = usePhoneVerification('recaptcha-container-login');
 
   async function createSession(idToken: string): Promise<boolean> {
@@ -90,12 +101,21 @@ export default function LoginPage() {
         role = demo.label;
       } else {
         const { user } = await signInWithEmailAndPassword(auth, email, password);
-        idToken = await user.getIdToken();
         const profileSnap = await getDoc(doc(db, 'users', user.uid));
         const resolvedRole = profileSnap.exists()
           ? (profileSnap.data().role as UserRole)
           : await fetchRoleByEmail(email);
         if (!resolvedRole) { setError('Profile not found. Please contact support.'); setLoading(false); return; }
+        
+        // Intercept force password reset
+        if (profileSnap.exists() && profileSnap.data().mustChangePassword === true) {
+          setChangePasswordUser(user);
+          setChangePasswordRole(resolvedRole);
+          setLoading(false);
+          return;
+        }
+
+        idToken = await user.getIdToken();
         role = resolvedRole;
       }
 
@@ -104,6 +124,87 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Sign in failed.';
       setError(msg.replace('Firebase: ', '').replace(/\(auth\/.*\)\.?/, '').trim());
+      setLoading(false);
+    }
+  }
+
+  async function handlePasswordChangeSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!changePasswordUser || !changePasswordRole) return;
+
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 1. Update Firebase Auth password
+      await updatePassword(changePasswordUser, newPassword);
+
+      // 2. Set mustChangePassword: false in Firestore
+      await updateDoc(doc(db, 'users', changePasswordUser.uid), {
+        mustChangePassword: false,
+        updated_at: new Date()
+      });
+
+      // 3. Get fresh ID token
+      const idToken = await changePasswordUser.getIdToken(true);
+
+      // 4. Create Session & Redirect
+      if (!await createSession(idToken)) {
+        throw new Error('Session creation failed. Please try again.');
+      }
+
+      // Reset state and redirect
+      const targetRole = changePasswordRole;
+      setChangePasswordUser(null);
+      setChangePasswordRole(null);
+      setNewPassword('');
+      setConfirmPassword('');
+      router.push(`/dashboard/${targetRole}`);
+    } catch (err: unknown) {
+      console.error('Password update login failed:', err);
+      const msg = err instanceof Error ? err.message : 'Failed to update password. Please try again.';
+      setError(msg.replace('Firebase: ', '').replace(/\(auth\/.*\)\.?/, '').trim());
+      setLoading(false);
+    }
+  }
+
+  async function handleCancelPasswordChange() {
+    setLoading(true);
+    try {
+      await auth.signOut();
+    } catch (err) {
+      console.error('Sign out error on cancel:', err);
+    }
+    setChangePasswordUser(null);
+    setChangePasswordRole(null);
+    setNewPassword('');
+    setConfirmPassword('');
+    setError(null);
+    setLoading(false);
+  }
+
+  async function handleForgotPasswordSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!forgotPasswordEmail) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      await sendPasswordResetEmail(auth, forgotPasswordEmail);
+      setForgotPasswordSuccess(true);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to send password reset email.';
+      setError(msg.replace('Firebase: ', '').replace(/\(auth\/.*\)\.?/, '').trim());
+    } finally {
       setLoading(false);
     }
   }
@@ -223,113 +324,28 @@ export default function LoginPage() {
             padding: 36,
           }}>
             <h2 style={{ fontSize: 18, fontWeight: 600, color: '#F0EBE0', marginBottom: 6, fontFamily: 'var(--font-bricolage, sans-serif)' }}>
-              Sign in
+              {changePasswordUser ? 'Update Password' : showForgotPassword ? 'Reset Password' : 'Sign in'}
             </h2>
             <p style={{ fontSize: 13, color: 'rgba(240,235,224,0.45)', marginBottom: 24 }}>
-              Access your creator, merchant or admin portal.
+              {changePasswordUser 
+                ? 'Please set a secure password for your first login.' 
+                : showForgotPassword 
+                  ? 'We will send a password reset link to your email.' 
+                  : 'Access your creator, merchant or admin portal.'}
             </p>
 
-            {/* Google Sign-in Button */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                disabled={loading}
-                style={{
-                  background: 'white',
-                  color: '#374151',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 100,
-                  padding: '11px 24px',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                  transition: 'all 0.2s',
-                  width: '100%',
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 18 18" style={{ display: 'block' }}>
-                  <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84a4.14 4.14 0 0 1-1.8 2.71v2.26h2.91c1.7-1.56 2.69-3.86 2.69-6.6z"/>
-                  <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.2l-2.91-2.26c-.8.54-1.84.86-3.05.86-2.34 0-4.32-1.58-5.03-3.7H.95v2.32A9 9 0 0 0 9 18z"/>
-                  <path fill="#FBBC05" d="M3.97 10.7a5.4 5.4 0 0 1 0-3.4V4.98H.95a9 9 0 0 0 0 8.04l3.02-2.32z"/>
-                  <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.1A9 9 0 0 0 .95 4.98l3.02 2.32C4.68 5.16 6.66 3.58 9 3.58z"/>
-                </svg>
-                <span>{loading && loginMethod === 'password' ? 'Connecting...' : 'Sign in with Google'}</span>
-              </button>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '8px 0' }}>
-                <div style={{ flex: 1, height: 1, background: 'rgba(240, 235, 224, 0.1)' }} />
-                <span style={{ fontSize: 11, color: 'rgba(240, 235, 224, 0.35)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>or</span>
-                <div style={{ flex: 1, height: 1, background: 'rgba(240, 235, 224, 0.1)' }} />
-              </div>
-            </div>
-
-            {/* Login Tab Selector */}
-            <div style={{ display: 'flex', borderBottom: '1px solid rgba(240,235,224,0.1)', marginBottom: 20 }}>
-              <button
-                type="button"
-                onClick={() => { setLoginMethod('password'); setError(null); }}
-                style={{
-                  flex: 1,
-                  padding: '10px 0',
-                  background: 'none',
-                  border: 'none',
-                  borderBottom: loginMethod === 'password' ? '2px solid #C8A968' : '2px solid transparent',
-                  color: loginMethod === 'password' ? '#F0EBE0' : 'rgba(240,235,224,0.4)',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                Password
-              </button>
-              <button
-                type="button"
-                onClick={() => { setLoginMethod('otp'); setError(null); }}
-                style={{
-                  flex: 1,
-                  padding: '10px 0',
-                  background: 'none',
-                  border: 'none',
-                  borderBottom: loginMethod === 'otp' ? '2px solid #C8A968' : '2px solid transparent',
-                  color: loginMethod === 'otp' ? '#F0EBE0' : 'rgba(240,235,224,0.4)',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                Mobile OTP
-              </button>
-            </div>
-
-            {/* Password Login Form */}
-            {loginMethod === 'password' && (
-              <form onSubmit={handleSubmit} autoComplete="off" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                <input type="text" name="prevent_autofill_email" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
-                <input type="password" name="prevent_autofill_password" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
-
+            {changePasswordUser ? (
+              <form onSubmit={handlePasswordChangeSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.45)' }}>
-                    Email
+                    New Password
                   </label>
                   <input
-                    type="email"
-                    autoComplete="off"
+                    type="password"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Minimum 6 characters"
                     style={{
                       background: 'rgba(255,255,255,0.05)',
                       border: '1px solid rgba(240,235,224,0.10)',
@@ -348,15 +364,14 @@ export default function LoginPage() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.45)' }}>
-                    Password
+                    Confirm Password
                   </label>
                   <input
                     type="password"
-                    autoComplete="new-password"
                     required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter password"
                     style={{
                       background: 'rgba(255,255,255,0.05)',
                       border: '1px solid rgba(240,235,224,0.10)',
@@ -386,131 +401,486 @@ export default function LoginPage() {
                   </div>
                 )}
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{
-                    background: '#C8A968',
-                    color: '#080D26',
-                    border: 'none',
-                    borderRadius: 100,
-                    padding: '12px 24px',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.15em',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    opacity: loading ? 0.6 : 1,
-                    transition: 'all 0.3s',
-                    width: '100%',
-                    marginTop: 4,
-                  }}
-                >
-                  {loading ? 'Signing in…' : 'Sign in'}
-                </button>
+                <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                      background: '#C8A968',
+                      color: '#080D26',
+                      border: 'none',
+                      borderRadius: 100,
+                      padding: '12px 24px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.15em',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      opacity: loading ? 0.6 : 1,
+                      transition: 'all 0.3s',
+                      flex: 1,
+                    }}
+                  >
+                    {loading ? 'Updating...' : 'Update Password'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelPasswordChange}
+                    style={{
+                      background: 'rgba(255,255,255,0.05)',
+                      color: '#F0EBE0',
+                      border: '1px solid rgba(240,235,224,0.10)',
+                      borderRadius: 100,
+                      padding: '12px 24px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.15em',
+                      cursor: 'pointer',
+                      flex: 1,
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </form>
-            )}
-
-            {/* OTP Login Form */}
-            {loginMethod === 'otp' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                {!phone.otpSent ? (
+            ) : showForgotPassword ? (
+              <form onSubmit={handleForgotPasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                {forgotPasswordSuccess ? (
                   <>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <label style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.45)' }}>
-                        Mobile Number
-                      </label>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <select
-                          value={phone.countryCode}
-                          onChange={(e) => phone.setCountryCode(e.target.value)}
-                          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(240,235,224,0.10)', borderRadius: 8, padding: '11px 14px', fontSize: 14, color: '#F0EBE0', outline: 'none', width: '40%' }}
-                        >
-                          {countryCodes.map((c) => (
-                            <option key={c.value} value={c.value} style={{ background: '#080D26', color: '#F0EBE0' }}>{c.label}</option>
-                          ))}
-                        </select>
-                        <input
-                          type="tel"
-                          required
-                          value={phone.phoneInput}
-                          onChange={(e) => phone.setPhoneInput(e.target.value.replace(/[^0-9]/g, ''))}
-                          placeholder="9876543210"
-                          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(240,235,224,0.10)', borderRadius: 8, padding: '11px 14px', fontSize: 14, color: '#F0EBE0', outline: 'none', flex: 1 }}
-                          onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(200,169,104,0.50)'; }}
-                          onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(240,235,224,0.10)'; }}
-                        />
-                      </div>
+                    <div style={{
+                      background: 'rgba(16,185,129,0.10)',
+                      border: '1px solid rgba(16,185,129,0.25)',
+                      borderRadius: 8,
+                      padding: '12px 14px',
+                      fontSize: 13,
+                      color: '#a7f3d0',
+                      lineHeight: 1.5,
+                    }}>
+                      A password reset link has been sent to <strong>{forgotPasswordEmail}</strong>. Please check your inbox to reset your password.
                     </div>
-
-                    {(phone.error || error) && (
-                      <div style={{ background: 'rgba(220,38,38,0.10)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#fca5a5' }}>
-                        {phone.error ?? error}
-                      </div>
-                    )}
-
                     <button
                       type="button"
-                      onClick={phone.sendOtp}
-                      disabled={phone.loading || !phone.phoneInput}
-                      style={{ background: '#C8A968', color: '#080D26', border: 'none', borderRadius: 100, padding: '12px 24px', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.15em', cursor: (phone.loading || !phone.phoneInput) ? 'not-allowed' : 'pointer', opacity: (phone.loading || !phone.phoneInput) ? 0.6 : 1, transition: 'all 0.3s', width: '100%' }}
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setForgotPasswordSuccess(false);
+                        setForgotPasswordEmail('');
+                        setError(null);
+                      }}
+                      style={{
+                        background: '#C8A968',
+                        color: '#080D26',
+                        border: 'none',
+                        borderRadius: 100,
+                        padding: '12px 24px',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.15em',
+                        cursor: 'pointer',
+                        width: '100%',
+                      }}
                     >
-                      {phone.loading ? 'Sending Code...' : 'Send OTP Code'}
+                      Back to Sign in
                     </button>
                   </>
                 ) : (
                   <>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <label style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.45)' }}>
-                        Enter 6-digit OTP
+                        Email Address
                       </label>
                       <input
-                        type="text"
-                        maxLength={6}
+                        type="email"
                         required
-                        value={phone.otpCode}
-                        onChange={(e) => phone.setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
-                        placeholder="123456"
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(240,235,224,0.10)', borderRadius: 8, padding: '11px 14px', fontSize: 16, color: '#F0EBE0', outline: 'none', textAlign: 'center', letterSpacing: '0.3em', fontFamily: 'monospace', width: '100%' }}
+                        value={forgotPasswordEmail}
+                        onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        style={{
+                          background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid rgba(240,235,224,0.10)',
+                          borderRadius: 8,
+                          padding: '11px 14px',
+                          fontSize: 14,
+                          color: '#F0EBE0',
+                          outline: 'none',
+                          transition: 'border-color 0.2s',
+                          width: '100%',
+                        }}
                         onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(200,169,104,0.50)'; }}
                         onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(240,235,224,0.10)'; }}
                       />
                     </div>
 
-                    {(phone.error || error) && (
-                      <div style={{ background: 'rgba(220,38,38,0.10)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#fca5a5' }}>
-                        {phone.error ?? error}
+                    {error && (
+                      <div style={{
+                        background: 'rgba(220,38,38,0.10)',
+                        border: '1px solid rgba(220,38,38,0.25)',
+                        borderRadius: 8,
+                        padding: '10px 14px',
+                        fontSize: 13,
+                        color: '#fca5a5',
+                      }}>
+                        {error}
                       </div>
                     )}
 
-                    <div style={{ display: 'flex', gap: 10 }}>
+                    <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
                       <button
-                        type="button"
-                        onClick={handleVerifyOtp}
-                        disabled={phone.loading || phone.otpCode.length !== 6}
-                        style={{ background: '#C8A968', color: '#080D26', border: 'none', borderRadius: 100, padding: '12px 24px', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.15em', cursor: (phone.loading || phone.otpCode.length !== 6) ? 'not-allowed' : 'pointer', opacity: (phone.loading || phone.otpCode.length !== 6) ? 0.6 : 1, transition: 'all 0.3s', flex: 2 }}
+                        type="submit"
+                        disabled={loading}
+                        style={{
+                          background: '#C8A968',
+                          color: '#080D26',
+                          border: 'none',
+                          borderRadius: 100,
+                          padding: '12px 24px',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.15em',
+                          cursor: loading ? 'not-allowed' : 'pointer',
+                          opacity: loading ? 0.6 : 1,
+                          transition: 'all 0.3s',
+                          flex: 2,
+                        }}
                       >
-                        {phone.loading ? 'Verifying...' : 'Verify & Login'}
+                        {loading ? 'Sending...' : 'Send Link'}
                       </button>
                       <button
                         type="button"
-                        onClick={phone.reset}
-                        style={{ background: 'rgba(255,255,255,0.05)', color: '#F0EBE0', border: '1px solid rgba(240,235,224,0.10)', borderRadius: 100, padding: '12px 24px', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', flex: 1 }}
+                        onClick={() => {
+                          setShowForgotPassword(false);
+                          setForgotPasswordEmail('');
+                          setError(null);
+                        }}
+                        style={{
+                          background: 'rgba(255,255,255,0.05)',
+                          color: '#F0EBE0',
+                          border: '1px solid rgba(240,235,224,0.10)',
+                          borderRadius: 100,
+                          padding: '12px 24px',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.15em',
+                          cursor: 'pointer',
+                          flex: 1,
+                        }}
                       >
                         Back
                       </button>
                     </div>
                   </>
                 )}
-              </div>
-            )}
+              </form>
+            ) : (
+              <>
+                {/* Google Sign-in Button */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={loading}
+                    style={{
+                      background: 'white',
+                      color: '#374151',
+                      border: '1px solid #d1d5db',
+                      borderRadius: 100,
+                      padding: '11px 24px',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      transition: 'all 0.2s',
+                      width: '100%',
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 18 18" style={{ display: 'block' }}>
+                      <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84a4.14 4.14 0 0 1-1.8 2.71v2.26h2.91c1.7-1.56 2.69-3.86 2.69-6.6z"/>
+                      <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.2l-2.91-2.26c-.8.54-1.84.86-3.05.86-2.34 0-4.32-1.58-5.03-3.7H.95v2.32A9 9 0 0 0 9 18z"/>
+                      <path fill="#FBBC05" d="M3.97 10.7a5.4 5.4 0 0 1 0-3.4V4.98H.95a9 9 0 0 0 0 8.04l3.02-2.32z"/>
+                      <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.1A9 9 0 0 0 .95 4.98l3.02 2.32C4.68 5.16 6.66 3.58 9 3.58z"/>
+                    </svg>
+                    <span>{loading && loginMethod === 'password' ? 'Connecting...' : 'Sign in with Google'}</span>
+                  </button>
 
-            <p style={{ marginTop: 28, textAlign: 'center', fontSize: 13, color: 'rgba(240,235,224,0.40)' }}>
-              New creator?{' '}
-              <Link href="/apply" style={{ color: '#C8A968', textDecoration: 'underline', textUnderlineOffset: 3 }}>
-                Apply for membership
-              </Link>
-            </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '8px 0' }}>
+                    <div style={{ flex: 1, height: 1, background: 'rgba(240, 235, 224, 0.1)' }} />
+                    <span style={{ fontSize: 11, color: 'rgba(240, 235, 224, 0.35)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>or</span>
+                    <div style={{ flex: 1, height: 1, background: 'rgba(240, 235, 224, 0.1)' }} />
+                  </div>
+                </div>
+
+                {/* Login Tab Selector */}
+                <div style={{ display: 'flex', borderBottom: '1px solid rgba(240,235,224,0.1)', marginBottom: 20 }}>
+                  <button
+                    type="button"
+                    onClick={() => { setLoginMethod('password'); setError(null); }}
+                    style={{
+                      flex: 1,
+                      padding: '10px 0',
+                      background: 'none',
+                      border: 'none',
+                      borderBottom: loginMethod === 'password' ? '2px solid #C8A968' : '2px solid transparent',
+                      color: loginMethod === 'password' ? '#F0EBE0' : 'rgba(240,235,224,0.4)',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.1em',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    Password
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setLoginMethod('otp'); setError(null); }}
+                    style={{
+                      flex: 1,
+                      padding: '10px 0',
+                      background: 'none',
+                      border: 'none',
+                      borderBottom: loginMethod === 'otp' ? '2px solid #C8A968' : '2px solid transparent',
+                      color: loginMethod === 'otp' ? '#F0EBE0' : 'rgba(240,235,224,0.4)',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.1em',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    Mobile OTP
+                  </button>
+                </div>
+
+                {/* Password Login Form */}
+                {loginMethod === 'password' && (
+                  <form onSubmit={handleSubmit} autoComplete="off" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                    <input type="text" name="prevent_autofill_email" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+                    <input type="password" name="prevent_autofill_password" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.45)' }}>
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        autoComplete="off"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        style={{
+                          background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid rgba(240,235,224,0.10)',
+                          borderRadius: 8,
+                          padding: '11px 14px',
+                          fontSize: 14,
+                          color: '#F0EBE0',
+                          outline: 'none',
+                          transition: 'border-color 0.2s',
+                          width: '100%',
+                        }}
+                        onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(200,169,104,0.50)'; }}
+                        onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(240,235,224,0.10)'; }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <label style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.45)' }}>
+                          Password
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowForgotPassword(true);
+                            setError(null);
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#C8A968',
+                            fontSize: 11,
+                            cursor: 'pointer',
+                            padding: 0,
+                            textDecoration: 'underline',
+                            textUnderlineOffset: '2px',
+                          }}
+                        >
+                          Forgot Password?
+                        </button>
+                      </div>
+                      <input
+                        type="password"
+                        autoComplete="new-password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        style={{
+                          background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid rgba(240,235,224,0.10)',
+                          borderRadius: 8,
+                          padding: '11px 14px',
+                          fontSize: 14,
+                          color: '#F0EBE0',
+                          outline: 'none',
+                          transition: 'border-color 0.2s',
+                          width: '100%',
+                        }}
+                        onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(200,169,104,0.50)'; }}
+                        onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(240,235,224,0.10)'; }}
+                      />
+                    </div>
+
+                    {error && (
+                      <div style={{
+                        background: 'rgba(220,38,38,0.10)',
+                        border: '1px solid rgba(220,38,38,0.25)',
+                        borderRadius: 8,
+                        padding: '10px 14px',
+                        fontSize: 13,
+                        color: '#fca5a5',
+                      }}>
+                        {error}
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      style={{
+                        background: '#C8A968',
+                        color: '#080D26',
+                        border: 'none',
+                        borderRadius: 100,
+                        padding: '12px 24px',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.15em',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        opacity: loading ? 0.6 : 1,
+                        transition: 'all 0.3s',
+                        width: '100%',
+                        marginTop: 4,
+                      }}
+                    >
+                      {loading ? 'Signing in…' : 'Sign in'}
+                    </button>
+                  </form>
+                )}
+
+                {/* OTP Login Form */}
+                {loginMethod === 'otp' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                    {!phone.otpSent ? (
+                      <>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          <label style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.45)' }}>
+                            Mobile Number
+                          </label>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <select
+                              value={phone.countryCode}
+                              onChange={(e) => phone.setCountryCode(e.target.value)}
+                              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(240,235,224,0.10)', borderRadius: 8, padding: '11px 14px', fontSize: 14, color: '#F0EBE0', outline: 'none', width: '40%' }}
+                            >
+                              {countryCodes.map((c) => (
+                                <option key={c.value} value={c.value} style={{ background: '#080D26', color: '#F0EBE0' }}>{c.label}</option>
+                              ))}
+                            </select>
+                            <input
+                              type="tel"
+                              required
+                              value={phone.phoneInput}
+                              onChange={(e) => phone.setPhoneInput(e.target.value.replace(/[^0-9]/g, ''))}
+                              placeholder="9876543210"
+                              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(240,235,224,0.10)', borderRadius: 8, padding: '11px 14px', fontSize: 14, color: '#F0EBE0', outline: 'none', flex: 1 }}
+                              onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(200,169,104,0.50)'; }}
+                              onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(240,235,224,0.10)'; }}
+                            />
+                          </div>
+                        </div>
+
+                        {(phone.error || error) && (
+                          <div style={{ background: 'rgba(220,38,38,0.10)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#fca5a5' }}>
+                            {phone.error ?? error}
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={phone.sendOtp}
+                          disabled={phone.loading || !phone.phoneInput}
+                          style={{ background: '#C8A968', color: '#080D26', border: 'none', borderRadius: 100, padding: '12px 24px', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.15em', cursor: (phone.loading || !phone.phoneInput) ? 'not-allowed' : 'pointer', opacity: (phone.loading || !phone.phoneInput) ? 0.6 : 1, transition: 'all 0.3s', width: '100%' }}
+                        >
+                          {phone.loading ? 'Sending Code...' : 'Send OTP Code'}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          <label style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(240,235,224,0.45)' }}>
+                            Enter 6-digit OTP
+                          </label>
+                          <input
+                            type="text"
+                            maxLength={6}
+                            required
+                            value={phone.otpCode}
+                            onChange={(e) => phone.setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                            placeholder="123456"
+                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(240,235,224,0.10)', borderRadius: 8, padding: '11px 14px', fontSize: 16, color: '#F0EBE0', outline: 'none', textAlign: 'center', letterSpacing: '0.3em', fontFamily: 'monospace', width: '100%' }}
+                            onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(200,169,104,0.50)'; }}
+                            onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(240,235,224,0.10)'; }}
+                          />
+                        </div>
+
+                        {(phone.error || error) && (
+                          <div style={{ background: 'rgba(220,38,38,0.10)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#fca5a5' }}>
+                            {phone.error ?? error}
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: 10 }}>
+                          <button
+                            type="button"
+                            onClick={handleVerifyOtp}
+                            disabled={phone.loading || phone.otpCode.length !== 6}
+                            style={{ background: '#C8A968', color: '#080D26', border: 'none', borderRadius: 100, padding: '12px 24px', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.15em', cursor: (phone.loading || phone.otpCode.length !== 6) ? 'not-allowed' : 'pointer', opacity: (phone.loading || phone.otpCode.length !== 6) ? 0.6 : 1, transition: 'all 0.3s', flex: 2 }}
+                          >
+                            {phone.loading ? 'Verifying...' : 'Verify & Login'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={phone.reset}
+                            style={{ background: 'rgba(255,255,255,0.05)', color: '#F0EBE0', border: '1px solid rgba(240,235,224,0.10)', borderRadius: 100, padding: '12px 24px', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', flex: 1 }}
+                          >
+                            Back
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                <p style={{ marginTop: 28, textAlign: 'center', fontSize: 13, color: 'rgba(240,235,224,0.40)' }}>
+                  New creator?{' '}
+                  <Link href="/apply" style={{ color: '#C8A968', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                    Apply for membership
+                  </Link>
+                </p>
+              </>
+            )}
           </div>
         </div>
 
